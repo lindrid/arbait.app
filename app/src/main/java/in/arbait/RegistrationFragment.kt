@@ -18,7 +18,7 @@ class RegistrationFragment : Fragment() {
   ): View? {
     val view = inflater.inflate(R.layout.fragment_registration, container, false)
 
-    tvRegistration = view.findViewById(R.id.tv_registration)
+    tvRegistration = view.findViewById(R.id.tv_reg_registration)
 
     return view
   }

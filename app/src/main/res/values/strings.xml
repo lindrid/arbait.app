@@ -1,4 +1,12 @@
 <resources>
     <string name="app_name">Arbait</string>
-    <string name="registration">Регистрация</string>
+    <string name="reg_registration">Регистрация</string>
+    <string name="reg_first_name">Имя</string>
+    <string name="reg_last_name">Фамилия</string>
+    <string name="reg_phone">Телефон</string>
+    <string name="reg_phone_whatsapp">Телефон в Whatsapp</string>
+    <string name="reg_b_same">Тот же</string>
+    <string name="reg_age">Возраст</string>
+    <string name="reg_done">Готово</string>
+    <string name="reg_password">Пароль</string>
 </resources>
