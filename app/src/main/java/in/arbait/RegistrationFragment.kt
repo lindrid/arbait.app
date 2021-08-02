@@ -62,7 +62,7 @@ class RegistrationFragment : Fragment() {
     btSamePhone.setOnClickListener(setPhoneWaEqualsToPhone)
 
     btDone.setOnClickListener {
-      val birthdate = SimpleDateFormat("dd-MM-yyyy").parse(etBirthdate.text.toString())
+      val birthdate = SimpleDateFormat("dd.MM.yyyy").parse(etBirthdate.text.toString())
       val user = User (
         id = null,
         firstName = etFirstName.text.toString(),
