@@ -1,7 +1,7 @@
 package `in`.arbait
 
 import `in`.arbait.http.User
-import `in`.arbait.http.Web
+import `in`.arbait.http.Server
 import android.os.Bundle
 import android.telephony.PhoneNumberFormattingTextWatcher
 import android.util.Log
@@ -11,17 +11,13 @@ import android.view.ViewGroup
 import android.widget.Button
 import android.widget.EditText
 import android.widget.TextView
-import android.widget.Toast
 import androidx.fragment.app.Fragment
-import java.text.SimpleDateFormat
-import java.time.LocalDate
-import java.time.format.DateTimeFormatter
 
 private const val TAG = "RegistrationFragment"
 
 class RegistrationFragment : Fragment() {
 
-  private val web = Web()
+  private val server = Server()
 
   private lateinit var tvRegistration: TextView
   private lateinit var etFirstName: EditText
@@ -82,21 +78,17 @@ class RegistrationFragment : Fragment() {
 
     Log.i (TAG, "User = ${user.toString()}")
 
-    web.registerUser(user) { result: String?, error: Boolean ->
-      onRegisterUserResult(result, error)
+    server.registerUser(user) { result: String?, error: Boolean ->
+      onResult(result, error)
     }
   }
 
-  private fun onRegisterUserResult (result: String?, error: Boolean) {
-    val toast: Toast = if (!error) {
-      Toast.makeText(requireContext(), "Все ок, сервер вернул: $result",
-        Toast.LENGTH_SHORT)
+  private fun onResult (result: String?, error: Boolean) {
+    if (!error) {
+      Log.i (TAG,"Все ок, сервер вернул: $result")
     } else {
-      Toast.makeText(requireContext(), "Регистрация не прошла, error is $result",
-        Toast.LENGTH_SHORT)
+      Log.i (TAG,"Регистрация не прошла, error is $result")
     }
-
-    toast.show()
   }
 
 }

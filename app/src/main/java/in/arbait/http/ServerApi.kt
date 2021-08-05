@@ -8,7 +8,7 @@ import retrofit2.http.POST
 
 const val ARBAIT_BASE_URL = "http://arbait.in"
 
-interface WebApi {
+interface ServerApi {
 
   //@Headers("Content-Type: application/json")
   @POST("/api/auth/register")

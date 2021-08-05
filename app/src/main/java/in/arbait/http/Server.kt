@@ -14,7 +14,7 @@ import retrofit2.converter.scalars.ScalarsConverterFactory
 
 private const val TAG = "Web"
 
-class Web {
+class Server {
 
   private val gson = GsonBuilder()
     .setLenient()
@@ -31,7 +31,7 @@ class Web {
     .addConverterFactory(GsonConverterFactory.create(gson))
     .client(client)
     .build()
-  private lateinit var webApi: WebApi
+  private lateinit var serverApi: ServerApi
   private val headers = HashMap<String, String>()
 
 
@@ -42,8 +42,8 @@ class Web {
   }
 
   fun registerUser (user: User, onResult: (String?, Boolean) -> Unit) {
-    webApi = retrofit.create(WebApi::class.java)
-    webApi.register(headers, user).enqueue(
+    serverApi = retrofit.create(ServerApi::class.java)
+    serverApi.register(headers, user).enqueue(
       object : Callback<String> {
         override fun onFailure(call: Call<String>, t: Throwable) {
           Log.d (TAG, "register.onFailure: ${t.message}, $t")
