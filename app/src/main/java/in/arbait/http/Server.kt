@@ -4,6 +4,7 @@ import android.util.Log
 import com.google.gson.GsonBuilder
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
+import org.json.JSONObject
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
@@ -11,8 +12,7 @@ import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import retrofit2.converter.scalars.ScalarsConverterFactory
 
-
-private const val TAG = "Web"
+private const val TAG = "Server"
 
 class Server {
 
@@ -41,21 +41,29 @@ class Server {
     headers["X-Authorization"] = "access_token"
   }
 
-  fun registerUser (user: User, onResult: (String?, Boolean) -> Unit) {
+  fun registerUser (user: User, onResult: (`in`.arbait.http.Response) -> Unit) {
     serverApi = retrofit.create(ServerApi::class.java)
     serverApi.register(headers, user).enqueue(
       object : Callback<String> {
+        private lateinit var response: `in`.arbait.http.Response
+
         override fun onFailure(call: Call<String>, t: Throwable) {
           Log.d (TAG, "register.onFailure: ${t.message}, $t")
-          onResult(t.message, true)
+          response = Response(t)
+          onResult(response)
         }
         override fun onResponse(call: Call<String>, response: Response<String>) {
           if (response.isSuccessful) {
-            onResult(response.body(), false)
+            this.response = Response(response)
           }
           else {
-            onResult(response.errorBody().toString(), true)
+            response.errorBody()?.let {
+              val str = it.string()
+              it.close()
+              this.response = Response(str)
+            }
           }
+          onResult(this.response)
         }
       }
     )

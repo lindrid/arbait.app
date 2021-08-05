@@ -1,7 +1,6 @@
 package `in`.arbait
 
-import `in`.arbait.http.User
-import `in`.arbait.http.Server
+import `in`.arbait.http.*
 import android.os.Bundle
 import android.telephony.PhoneNumberFormattingTextWatcher
 import android.util.Log
@@ -12,6 +11,7 @@ import android.widget.Button
 import android.widget.EditText
 import android.widget.TextView
 import androidx.fragment.app.Fragment
+import org.json.JSONObject
 
 private const val TAG = "RegistrationFragment"
 
@@ -61,6 +61,13 @@ class RegistrationFragment : Fragment() {
       registerUser()
     }
 
+    etFirstName.setText("Дмитрий")
+    etLastName.setText("Федоров")
+    etBirthdate.setText("08.06-1987")
+    etPhone.setText("89240078897")
+    etPhoneWhatsapp.setText("89240078897")
+    etPassword.setText("12345")
+
     return view
   }
 
@@ -78,16 +85,19 @@ class RegistrationFragment : Fragment() {
 
     Log.i (TAG, "User = ${user.toString()}")
 
-    server.registerUser(user) { result: String?, error: Boolean ->
-      onResult(result, error)
+    server.registerUser(user) { response: Response ->
+      onResult(response)
     }
   }
 
-  private fun onResult (result: String?, error: Boolean) {
-    if (!error) {
-      Log.i (TAG,"Все ок, сервер вернул: $result")
-    } else {
-      Log.i (TAG,"Регистрация не прошла, error is $result")
+  private fun onResult (response: Response) {
+    when (response.code) {
+      SERVER_OK -> {
+        Log.i (TAG,"Все ок, сервер вернул: ${response.message}")
+      }
+      else -> {
+        Log.i (TAG,"Регистрация не прошла, error is ${response.message}")
+      }
     }
   }
 
