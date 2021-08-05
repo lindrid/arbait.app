@@ -62,31 +62,41 @@ class RegistrationFragment : Fragment() {
     btSamePhone.setOnClickListener(setPhoneWaEqualsToPhone)
 
     btDone.setOnClickListener {
-      val birthdate = SimpleDateFormat("dd.MM.yyyy").parse(etBirthdate.text.toString())
-      val user = User (
-        id = null,
-        firstName = etFirstName.text.toString(),
-        lastName = etLastName.text.toString(),
-        birthdate = birthdate,
-        phone = etPhone.text.toString(),
-        phoneWa = etPhoneWhatsapp.text.toString(),
-        password = etPassword.text.toString()
-      )
-
-      Log.i (TAG, "User = ${user.toString()}")
-      web.registerUser(user) {
-        val toast: Toast = if (it != null) {
-          Toast.makeText(requireContext(), "Все ок, сервер вернул: $it",
-            Toast.LENGTH_SHORT)
-        } else {
-          Toast.makeText(requireContext(), "Регистрация не прошла", Toast.LENGTH_SHORT)
-        }
-
-        toast.show()
-      }
+      registerUser()
     }
 
     return view
+  }
+
+
+  private fun registerUser() {
+    val user = User (
+      id = null,
+      firstName = etFirstName.text.toString(),
+      lastName = etLastName.text.toString(),
+      birthdate = etBirthdate.text.toString(),
+      phone = etPhone.text.toString(),
+      phoneWa = etPhoneWhatsapp.text.toString(),
+      password = etPassword.text.toString()
+    )
+
+    Log.i (TAG, "User = ${user.toString()}")
+
+    web.registerUser(user) { result: String?, error: Boolean ->
+      onRegisterUserResult(result, error)
+    }
+  }
+
+  private fun onRegisterUserResult (result: String?, error: Boolean) {
+    val toast: Toast = if (!error) {
+      Toast.makeText(requireContext(), "Все ок, сервер вернул: $result",
+        Toast.LENGTH_SHORT)
+    } else {
+      Toast.makeText(requireContext(), "Регистрация не прошла, error is $result",
+        Toast.LENGTH_SHORT)
+    }
+
+    toast.show()
   }
 
 }

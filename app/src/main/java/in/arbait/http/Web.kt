@@ -9,6 +9,7 @@ import retrofit2.Callback
 import retrofit2.Response
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
+import retrofit2.converter.scalars.ScalarsConverterFactory
 
 
 private const val TAG = "Web"
@@ -19,28 +20,42 @@ class Web {
     .setLenient()
     .create()
   private val loggingInterceptor = HttpLoggingInterceptor().apply {
-    level = HttpLoggingInterceptor.Level.BASIC
+    level = HttpLoggingInterceptor.Level.BODY
   }
   private val client = OkHttpClient.Builder()
     .addInterceptor(loggingInterceptor)
     .build()
   private val retrofit = Retrofit.Builder()
     .baseUrl(ARBAIT_BASE_URL)
+    .addConverterFactory(ScalarsConverterFactory.create())
     .addConverterFactory(GsonConverterFactory.create(gson))
     .client(client)
     .build()
   private lateinit var webApi: WebApi
+  private val headers = HashMap<String, String>()
 
-  fun registerUser (user: User, onResult: (String?) -> Unit) {
+
+  init {
+    headers["Accept"] = "application/json"
+    headers["Content-Type"] = "application/json"
+    headers["X-Authorization"] = "access_token"
+  }
+
+  fun registerUser (user: User, onResult: (String?, Boolean) -> Unit) {
     webApi = retrofit.create(WebApi::class.java)
-    webApi.register(user).enqueue(
+    webApi.register(headers, user).enqueue(
       object : Callback<String> {
         override fun onFailure(call: Call<String>, t: Throwable) {
           Log.d (TAG, "register.onFailure: ${t.message}, $t")
-          onResult(t.message)
+          onResult(t.message, true)
         }
         override fun onResponse(call: Call<String>, response: Response<String>) {
-          onResult(response.body())
+          if (response.isSuccessful) {
+            onResult(response.body(), false)
+          }
+          else {
+            onResult(response.errorBody().toString(), true)
+          }
         }
       }
     )
