@@ -68,7 +68,7 @@
         android:hint="@string/reg_phone_whatsapp"
         android:inputType="phone"
         android:textSize="20sp"
-        app:layout_constraintBottom_toTopOf="@+id/etp_reg_password"
+        app:layout_constraintBottom_toTopOf="@+id/et_reg_password"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent" />
 
@@ -97,7 +97,7 @@
         app:layout_constraintStart_toStartOf="parent" />
 
     <EditText
-        android:id="@+id/etp_reg_password"
+        android:id="@+id/et_reg_password"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginBottom="32dp"

@@ -48,7 +48,7 @@ class RegistrationFragment : Fragment() {
     etPhone = view.findViewById(R.id.et_reg_phone)
     etPhoneWhatsapp = view.findViewById(R.id.et_reg_phone_whatsapp)
     btSamePhone = view.findViewById(R.id.bt_reg_same_phone)
-    etPassword = view.findViewById(R.id.etp_reg_password)
+    etPassword = view.findViewById(R.id.et_reg_password)
     btDone = view.findViewById(R.id.bt_reg_done)
 
     etPhone.addTextChangedListener(PhoneNumberFormattingTextWatcher())
@@ -96,6 +96,9 @@ class RegistrationFragment : Fragment() {
       }
       else -> {
         Log.i (TAG,"Регистрация не прошла, error is ${response.message}")
+        if (response.isItValidationError) {
+          Log.i (TAG, "Поле: ${response.errorValidationField}")
+        }
       }
     }
   }
