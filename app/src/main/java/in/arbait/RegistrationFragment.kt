@@ -11,7 +11,6 @@ import android.widget.Button
 import android.widget.EditText
 import android.widget.TextView
 import androidx.fragment.app.Fragment
-import org.json.JSONObject
 
 private const val TAG = "RegistrationFragment"
 
@@ -22,7 +21,7 @@ class RegistrationFragment : Fragment() {
   private lateinit var tvRegistration: TextView
   private lateinit var etFirstName: EditText
   private lateinit var etLastName: EditText
-  private lateinit var etBirthdate: EditText
+  private lateinit var etBirthDate: EditText
   private lateinit var etPhone: EditText
   private lateinit var etPhoneWhatsapp: EditText
   private lateinit var btSamePhone: Button
@@ -45,7 +44,7 @@ class RegistrationFragment : Fragment() {
 
     etFirstName = view.findViewById(R.id.et_reg_first_name)
     etLastName = view.findViewById(R.id.et_reg_last_name)
-    etBirthdate = view.findViewById(R.id.et_reg_birthdate)
+    etBirthDate = view.findViewById(R.id.et_reg_birth_date)
     etPhone = view.findViewById(R.id.et_reg_phone)
     etPhoneWhatsapp = view.findViewById(R.id.et_reg_phone_whatsapp)
     btSamePhone = view.findViewById(R.id.bt_reg_same_phone)
@@ -63,7 +62,7 @@ class RegistrationFragment : Fragment() {
 
     etFirstName.setText("Дмитрий")
     etLastName.setText("Федоров")
-    etBirthdate.setText("08.06-1987")
+    etBirthDate.setText("08.06-1987")
     etPhone.setText("89240078897")
     etPhoneWhatsapp.setText("89240078897")
     etPassword.setText("12345")
@@ -77,7 +76,7 @@ class RegistrationFragment : Fragment() {
       id = null,
       firstName = etFirstName.text.toString(),
       lastName = etLastName.text.toString(),
-      birthdate = etBirthdate.text.toString(),
+      birthDate = etBirthDate.text.toString(),
       phone = etPhone.text.toString(),
       phoneWa = etPhoneWhatsapp.text.toString(),
       password = etPassword.text.toString()

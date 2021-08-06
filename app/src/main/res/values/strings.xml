@@ -10,5 +10,5 @@
     <string name="reg_age">Возраст (полных лет)</string>
     <string name="reg_done">Готово</string>
     <string name="reg_password">Пароль</string>
-    <string name="reg_birthdate">Дата рождения</string>
+    <string name="reg_birth_date">Дата рождения</string>
 </resources>
