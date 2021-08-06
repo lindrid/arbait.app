@@ -10,5 +10,5 @@ data class User (
   @SerializedName("birth_date") val birthDate: String?,
   @SerializedName("phone") val phone: String?,
   @SerializedName("phone_wa") val phoneWa: String?,
-  @SerializedName("password") val password: String?
+  @SerializedName("password") val password: String?,
 )

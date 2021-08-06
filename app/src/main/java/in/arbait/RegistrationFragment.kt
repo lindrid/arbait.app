@@ -1,6 +1,8 @@
 package `in`.arbait
 
 import `in`.arbait.http.*
+import android.graphics.Color
+import android.graphics.Color.red
 import android.os.Bundle
 import android.telephony.PhoneNumberFormattingTextWatcher
 import android.util.Log
@@ -10,9 +12,25 @@ import android.view.ViewGroup
 import android.widget.Button
 import android.widget.EditText
 import android.widget.TextView
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
+import com.skydoves.balloon.Balloon
+import com.skydoves.balloon.BalloonAnimation
+import com.skydoves.balloon.BalloonSizeSpec
+import com.skydoves.balloon.createBalloon
+import java.text.DateFormat
+import java.text.ParseException
+import java.text.SimpleDateFormat
+import java.util.*
+import java.util.Calendar.*
 
 private const val TAG = "RegistrationFragment"
+
+private const val DATE_FORMAT1 = "dd.MM.yyyy"
+private const val DATE_FORMAT2 = "dd-MM-yyyy"
+private const val DATE_FORMAT3 = "dd/MM/yyyy"
+private const val WORKER_AGE_FROM = 18
+private const val WORKER_AGE_UP_TO = 65
 
 class RegistrationFragment : Fragment() {
 
@@ -27,6 +45,9 @@ class RegistrationFragment : Fragment() {
   private lateinit var btSamePhone: Button
   private lateinit var etPassword: EditText
   private lateinit var btDone: Button
+
+  private lateinit var balloon: Balloon
+  private lateinit var userBirthDate: Date
 
   private val setPhoneWaEqualsToPhone = { _: View ->
     etPhoneWhatsapp.text = etPhone.text
@@ -57,36 +78,47 @@ class RegistrationFragment : Fragment() {
     btSamePhone.setOnClickListener(setPhoneWaEqualsToPhone)
 
     btDone.setOnClickListener {
-      registerUser()
+      val user = User (
+        id = null,
+        firstName = etFirstName.text.toString(),
+        lastName = etLastName.text.toString(),
+        birthDate = etBirthDate.text.toString(),
+        phone = etPhone.text.toString(),
+        phoneWa = etPhoneWhatsapp.text.toString(),
+        password = etPassword.text.toString()
+      )
+      Log.i (TAG, "User = ${user.toString()}")
+
+      if (isInputValid(user)) {
+        server.registerUser(user) { response: Response ->
+          onResult(response)
+        }
+      }
+    }
+
+    balloon = createBalloon(requireContext()) {
+      setArrowSize(10)
+      setWidth(BalloonSizeSpec.WRAP)
+      setHeight(65)
+      setArrowPosition(0.7f)
+      setCornerRadius(4f)
+      setAlpha(0.9f)
+      setText("You can access your profile from now on.")
+      setTextColorResource(R.color.white)
+      setTextIsHtml(true)
+      setBackgroundColor(Color.RED)
+      setBalloonAnimation(BalloonAnimation.FADE)
+      setLifecycleOwner(lifecycleOwner)
     }
 
     etFirstName.setText("Дмитрий")
     etLastName.setText("Федоров")
-    etBirthDate.setText("08.06-1987")
+    etBirthDate.setText("08.06.1987")
     etPhone.setText("89240078897")
     etPhoneWhatsapp.setText("89240078897")
     etPassword.setText("12345")
 
     return view
-  }
-
-
-  private fun registerUser() {
-    val user = User (
-      id = null,
-      firstName = etFirstName.text.toString(),
-      lastName = etLastName.text.toString(),
-      birthDate = etBirthDate.text.toString(),
-      phone = etPhone.text.toString(),
-      phoneWa = etPhoneWhatsapp.text.toString(),
-      password = etPassword.text.toString()
-    )
-
-    Log.i (TAG, "User = ${user.toString()}")
-
-    server.registerUser(user) { response: Response ->
-      onResult(response)
-    }
   }
 
   private fun onResult (response: Response) {
@@ -103,4 +135,68 @@ class RegistrationFragment : Fragment() {
     }
   }
 
+  private fun isInputValid(user: User): Boolean {
+
+    user.birthDate?.let {
+      return if (isValidDate(it)) {
+        val currentTime = Calendar.getInstance().time
+        val age = getDiffYears(userBirthDate, currentTime)
+
+        Log.i (TAG, "Age is $age")
+
+        if (age in 18..60) {
+          Log.i(TAG, "$it is valid date, $userBirthDate")
+          true
+        }
+        else {
+          Log.i(TAG, "У нас принимаются работники от 18 до 60 лет, $userBirthDate")
+          false
+        }
+      }
+      else {
+        Log.i(TAG, "$it is invalid date, $userBirthDate")
+        false
+      }
+    }
+
+    return false
+  }
+
+  private fun isValidDate (date: String): Boolean {
+    return  parseDate(date, DATE_FORMAT1) ||
+            parseDate(date, DATE_FORMAT2) ||
+            parseDate(date, DATE_FORMAT3)
+  }
+
+  private fun parseDate (date: String, dateFormat: String): Boolean {
+    val sdf: DateFormat = SimpleDateFormat(dateFormat)
+    sdf.isLenient = false
+    try {
+      val d = sdf.parse(date)
+      d?.let {
+        userBirthDate = d
+      }
+    }
+    catch (e: ParseException) {
+      return false
+    }
+    return true
+  }
+
+  private fun getDiffYears (first: Date?, last: Date?): Int {
+    val a = getCalendar(first)
+    val b = getCalendar(last)
+    var diff = b[YEAR] - a[YEAR]
+    if (a[MONTH] > b[MONTH] || a[MONTH] == b[MONTH] && a[DATE] > b[DATE]) {
+      diff--
+    }
+
+    return diff
+  }
+
+  private fun getCalendar (date: Date?): Calendar {
+    val cal = Calendar.getInstance()
+    cal.time = date!!
+    return cal
+  }
 }
