@@ -1,11 +1,11 @@
 package `in`.arbait.http
 
-import android.util.Log
 import okhttp3.ResponseBody
 import org.json.JSONObject
 import retrofit2.Response
 
 private const val TAG = "http.Response"
+private const val ROOT_VALIDATION_ERROR_JSON_STR = "errors"
 
 const val SYSTEM_ERROR = 0
 const val SERVER_OK = 1
@@ -19,16 +19,32 @@ class Response {
   var message: String? = null
     private set
 
+  var isItValidationError = false
+    private set
+
+  var errorValidationField = ""
+    private set
+
+
   constructor (response: Response<String>) {
     code = SERVER_OK
     message = response.body()
   }
 
-  constructor (error: String){
+  constructor (errorBody: ResponseBody) {
     code = SERVER_ERROR
-    val obj = JSONObject(error)
-    if (isItValidationError(obj)) {
-      message = getErrorMsg(obj)
+
+    errorBody?.let {
+      val obj = JSONObject(it.string())
+      it.close()
+      isItValidationError = obj.has(ROOT_VALIDATION_ERROR_JSON_STR)
+      if (isItValidationError) {
+        val pair = getErrorFieldAndMsg(obj)
+        pair?.let {
+          errorValidationField = pair.first
+          message = pair.second
+        }
+      }
     }
   }
 
@@ -37,18 +53,17 @@ class Response {
     message = t.message
   }
 
-  private fun isItValidationError (obj: JSONObject): Boolean {
-    return obj.has("errors")
-  }
 
-  private fun getErrorMsg (obj: JSONObject): String? {
+  private fun getErrorFieldAndMsg (obj: JSONObject): Pair<String, String>? {
     val errors = obj.getJSONObject("errors")
-    val keys = errors.names()
+    val fields = errors.names()
 
-    if (keys.length() > 0) {
-      val key = keys.getString(0)     // Here's your key
-      val str = errors.getString(key)       // Here's your value
-      return str.substring(1, str.length-2) // убираем скобки [] - в начале и в конце
+    if (fields.length() > 0) {
+      val field = fields.getString(0)
+      var msg = errors.getString(field)
+      msg = msg.substring(1, msg.length-2) // убираем скобки [] - в начале и в конце
+
+      return Pair(field, msg)
     }
 
     return null

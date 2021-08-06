@@ -58,9 +58,7 @@ class Server {
           }
           else {
             response.errorBody()?.let {
-              val str = it.string()
-              it.close()
-              this.response = Response(str)
+              this.response = Response(it)
             }
           }
           onResult(this.response)
