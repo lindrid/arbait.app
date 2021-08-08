@@ -11,4 +11,6 @@
     <string name="reg_done">Готово</string>
     <string name="reg_password">Пароль</string>
     <string name="reg_birth_date">Дата рождения</string>
+    <string name="reg_dialog_cancel">Отмена</string>
+    <string name="reg_dialog_ok">OK</string>
 </resources>

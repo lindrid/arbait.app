@@ -48,6 +48,7 @@ class RegistrationFragment : Fragment() {
 
   private lateinit var balloon: Balloon
   private lateinit var userBirthDate: Date
+  private lateinit var birthDateFragmentDialog: BirthDateFragmentDialog
 
   private val setPhoneWaEqualsToPhone = { _: View ->
     etPhoneWhatsapp.text = etPhone.text
@@ -96,20 +97,26 @@ class RegistrationFragment : Fragment() {
       }
     }
 
-    balloon = createBalloon(requireContext()) {
-      setArrowSize(10)
-      setWidth(BalloonSizeSpec.WRAP)
-      setHeight(65)
-      setArrowPosition(0.7f)
-      setCornerRadius(4f)
-      setAlpha(0.9f)
-      setText("You can access your profile from now on.")
-      setTextColorResource(R.color.white)
-      setTextIsHtml(true)
-      setBackgroundColor(Color.RED)
-      setBalloonAnimation(BalloonAnimation.FADE)
-      setLifecycleOwner(lifecycleOwner)
+    Log.i (TAG, "manufacturer is $MANUFACTURER")
+    Log.i (TAG, "Android version is $VERSION")
+
+    if (isSamsung() && versionIsNineOrGreater()) {
+      Log.i (TAG, "Manufacturer is samsung and version >= 9")
+      birthDateFragmentDialog = BirthDateFragmentDialog()
+
+      etBirthDate.setOnClickListener {
+        birthDateFragmentDialog.show(requireActivity().supportFragmentManager,
+          "BirthDateFragmentDialog")
+      }
+
+      etBirthDate.setOnFocusChangeListener { view, hasFocus ->
+        if (hasFocus) {
+          birthDateFragmentDialog.show(requireActivity().supportFragmentManager,
+            "BirthDateFragmentDialog")
+        }
+      }
     }
+
 
     etFirstName.setText("Дмитрий")
     etLastName.setText("Федоров")
@@ -136,27 +143,47 @@ class RegistrationFragment : Fragment() {
   }
 
   private fun isInputValid(user: User): Boolean {
+    if (user.birthDate == null) {
+      Log.i (TAG, "Укажите дату рождения!")
 
-    user.birthDate?.let {
-      return if (isValidDate(it)) {
-        val currentTime = Calendar.getInstance().time
-        val age = getDiffYears(userBirthDate, currentTime)
+      balloon = createBalloon(requireContext()) {
+        setArrowSize(10)
+        setWidth(BalloonSizeSpec.WRAP)
+        setHeight(65)
+        setArrowPosition(0.7f)
+        setCornerRadius(4f)
+        setAlpha(0.9f)
+        setText("Укажите дату рождения! Пример правильной даты: 01.12.2000")
+        setTextColorResource(R.color.white)
+        setTextIsHtml(true)
+        setBackgroundColor(Color.RED)
+        setBalloonAnimation(BalloonAnimation.FADE)
+        setLifecycleOwner(lifecycleOwner)
+      }
 
-        Log.i (TAG, "Age is $age")
+      balloon.showAlignBottom(etBirthDate)
+      return false
+    }
 
-        if (age in 18..60) {
-          Log.i(TAG, "$it is valid date, $userBirthDate")
-          true
-        }
-        else {
-          Log.i(TAG, "У нас принимаются работники от 18 до 60 лет, $userBirthDate")
-          false
-        }
+    return if (isValidDate(user.birthDate)) {
+      val currentTime = Calendar.getInstance().time
+      val age = getDiffYears(userBirthDate, currentTime)
+
+      Log.i (TAG, "Age is $age")
+
+      if (age in WORKER_AGE_FROM..WORKER_AGE_UP_TO) {
+        Log.i (TAG, "${user.birthDate} is valid date, $userBirthDate")
+        true
       }
       else {
-        Log.i(TAG, "$it is invalid date, $userBirthDate")
+        Log.i (TAG, "У нас принимаются работники от $WORKER_AGE_FROM до" +
+            "$WORKER_AGE_UP_TO лет, $userBirthDate")
         false
       }
+    }
+    else {
+      Log.i (TAG, "${user.birthDate} is invalid date, $userBirthDate")
+      false
     }
 
     return false
