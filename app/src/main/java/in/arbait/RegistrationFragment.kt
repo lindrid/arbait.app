@@ -2,7 +2,6 @@ package `in`.arbait
 
 import `in`.arbait.http.*
 import android.graphics.Color
-import android.graphics.Color.red
 import android.os.Bundle
 import android.telephony.PhoneNumberFormattingTextWatcher
 import android.util.Log
@@ -12,20 +11,16 @@ import android.view.ViewGroup
 import android.widget.Button
 import android.widget.EditText
 import android.widget.TextView
-import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import com.skydoves.balloon.Balloon
 import com.skydoves.balloon.BalloonAnimation
 import com.skydoves.balloon.BalloonSizeSpec
 import com.skydoves.balloon.createBalloon
-import java.text.DateFormat
-import java.text.ParseException
-import java.text.SimpleDateFormat
 import java.util.*
-import java.util.Calendar.*
 
 private const val TAG = "RegistrationFragment"
 
+private const val DEFAULT_BIRTH_DATE = "01.02.1995"
 private const val DATE_FORMAT1 = "dd.MM.yyyy"
 private const val DATE_FORMAT2 = "dd-MM-yyyy"
 private const val DATE_FORMAT3 = "dd/MM/yyyy"
@@ -97,33 +92,35 @@ class RegistrationFragment : Fragment() {
       }
     }
 
+    etFirstName.setText("Дмитрий")
+    etLastName.setText("Федоров")
+    etBirthDate.setText("")
+    etPhone.setText("89240078897")
+    etPhoneWhatsapp.setText("89240078897")
+    etPassword.setText("12345")
+
     Log.i (TAG, "manufacturer is $MANUFACTURER")
     Log.i (TAG, "Android version is $VERSION")
 
     if (isSamsung() && versionIsNineOrGreater()) {
       Log.i (TAG, "Manufacturer is samsung and version >= 9")
-      birthDateFragmentDialog = BirthDateFragmentDialog()
 
       etBirthDate.setOnClickListener {
+        val date = getValidBirthDateForSamsung9()
+        birthDateFragmentDialog = BirthDateFragmentDialog.newInstance(date)
         birthDateFragmentDialog.show(requireActivity().supportFragmentManager,
           "BirthDateFragmentDialog")
       }
 
       etBirthDate.setOnFocusChangeListener { view, hasFocus ->
         if (hasFocus) {
+          val date = getValidBirthDateForSamsung9()
+          birthDateFragmentDialog = BirthDateFragmentDialog.newInstance(date)
           birthDateFragmentDialog.show(requireActivity().supportFragmentManager,
             "BirthDateFragmentDialog")
         }
       }
     }
-
-
-    etFirstName.setText("Дмитрий")
-    etLastName.setText("Федоров")
-    etBirthDate.setText("08.06.1987")
-    etPhone.setText("89240078897")
-    etPhoneWhatsapp.setText("89240078897")
-    etPassword.setText("12345")
 
     return view
   }
@@ -143,7 +140,7 @@ class RegistrationFragment : Fragment() {
   }
 
   private fun isInputValid(user: User): Boolean {
-    if (user.birthDate == null) {
+    if (user.birthDate.isNullOrEmpty()) {
       Log.i (TAG, "Укажите дату рождения!")
 
       balloon = createBalloon(requireContext()) {
@@ -153,7 +150,7 @@ class RegistrationFragment : Fragment() {
         setArrowPosition(0.7f)
         setCornerRadius(4f)
         setAlpha(0.9f)
-        setText("Укажите дату рождения! Пример правильной даты: 01.12.2000")
+        setText("Укажите дату рождения! Пример правильной даты: 01.02.1995")
         setTextColorResource(R.color.white)
         setTextIsHtml(true)
         setBackgroundColor(Color.RED)
@@ -189,41 +186,28 @@ class RegistrationFragment : Fragment() {
     return false
   }
 
-  private fun isValidDate (date: String): Boolean {
-    return  parseDate(date, DATE_FORMAT1) ||
-            parseDate(date, DATE_FORMAT2) ||
-            parseDate(date, DATE_FORMAT3)
-  }
-
-  private fun parseDate (date: String, dateFormat: String): Boolean {
-    val sdf: DateFormat = SimpleDateFormat(dateFormat)
-    sdf.isLenient = false
-    try {
-      val d = sdf.parse(date)
-      d?.let {
-        userBirthDate = d
-      }
-    }
-    catch (e: ParseException) {
-      return false
-    }
-    return true
-  }
-
-  private fun getDiffYears (first: Date?, last: Date?): Int {
-    val a = getCalendar(first)
-    val b = getCalendar(last)
-    var diff = b[YEAR] - a[YEAR]
-    if (a[MONTH] > b[MONTH] || a[MONTH] == b[MONTH] && a[DATE] > b[DATE]) {
-      diff--
+  private fun getValidBirthDateForSamsung9(): Date {
+    val dateStr = etBirthDate.text.toString()
+    val date = strToDate(dateStr, DATE_FORMAT1)
+    if (date != null) {
+      return date
     }
 
-    return diff
+    return strToDate(DEFAULT_BIRTH_DATE, DATE_FORMAT1)!!
   }
 
-  private fun getCalendar (date: Date?): Calendar {
-    val cal = Calendar.getInstance()
-    cal.time = date!!
-    return cal
+  private fun isValidDate (dateStr: String): Boolean {
+    return  isValidFormatDate(dateStr, DATE_FORMAT1) ||
+            isValidFormatDate(dateStr, DATE_FORMAT2) ||
+            isValidFormatDate(dateStr, DATE_FORMAT3)
+  }
+
+  private fun isValidFormatDate (dateStr: String, format: String): Boolean {
+    val date = strToDate(dateStr, format)
+    if (date != null) {
+      userBirthDate = date
+      return true
+    }
+    return false
   }
 }
