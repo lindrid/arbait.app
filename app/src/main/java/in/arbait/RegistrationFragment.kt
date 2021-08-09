@@ -12,13 +12,17 @@ import android.widget.Button
 import android.widget.EditText
 import android.widget.TextView
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.FragmentManager
 import com.skydoves.balloon.Balloon
 import com.skydoves.balloon.BalloonAnimation
 import com.skydoves.balloon.BalloonSizeSpec
 import com.skydoves.balloon.createBalloon
 import java.util.*
 
+const val BIRTH_DATE_KEY = "birthDate"
+
 private const val TAG = "RegistrationFragment"
+private const val BIRTH_DATE_DIALOG_TAG = "BirthDateFragmentDialog"
 
 private const val DEFAULT_BIRTH_DATE = "01.02.1995"
 private const val DATE_FORMAT1 = "dd.MM.yyyy"
@@ -45,6 +49,8 @@ class RegistrationFragment : Fragment() {
   private lateinit var userBirthDate: Date
   private lateinit var birthDateFragmentDialog: BirthDateFragmentDialog
 
+  private lateinit var supportFragmentManager: FragmentManager
+
   private val setPhoneWaEqualsToPhone = { _: View ->
     etPhoneWhatsapp.text = etPhone.text
   }
@@ -56,6 +62,7 @@ class RegistrationFragment : Fragment() {
     savedInstanceState: Bundle?
   ): View? {
     val view = inflater.inflate(R.layout.fragment_registration, container, false)
+    supportFragmentManager = requireActivity().supportFragmentManager
 
     tvRegistration = view.findViewById(R.id.tv_reg_registration)
 
@@ -100,29 +107,49 @@ class RegistrationFragment : Fragment() {
     etPassword.setText("12345")
 
     Log.i (TAG, "manufacturer is $MANUFACTURER")
-    Log.i (TAG, "Android version is $VERSION")
+    Log.i (TAG, "Android v ersion is $VERSION")
 
     if (isSamsung() && versionIsNineOrGreater()) {
-      Log.i (TAG, "Manufacturer is samsung and version >= 9")
+      Log.i(TAG, "Manufacturer is samsung and version >= 9")
+
+      setBirthDateEditTextWhenDialogResult()
 
       etBirthDate.setOnClickListener {
-        val date = getValidBirthDateForSamsung9()
-        birthDateFragmentDialog = BirthDateFragmentDialog.newInstance(date)
-        birthDateFragmentDialog.show(requireActivity().supportFragmentManager,
-          "BirthDateFragmentDialog")
+        createBirthDateDialog()
       }
 
       etBirthDate.setOnFocusChangeListener { view, hasFocus ->
         if (hasFocus) {
-          val date = getValidBirthDateForSamsung9()
-          birthDateFragmentDialog = BirthDateFragmentDialog.newInstance(date)
-          birthDateFragmentDialog.show(requireActivity().supportFragmentManager,
-            "BirthDateFragmentDialog")
+          createBirthDateDialog()
         }
       }
     }
 
     return view
+  }
+
+
+  private fun setBirthDateEditTextWhenDialogResult() {
+    supportFragmentManager.setFragmentResultListener(BIRTH_DATE_KEY, viewLifecycleOwner)
+    { _, bundle ->
+      etBirthDate.setText(bundle.getString(BIRTH_DATE_KEY))
+    }
+  }
+
+  private fun createBirthDateDialog() {
+    val date = getValidBirthDateForSamsung9()
+    birthDateFragmentDialog = BirthDateFragmentDialog.newInstance(date)
+    birthDateFragmentDialog.show(supportFragmentManager, BIRTH_DATE_DIALOG_TAG)
+  }
+
+  private fun getValidBirthDateForSamsung9(): Date {
+    val dateStr = etBirthDate.text.toString()
+    val date = strToDate(dateStr, DATE_FORMAT1)
+    if (date != null) {
+      return date
+    }
+
+    return strToDate(DEFAULT_BIRTH_DATE, DATE_FORMAT1)!!
   }
 
   private fun onResult (response: Response) {
@@ -184,16 +211,6 @@ class RegistrationFragment : Fragment() {
     }
 
     return false
-  }
-
-  private fun getValidBirthDateForSamsung9(): Date {
-    val dateStr = etBirthDate.text.toString()
-    val date = strToDate(dateStr, DATE_FORMAT1)
-    if (date != null) {
-      return date
-    }
-
-    return strToDate(DEFAULT_BIRTH_DATE, DATE_FORMAT1)!!
   }
 
   private fun isValidDate (dateStr: String): Boolean {
