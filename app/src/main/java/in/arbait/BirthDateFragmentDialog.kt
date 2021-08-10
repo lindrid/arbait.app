@@ -25,7 +25,7 @@ class BirthDateFragmentDialog: DialogFragment(), View.OnClickListener {
     val view = inflater.inflate(R.layout.fragment_dialog_birth_date, container, false)
     view.findViewById<Button>(R.id.bt_reg_dialog_ok).setOnClickListener(this)
     view.findViewById<Button>(R.id.bt_reg_dialog_cancel).setOnClickListener(this)
-    datePicker = view.findViewById<DatePicker>(R.id.dp_reg_dialog_birth_date)
+    datePicker = view.findViewById(R.id.dp_reg_dialog_birth_date)
 
     val date = arguments?.getSerializable(ARG_DATE) as Date
     val calendar = getCalendar(date)

@@ -13,4 +13,11 @@
     <string name="reg_birth_date">Дата рождения</string>
     <string name="reg_dialog_cancel">Отмена</string>
     <string name="reg_dialog_ok">OK</string>
+    <string name="reg_empty_birth_date">Укажите дату рождения! Пример правильной даты: 15.06.1995</string>
+    <string name="reg_wrong_birth_date">Неправильная дата рождения! Пример правильной даты: 15.06.1995</string>
+    <string name="reg_wrong_age">Мы принимаем работников от %1$d до %2$d лет!</string>
+    <string name="reg_server_validation_error">Сервер вернул: %1$s, %2$s</string>
+    <string name="internet_is_not_available">Соединение с интернетом отсутствует!</string>
+    <string name="system_error">Произошла системная ошибка: %1$s</string>
+    <string name="reg_invalid_password_length">Длина пароля должна быть не меньше %1$d символов и не больше %2$d</string>
 </resources>

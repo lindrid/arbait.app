@@ -1,8 +1,17 @@
 package `in`.arbait
 
+import android.content.Context
+import android.content.res.ColorStateList
+import android.graphics.Color
 import android.os.Build
 
 import android.util.Log
+import android.view.View
+import android.widget.EditText
+import com.skydoves.balloon.BalloonAnimation
+import com.skydoves.balloon.BalloonSizeSpec
+import com.skydoves.balloon.createBalloon
+import java.io.IOException
 import java.text.DateFormat
 import java.text.ParseException
 import java.text.SimpleDateFormat
@@ -12,6 +21,67 @@ private const val TAG = "Utils"
 
 val MANUFACTURER: String = Build.MANUFACTURER
 val VERSION: String = Build.VERSION.RELEASE
+
+@Throws(InterruptedException::class, IOException::class)
+fun isInternetAvailable(): Boolean {
+  val command = "ping -c 1 google.com"
+  return Runtime.getRuntime().exec(command).waitFor() == 0
+}
+
+
+fun setUnderlineColor (editText: EditText, colorInt: Int) {
+  editText.backgroundTintList = ColorStateList.valueOf(colorInt)
+}
+
+fun showValidationError (context: Context, field: EditText, textResource: Int) {
+  setUnderlineColor(field, Color.RED)
+  showErrorBalloon(context, field, textResource)
+}
+
+fun showValidationError (context: Context, field: EditText, text: String) {
+  setUnderlineColor(field, Color.RED)
+  showErrorBalloon(context, field, text)
+}
+
+fun showErrorBalloon (context: Context, whereToShow: View, textResource: Int) {
+  val balloon = createBalloon(context) {
+    setArrowSize(10)
+    setWidth(BalloonSizeSpec.WRAP)
+    setHeight(65)
+    setArrowPosition(0.7f)
+    setCornerRadius(4f)
+    setAlpha(0.9f)
+    setTextResource(textResource)
+    setTextSize(18f)
+    setTextColorResource(R.color.white)
+    setTextIsHtml(true)
+    setBackgroundColor(Color.RED)
+    setBalloonAnimation(BalloonAnimation.FADE)
+    setLifecycleOwner(lifecycleOwner)
+  }
+
+  balloon.showAlignBottom(whereToShow)
+}
+
+fun showErrorBalloon(context: Context, whereToShow: View, text: String) {
+  val balloon = createBalloon(context) {
+    setArrowSize(10)
+    setWidth(BalloonSizeSpec.WRAP)
+    setHeight(65)
+    setArrowPosition(0.7f)
+    setCornerRadius(4f)
+    setAlpha(0.9f)
+    setText(text)
+    setTextSize(18f)
+    setTextColorResource(R.color.white)
+    setTextIsHtml(true)
+    setBackgroundColor(Color.RED)
+    setBalloonAnimation(BalloonAnimation.FADE)
+    setLifecycleOwner(lifecycleOwner)
+  }
+
+  balloon.showAlignBottom(whereToShow)
+}
 
 fun isSamsung(): Boolean {
   if (MANUFACTURER.indexOf("samsung") != -1 ||

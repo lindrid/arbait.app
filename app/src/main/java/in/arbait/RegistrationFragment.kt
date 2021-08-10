@@ -1,6 +1,7 @@
 package `in`.arbait
 
 import `in`.arbait.http.*
+import android.content.res.ColorStateList
 import android.graphics.Color
 import android.os.Bundle
 import android.telephony.PhoneNumberFormattingTextWatcher
@@ -13,10 +14,6 @@ import android.widget.EditText
 import android.widget.TextView
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
-import com.skydoves.balloon.Balloon
-import com.skydoves.balloon.BalloonAnimation
-import com.skydoves.balloon.BalloonSizeSpec
-import com.skydoves.balloon.createBalloon
 import java.util.*
 
 const val BIRTH_DATE_KEY = "birthDate"
@@ -24,17 +21,24 @@ const val BIRTH_DATE_KEY = "birthDate"
 private const val TAG = "RegistrationFragment"
 private const val BIRTH_DATE_DIALOG_TAG = "BirthDateFragmentDialog"
 
-private const val DEFAULT_BIRTH_DATE = "01.02.1995"
+private const val DEFAULT_BIRTH_DATE = "15.06.1995"
 private const val DATE_FORMAT1 = "dd.MM.yyyy"
 private const val DATE_FORMAT2 = "dd-MM-yyyy"
 private const val DATE_FORMAT3 = "dd/MM/yyyy"
 private const val WORKER_AGE_FROM = 18
 private const val WORKER_AGE_UP_TO = 65
 
+private const val PASSWORD_MIN_LENGTH = 5
+private const val PASSWORD_MAX_LENGTH = 25
+
+private val DEFAULT_EDITTEXT_EMERALD_COLOR = Color.parseColor("#02dac5")
+
+
 class RegistrationFragment : Fragment() {
 
   private val server = Server()
 
+  private lateinit var rootView: View
   private lateinit var tvRegistration: TextView
   private lateinit var etFirstName: EditText
   private lateinit var etLastName: EditText
@@ -45,11 +49,11 @@ class RegistrationFragment : Fragment() {
   private lateinit var etPassword: EditText
   private lateinit var btDone: Button
 
-  private lateinit var balloon: Balloon
-  private lateinit var userBirthDate: Date
+  private var userBirthDate: Date? = null
   private lateinit var birthDateFragmentDialog: BirthDateFragmentDialog
 
   private lateinit var supportFragmentManager: FragmentManager
+  private var defaultBackgroundTintList: ColorStateList? = null
 
   private val setPhoneWaEqualsToPhone = { _: View ->
     etPhoneWhatsapp.text = etPhone.text
@@ -101,13 +105,13 @@ class RegistrationFragment : Fragment() {
 
     etFirstName.setText("Дмитрий")
     etLastName.setText("Федоров")
-    etBirthDate.setText("")
+    etBirthDate.setText("08.06.1987")
     etPhone.setText("89240078897")
     etPhoneWhatsapp.setText("89240078897")
-    etPassword.setText("12345")
+    etPassword.setText("12")
 
     Log.i (TAG, "manufacturer is $MANUFACTURER")
-    Log.i (TAG, "Android v ersion is $VERSION")
+    Log.i (TAG, "Android version is $VERSION")
 
     if (isSamsung() && versionIsNineOrGreater()) {
       Log.i(TAG, "Manufacturer is samsung and version >= 9")
@@ -116,15 +120,35 @@ class RegistrationFragment : Fragment() {
 
       etBirthDate.setOnClickListener {
         createBirthDateDialog()
+        setUnderlineColor(etBirthDate, DEFAULT_EDITTEXT_EMERALD_COLOR)
       }
 
       etBirthDate.setOnFocusChangeListener { view, hasFocus ->
         if (hasFocus) {
           createBirthDateDialog()
+          setUnderlineColor(etBirthDate, DEFAULT_EDITTEXT_EMERALD_COLOR)
+        }
+        else {
+          setUnderlineColor(etBirthDate, Color.BLACK)
+        }
+      }
+    }
+    else {
+      etBirthDate.setOnClickListener {
+        setUnderlineColor(etBirthDate, DEFAULT_EDITTEXT_EMERALD_COLOR)
+      }
+
+      etBirthDate.setOnFocusChangeListener { view, hasFocus ->
+        if (hasFocus) {
+          setUnderlineColor(etBirthDate, DEFAULT_EDITTEXT_EMERALD_COLOR)
+        }
+        else {
+          setUnderlineColor(etBirthDate, Color.BLACK)
         }
       }
     }
 
+    this.rootView = view
     return view
   }
 
@@ -161,7 +185,41 @@ class RegistrationFragment : Fragment() {
         Log.i (TAG,"Регистрация не прошла, error is ${response.message}")
         if (response.isItValidationError) {
           Log.i (TAG, "Поле: ${response.errorValidationField}")
+          val errorStr = getString (
+            R.string.reg_server_validation_error,
+            response.errorValidationField,
+            response.message
+          )
+          when (response.errorValidationField) {
+            "first_name" -> {
+              showErrorBalloon(requireContext(), etFirstName, errorStr)
+            }
+            "last_name" -> {
+              showErrorBalloon(requireContext(), etLastName, errorStr)
+            }
+            "birth_date" -> {
+              showErrorBalloon(requireContext(), etBirthDate, errorStr)
+            }
+            "phone" -> {
+              showErrorBalloon(requireContext(), etPhone, errorStr)
+            }
+            "phone_wa" -> {
+              showErrorBalloon(requireContext(), etPhoneWhatsapp, errorStr)
+            }
+            "password" -> {
+              showErrorBalloon(requireContext(), etPassword, errorStr)
+            }
+          }
+          return
         }
+
+        if (!isInternetAvailable()) {
+          showErrorBalloon(requireContext(), this.rootView, R.string.internet_is_not_available)
+          return
+        }
+
+        val systemError = getString(R.string.system_error, response.message)
+        showErrorBalloon(requireContext(), this.rootView, systemError)
       }
     }
   }
@@ -169,27 +227,12 @@ class RegistrationFragment : Fragment() {
   private fun isInputValid(user: User): Boolean {
     if (user.birthDate.isNullOrEmpty()) {
       Log.i (TAG, "Укажите дату рождения!")
-
-      balloon = createBalloon(requireContext()) {
-        setArrowSize(10)
-        setWidth(BalloonSizeSpec.WRAP)
-        setHeight(65)
-        setArrowPosition(0.7f)
-        setCornerRadius(4f)
-        setAlpha(0.9f)
-        setText("Укажите дату рождения! Пример правильной даты: 01.02.1995")
-        setTextColorResource(R.color.white)
-        setTextIsHtml(true)
-        setBackgroundColor(Color.RED)
-        setBalloonAnimation(BalloonAnimation.FADE)
-        setLifecycleOwner(lifecycleOwner)
-      }
-
-      balloon.showAlignBottom(etBirthDate)
+      defaultBackgroundTintList = etBirthDate.backgroundTintList
+      showValidationError(requireContext(), etBirthDate, R.string.reg_empty_birth_date)
       return false
     }
 
-    return if (isValidDate(user.birthDate)) {
+    if (isValidDate(user.birthDate)) {
       val currentTime = Calendar.getInstance().time
       val age = getDiffYears(userBirthDate, currentTime)
 
@@ -197,20 +240,41 @@ class RegistrationFragment : Fragment() {
 
       if (age in WORKER_AGE_FROM..WORKER_AGE_UP_TO) {
         Log.i (TAG, "${user.birthDate} is valid date, $userBirthDate")
-        true
       }
       else {
         Log.i (TAG, "У нас принимаются работники от $WORKER_AGE_FROM до" +
             "$WORKER_AGE_UP_TO лет, $userBirthDate")
-        false
+        val error = getString(R.string.reg_wrong_age, WORKER_AGE_FROM, WORKER_AGE_UP_TO)
+        showValidationError(requireContext(), etBirthDate, error)
+        return false
       }
     }
     else {
       Log.i (TAG, "${user.birthDate} is invalid date, $userBirthDate")
-      false
+      showValidationError(requireContext(), etBirthDate, R.string.reg_wrong_birth_date)
+      return false
     }
 
-    return false
+    if (!isValidPassword(user.password)) {
+      val invalidPassword = getString (
+        R.string.reg_invalid_password_length,
+        PASSWORD_MIN_LENGTH,
+        PASSWORD_MAX_LENGTH
+      )
+      showValidationError(requireContext(), etPassword, invalidPassword)
+      return false
+    }
+
+    return true
+  }
+
+
+  private fun isValidPassword(password: String?): Boolean {
+    if (password == null) {
+      return false
+    }
+
+    return password.length in PASSWORD_MIN_LENGTH..PASSWORD_MAX_LENGTH
   }
 
   private fun isValidDate (dateStr: String): Boolean {
