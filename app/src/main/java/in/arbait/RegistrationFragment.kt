@@ -25,6 +25,9 @@ private const val DEFAULT_BIRTH_DATE = "15.06.1995"
 private const val DATE_FORMAT1 = "dd.MM.yyyy"
 private const val DATE_FORMAT2 = "dd-MM-yyyy"
 private const val DATE_FORMAT3 = "dd/MM/yyyy"
+private const val DATE_DELIMITER1 = '.'
+private const val DATE_DELIMITER2 = '-'
+private const val DATE_DELIMITER3 = '/'
 private const val WORKER_AGE_FROM = 18
 private const val WORKER_AGE_UP_TO = 65
 
@@ -38,6 +41,7 @@ class RegistrationFragment : Fragment() {
 
   private val server = Server()
 
+  private var registrationFields = mutableListOf<EditText>()
   private lateinit var rootView: View
   private lateinit var tvRegistration: TextView
   private lateinit var etFirstName: EditText
@@ -78,6 +82,13 @@ class RegistrationFragment : Fragment() {
     btSamePhone = view.findViewById(R.id.bt_reg_same_phone)
     etPassword = view.findViewById(R.id.et_reg_password)
     btDone = view.findViewById(R.id.bt_reg_done)
+
+    registrationFields.add(etFirstName)
+    registrationFields.add(etLastName)
+    registrationFields.add(etBirthDate)
+    registrationFields.add(etPhone)
+    registrationFields.add(etPhoneWhatsapp)
+    registrationFields.add(etPassword)
 
     etPhone.addTextChangedListener(PhoneNumberFormattingTextWatcher())
     etPhoneWhatsapp.addTextChangedListener(PhoneNumberFormattingTextWatcher())
@@ -123,7 +134,7 @@ class RegistrationFragment : Fragment() {
         setUnderlineColor(etBirthDate, DEFAULT_EDITTEXT_EMERALD_COLOR)
       }
 
-      etBirthDate.setOnFocusChangeListener { view, hasFocus ->
+      etBirthDate.setOnFocusChangeListener { _, hasFocus ->
         if (hasFocus) {
           createBirthDateDialog()
           setUnderlineColor(etBirthDate, DEFAULT_EDITTEXT_EMERALD_COLOR)
@@ -132,26 +143,36 @@ class RegistrationFragment : Fragment() {
           setUnderlineColor(etBirthDate, Color.BLACK)
         }
       }
+
+      val withoutBirthDate = true
+      setRegistrationFieldsListeners(withoutBirthDate)
     }
     else {
-      etBirthDate.setOnClickListener {
-        setUnderlineColor(etBirthDate, DEFAULT_EDITTEXT_EMERALD_COLOR)
-      }
-
-      etBirthDate.setOnFocusChangeListener { view, hasFocus ->
-        if (hasFocus) {
-          setUnderlineColor(etBirthDate, DEFAULT_EDITTEXT_EMERALD_COLOR)
-        }
-        else {
-          setUnderlineColor(etBirthDate, Color.BLACK)
-        }
-      }
+      setRegistrationFieldsListeners()
     }
 
     this.rootView = view
     return view
   }
 
+
+  private fun setRegistrationFieldsListeners (withoutBirthDate: Boolean = false) {
+    registrationFields.forEach { field ->
+      if (!withoutBirthDate || field != etBirthDate) {
+        field.setOnClickListener {
+          setUnderlineColor(field, DEFAULT_EDITTEXT_EMERALD_COLOR)
+        }
+        field.setOnFocusChangeListener { _, hasFocus ->
+          if (hasFocus) {
+            setUnderlineColor(field, DEFAULT_EDITTEXT_EMERALD_COLOR)
+          }
+          else {
+            setUnderlineColor(field, Color.BLACK)
+          }
+        }
+      }
+    }
+  }
 
   private fun setBirthDateEditTextWhenDialogResult() {
     supportFragmentManager.setFragmentResultListener(BIRTH_DATE_KEY, viewLifecycleOwner)
@@ -238,7 +259,34 @@ class RegistrationFragment : Fragment() {
     }
 
     if (isValidDate(user.birthDate)) {
+      val delimiter = when {
+        user.birthDate.indexOf(DATE_DELIMITER1) != -1 -> {
+          DATE_DELIMITER1
+        }
+        user.birthDate.indexOf(DATE_DELIMITER2) != -1 -> {
+          DATE_DELIMITER2
+        }
+        user.birthDate.indexOf(DATE_DELIMITER3) != -1 -> {
+          DATE_DELIMITER3
+        }
+        else -> null
+      }
+
       val currentTime = Calendar.getInstance().time
+      val currentYear = Calendar.getInstance().get(Calendar.YEAR)
+      if (delimiter != null) {
+        val year = getFullYear(user.birthDate.substringAfterLast(delimiter))
+        Log.i (TAG, "year = $year")
+        if ((year < currentYear - 100) || year >= currentYear) {
+          Log.i (TAG, "currentTime.year = $currentYear")
+          Log.i (TAG, "Неправильная дата ${user.birthDate}")
+          showValidationError(requireContext(), etBirthDate, R.string.reg_wrong_birth_date)
+          return false
+        }
+        else {
+          setUserBirthDateYear(year)
+        }
+      }
       val age = getDiffYears(userBirthDate, currentTime)
 
       Log.i (TAG, "Age is $age")
@@ -273,6 +321,13 @@ class RegistrationFragment : Fragment() {
     return true
   }
 
+  private fun setUserBirthDateYear(year: Int) {
+    userBirthDate?.let {
+      val calendar = getCalendar(userBirthDate)
+      calendar.set(year, calendar.get(Calendar.MONTH), calendar.get(Calendar.DAY_OF_MONTH))
+      userBirthDate = calendar.time
+    }
+  }
 
   private fun isValidPassword(password: String?): Boolean {
     if (password == null) {

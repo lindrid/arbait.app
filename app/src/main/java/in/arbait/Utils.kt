@@ -12,6 +12,7 @@ import com.skydoves.balloon.BalloonAnimation
 import com.skydoves.balloon.BalloonSizeSpec
 import com.skydoves.balloon.createBalloon
 import java.io.IOException
+import java.lang.Exception
 import java.text.DateFormat
 import java.text.ParseException
 import java.text.SimpleDateFormat
@@ -22,12 +23,72 @@ private const val TAG = "Utils"
 val MANUFACTURER: String = Build.MANUFACTURER
 val VERSION: String = Build.VERSION.RELEASE
 
+private const val CENTURY_21_YEAR_UP_TO = 21
+private const val CENTURY_20_YEAR_UP_TO = 99
+
+fun getFullYear (shortcutYear: String): Int {
+  try {
+    val year = shortcutYear.toInt()
+    when (shortcutYear.length) {
+      1 -> {
+        return 2000 + year
+      }
+      2 -> {
+        if (year <= CENTURY_21_YEAR_UP_TO) {
+          return 2000 + year
+        }
+        else if (year <= CENTURY_20_YEAR_UP_TO) {
+          return 1900 + year
+        }
+      }
+      3 -> {
+        return if (year <= CENTURY_20_YEAR_UP_TO) {
+          2000 + year
+        } else {
+          900 + year
+        }
+      }
+      4 -> {
+        return year
+      }
+    }
+  }
+  catch (e: Exception) {
+    return -1
+  }
+
+  return -1
+}
+
+fun isSamsung(): Boolean {
+  if (MANUFACTURER.indexOf("samsung") != -1 ||
+    MANUFACTURER.indexOf("Samsung") != -1)
+  {
+    return true
+  }
+
+  return false
+}
+
+fun versionIsNineOrGreater(): Boolean {
+  var end = VERSION.length
+  if (VERSION.indexOf('.') != -1) {
+    end = VERSION.indexOf('.')
+  }
+  val ver = VERSION.substring(0, end)
+  Log.i (TAG, "Version: $ver")
+  if (ver.toInt() >= 9) {
+    return true
+  }
+
+  return false
+}
+
 @Throws(InterruptedException::class, IOException::class)
 fun isInternetAvailable(): Boolean {
   val command = "ping -c 1 google.com"
   return Runtime.getRuntime().exec(command).waitFor() == 0
 }
-
 
 fun setUnderlineColor (editText: EditText, colorInt: Int) {
   editText.backgroundTintList = ColorStateList.valueOf(colorInt)
@@ -81,30 +142,6 @@ fun showErrorBalloon(context: Context, whereToShow: View, text: String) {
   }
 
   balloon.showAlignBottom(whereToShow)
-}
-
-fun isSamsung(): Boolean {
-  if (MANUFACTURER.indexOf("samsung") != -1 ||
-      MANUFACTURER.indexOf("Samsung") != -1)
-  {
-    return true
-  }
-
-  return false
-}
-
-fun versionIsNineOrGreater(): Boolean {
-  var end = VERSION.length
-  if (VERSION.indexOf('.') != -1) {
-    end = VERSION.indexOf('.')
-  }
-  val ver = VERSION.substring(0, end)
-  Log.i (TAG, "Version: $ver")
-  if (ver.toInt() >= 9) {
-    return true
-  }
-
-  return false
 }
 
 fun getDiffYears (first: Date?, last: Date?): Int {
