@@ -181,8 +181,13 @@ class RegistrationFragment : Fragment() {
       SERVER_OK -> {
         Log.i (TAG,"Все ок, сервер вернул: ${response.message}")
       }
+      SYSTEM_ERROR -> {
+        Log.i (TAG,"Системная ошибка ${response.message}")
+        val systemError = getString(R.string.system_error, response.message)
+        showErrorBalloon(requireContext(), this.rootView, systemError)
+      }
       else -> {
-        Log.i (TAG,"Регистрация не прошла, error is ${response.message}")
+        Log.i (TAG,"Регистрация не прошла, сервер вернул ${response.message}")
         if (response.isItValidationError) {
           Log.i (TAG, "Поле: ${response.errorValidationField}")
           val errorStr = getString (
@@ -218,8 +223,8 @@ class RegistrationFragment : Fragment() {
           return
         }
 
-        val systemError = getString(R.string.system_error, response.message)
-        showErrorBalloon(requireContext(), this.rootView, systemError)
+        val unknownServerError = getString(R.string.unknown_server_error, response.message)
+        showErrorBalloon(requireContext(), this.rootView, unknownServerError)
       }
     }
   }
