@@ -21,4 +21,12 @@
     <string name="system_error">Произошла системная ошибка: %1$s</string>
     <string name="reg_invalid_password_length">Длина пароля должна быть не меньше %1$d символов и не больше %2$d</string>
     <string name="unknown_server_error">Ошибка от сервера: %1$s</string>
+    <string name="reg_empty_first_name">Укажите имя!</string>
+    <string name="reg_empty_last_name">Укажите фамилию!</string>
+    <string name="reg_empty_phone">Укажите номер телефона!</string>
+    <string name="reg_empty_phone_whatsapp">Укажите номер телефона в Whatsapp!</string>
+    <string name="reg_empty_password">Придумайте пароль длиной от %1$d до %2$d символов!</string>
+    <string name="reg_wrong_first_name">Имя должно состоять ТОЛЬКО из русских букв, пробелы не допускаются</string>
+    <string name="reg_wrong_last_name">Фамилия должна состоять ТОЛЬКО из русских букв, пробелы не допускаются</string>
+    <string name="reg_wrong_phone">Задайте корректный российский номер телефона!</string>
 </resources>

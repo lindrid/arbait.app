@@ -2,12 +2,16 @@ package `in`.arbait
 
 import android.content.Context
 import android.content.res.ColorStateList
+import android.content.res.Resources
 import android.graphics.Color
 import android.os.Build
 
 import android.util.Log
 import android.view.View
 import android.widget.EditText
+import com.google.i18n.phonenumbers.NumberParseException
+import com.google.i18n.phonenumbers.PhoneNumberUtil
+import com.google.i18n.phonenumbers.Phonenumber
 import com.skydoves.balloon.BalloonAnimation
 import com.skydoves.balloon.BalloonSizeSpec
 import com.skydoves.balloon.createBalloon
@@ -84,8 +88,21 @@ fun versionIsNineOrGreater(): Boolean {
   return false
 }
 
+fun phoneNumberIsValid (phoneNumber: String?, countryCode: String?, logTag: String): Boolean {
+  //NOTE: This should probably be a member variable.
+  val phoneUtil: PhoneNumberUtil = PhoneNumberUtil.getInstance()
+  try {
+    val numberProto: Phonenumber.PhoneNumber = phoneUtil.parse(phoneNumber, countryCode)
+    return phoneUtil.isValidNumber(numberProto)
+  }
+  catch (e: NumberParseException) {
+    Log.i (logTag, "NumberParseException was thrown: $e")
+  }
+  return false
+}
+
 @Throws(InterruptedException::class, IOException::class)
-fun isInternetAvailable(): Boolean {
+fun internetIsAvailable(): Boolean {
   val command = "ping -c 1 google.com"
   return Runtime.getRuntime().exec(command).waitFor() == 0
 }
@@ -105,23 +122,10 @@ fun showValidationError (context: Context, field: EditText, text: String) {
 }
 
 fun showErrorBalloon (context: Context, whereToShow: View, textResource: Int) {
-  val balloon = createBalloon(context) {
-    setArrowSize(10)
-    setWidth(BalloonSizeSpec.WRAP)
-    setHeight(65)
-    setArrowPosition(0.7f)
-    setCornerRadius(4f)
-    setAlpha(0.9f)
-    setTextResource(textResource)
-    setTextSize(18f)
-    setTextColorResource(R.color.white)
-    setTextIsHtml(true)
-    setBackgroundColor(Color.RED)
-    setBalloonAnimation(BalloonAnimation.FADE)
-    setLifecycleOwner(lifecycleOwner)
+  App.res?.let {
+    val str = it.getString(textResource)
+    showErrorBalloon(context, whereToShow, str)
   }
-
-  balloon.showAlignBottom(whereToShow)
 }
 
 fun showErrorBalloon(context: Context, whereToShow: View, text: String) {
@@ -132,7 +136,7 @@ fun showErrorBalloon(context: Context, whereToShow: View, text: String) {
     setArrowPosition(0.7f)
     setCornerRadius(4f)
     setAlpha(0.9f)
-    setText(text)
+    setText("&nbsp  $text  &nbsp")
     setTextSize(18f)
     setTextColorResource(R.color.white)
     setTextIsHtml(true)

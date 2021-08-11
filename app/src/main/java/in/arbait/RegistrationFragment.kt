@@ -1,7 +1,6 @@
 package `in`.arbait
 
 import `in`.arbait.http.*
-import android.content.res.ColorStateList
 import android.graphics.Color
 import android.os.Bundle
 import android.telephony.PhoneNumberFormattingTextWatcher
@@ -31,6 +30,10 @@ private const val DATE_DELIMITER3 = '/'
 private const val WORKER_AGE_FROM = 18
 private const val WORKER_AGE_UP_TO = 65
 
+private const val FIRST_NAME_MIN_LENGTH = 2
+private const val FIRST_NAME_MAX_LENGTH = 20
+private const val LAST_NAME_MIN_LENGTH = 2
+private const val LAST_NAME_MAX_LENGTH = 20
 private const val PASSWORD_MIN_LENGTH = 5
 private const val PASSWORD_MAX_LENGTH = 25
 
@@ -57,7 +60,6 @@ class RegistrationFragment : Fragment() {
   private lateinit var birthDateFragmentDialog: BirthDateFragmentDialog
 
   private lateinit var supportFragmentManager: FragmentManager
-  private var defaultBackgroundTintList: ColorStateList? = null
 
   private val setPhoneWaEqualsToPhone = { _: View ->
     etPhoneWhatsapp.text = etPhone.text
@@ -107,7 +109,7 @@ class RegistrationFragment : Fragment() {
       )
       Log.i (TAG, "User = ${user.toString()}")
 
-      if (isInputValid(user)) {
+      if (inputFieldsAreValid(user)) {
         server.registerUser(user) { response: Response ->
           onResult(response)
         }
@@ -239,7 +241,7 @@ class RegistrationFragment : Fragment() {
           return
         }
 
-        if (!isInternetAvailable()) {
+        if (!internetIsAvailable()) {
           showErrorBalloon(requireContext(), this.rootView, R.string.internet_is_not_available)
           return
         }
@@ -250,75 +252,138 @@ class RegistrationFragment : Fragment() {
     }
   }
 
-  private fun isInputValid(user: User): Boolean {
-    if (user.birthDate.isNullOrEmpty()) {
-      Log.i (TAG, "Укажите дату рождения!")
-      defaultBackgroundTintList = etBirthDate.backgroundTintList
-      showValidationError(requireContext(), etBirthDate, R.string.reg_empty_birth_date)
-      return false
+  private fun inputFieldsAreValid(user: User): Boolean {
+    if (user.firstName.isNullOrEmpty()) {
+      return doWhenFieldEmptyOrWrong(etFirstName, R.string.reg_empty_first_name,
+        "Укажите имя!")
     }
 
-    if (isValidDate(user.birthDate)) {
-      val delimiter = when {
-        user.birthDate.indexOf(DATE_DELIMITER1) != -1 -> {
-          DATE_DELIMITER1
-        }
-        user.birthDate.indexOf(DATE_DELIMITER2) != -1 -> {
-          DATE_DELIMITER2
-        }
-        user.birthDate.indexOf(DATE_DELIMITER3) != -1 -> {
-          DATE_DELIMITER3
-        }
-        else -> null
-      }
+    if (user.lastName.isNullOrEmpty()) {
+      return doWhenFieldEmptyOrWrong(etLastName, R.string.reg_empty_last_name,
+        "Укажите фамилию!")
+    }
 
+    if (user.phone.isNullOrEmpty()) {
+      return doWhenFieldEmptyOrWrong(etPhone, R.string.reg_empty_phone,
+        "Укажите номер телефона!")
+    }
+
+    if (user.phoneWa.isNullOrEmpty()) {
+      return doWhenFieldEmptyOrWrong(etPhoneWhatsapp, R.string.reg_empty_phone_whatsapp,
+        "Укажите номер телефона в Whatsapp!")
+    }
+
+    if (user.birthDate.isNullOrEmpty()) {
+      return doWhenFieldEmptyOrWrong(etBirthDate, R.string.reg_empty_birth_date,
+        "Укажите дату рождения!")
+    }
+
+    if (user.password.isNullOrEmpty()) {
+      val emptyPassword = getString (
+        R.string.reg_empty_password,
+        PASSWORD_MIN_LENGTH,
+        PASSWORD_MAX_LENGTH
+      )
+      return doWhenFieldEmptyOrWrong(etPassword, emptyPassword,
+        "Придумайте пароль длиной от $PASSWORD_MIN_LENGTH до $PASSWORD_MAX_LENGTH символов!")
+    }
+
+    if (!firstNameIsValid(user.firstName)) {
+      return doWhenFieldEmptyOrWrong(etFirstName, R.string.reg_wrong_first_name,
+        "Wrong first name - ${user.firstName}")
+    }
+
+    if (!lastNameIsValid(user.lastName)) {
+      return doWhenFieldEmptyOrWrong(etLastName, R.string.reg_wrong_last_name,
+        "Wrong last name - ${user.lastName}")
+    }
+
+    if (!dateIsValid(user.birthDate)) {
+      return doWhenFieldEmptyOrWrong(etBirthDate, R.string.reg_wrong_birth_date,
+        "${user.birthDate} is invalid date, $userBirthDate")
+    }
+    else {
+      val delimiter = getDelimiter(user.birthDate)
       val currentTime = Calendar.getInstance().time
       val currentYear = Calendar.getInstance().get(Calendar.YEAR)
+
       if (delimiter != null) {
         val year = getFullYear(user.birthDate.substringAfterLast(delimiter))
+        val wrongBirthDate = ( (year < currentYear - 100) || (year >= currentYear) )
+
         Log.i (TAG, "year = $year")
-        if ((year < currentYear - 100) || year >= currentYear) {
-          Log.i (TAG, "currentTime.year = $currentYear")
-          Log.i (TAG, "Неправильная дата ${user.birthDate}")
-          showValidationError(requireContext(), etBirthDate, R.string.reg_wrong_birth_date)
-          return false
+
+        if (wrongBirthDate) {
+          return doWhenFieldEmptyOrWrong(etBirthDate, R.string.reg_wrong_birth_date,
+            "Неправильная дата ${user.birthDate}. currentTime.year = $currentYear")
         }
         else {
           setUserBirthDateYear(year)
         }
       }
-      val age = getDiffYears(userBirthDate, currentTime)
 
+      val age = getDiffYears(userBirthDate, currentTime)
       Log.i (TAG, "Age is $age")
 
       if (age in WORKER_AGE_FROM..WORKER_AGE_UP_TO) {
         Log.i (TAG, "${user.birthDate} is valid date, $userBirthDate")
       }
       else {
-        Log.i (TAG, "У нас принимаются работники от $WORKER_AGE_FROM до" +
-            "$WORKER_AGE_UP_TO лет, $userBirthDate")
-        val error = getString(R.string.reg_wrong_age, WORKER_AGE_FROM, WORKER_AGE_UP_TO)
-        showValidationError(requireContext(), etBirthDate, error)
-        return false
+        val wrongAge = getString (
+          R.string.reg_wrong_age,
+          WORKER_AGE_FROM,
+          WORKER_AGE_UP_TO
+        )
+        return doWhenFieldEmptyOrWrong(etBirthDate, wrongAge,"У нас принимаются работники" +
+            "от $WORKER_AGE_FROM до $WORKER_AGE_UP_TO лет, $userBirthDate")
       }
     }
-    else {
-      Log.i (TAG, "${user.birthDate} is invalid date, $userBirthDate")
-      showValidationError(requireContext(), etBirthDate, R.string.reg_wrong_birth_date)
-      return false
+
+    if (!phoneNumberIsValid(user.phone, "RU", TAG)) {
+      return doWhenFieldEmptyOrWrong(etPhone, R.string.reg_wrong_phone,
+        "Wrong phone ${user.phone}")
     }
 
-    if (!isValidPassword(user.password)) {
+    if (!passwordIsValid(user.password)) {
       val invalidPassword = getString (
         R.string.reg_invalid_password_length,
         PASSWORD_MIN_LENGTH,
         PASSWORD_MAX_LENGTH
       )
-      showValidationError(requireContext(), etPassword, invalidPassword)
-      return false
+      return doWhenFieldEmptyOrWrong(etPassword, invalidPassword, invalidPassword)
     }
 
     return true
+  }
+
+
+  private fun getDelimiter(birthDate: String): Char? {
+    return when {
+      birthDate.indexOf(DATE_DELIMITER1) != -1 -> {
+        DATE_DELIMITER1
+      }
+      birthDate.indexOf(DATE_DELIMITER2) != -1 -> {
+        DATE_DELIMITER2
+      }
+      birthDate.indexOf(DATE_DELIMITER3) != -1 -> {
+        DATE_DELIMITER3
+      }
+      else -> null
+    }
+  }
+
+  private fun doWhenFieldEmptyOrWrong(field: EditText, errorStrResource: Int,
+                                      logStr: String): Boolean
+  {
+    return doWhenFieldEmptyOrWrong(field, getString(errorStrResource), logStr)
+  }
+
+  private fun doWhenFieldEmptyOrWrong(field: EditText, errorStr: String,
+                                      logStr: String): Boolean
+  {
+    Log.i (TAG, logStr)
+    showValidationError(requireContext(), field, errorStr)
+    return false
   }
 
   private fun setUserBirthDateYear(year: Int) {
@@ -329,26 +394,34 @@ class RegistrationFragment : Fragment() {
     }
   }
 
-  private fun isValidPassword(password: String?): Boolean {
-    if (password == null) {
-      return false
-    }
-
-    return password.length in PASSWORD_MIN_LENGTH..PASSWORD_MAX_LENGTH
+  private fun firstNameIsValid (firstName: String): Boolean {
+    return firstName.matches("^[а-яА-Я]*$".toRegex())
   }
 
-  private fun isValidDate (dateStr: String): Boolean {
-    return  isValidFormatDate(dateStr, DATE_FORMAT1) ||
-            isValidFormatDate(dateStr, DATE_FORMAT2) ||
-            isValidFormatDate(dateStr, DATE_FORMAT3)
+  private fun lastNameIsValid(lastName: String): Boolean {
+    return lastName.matches("^[а-яА-Я]*$".toRegex())
   }
 
-  private fun isValidFormatDate (dateStr: String, format: String): Boolean {
+  private fun dateIsValid (dateStr: String): Boolean {
+    return  dateFormatIsValid(dateStr, DATE_FORMAT1) ||
+            dateFormatIsValid(dateStr, DATE_FORMAT2) ||
+            dateFormatIsValid(dateStr, DATE_FORMAT3)
+  }
+
+  private fun dateFormatIsValid (dateStr: String, format: String): Boolean {
     val date = strToDate(dateStr, format)
     if (date != null) {
       userBirthDate = date
       return true
     }
     return false
+  }
+
+  private fun passwordIsValid(password: String?): Boolean {
+    if (password == null) {
+      return false
+    }
+
+    return password.length in PASSWORD_MIN_LENGTH..PASSWORD_MAX_LENGTH
   }
 }
