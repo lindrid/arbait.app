@@ -1,6 +1,11 @@
 <resources>
     <string name="app_name">Arbait</string>
     <string name="app_name_in_launcher">Arbait</string>
+    <string name="unknown_server_error">Ошибка от сервера: %1$s</string>
+    <string name="internet_is_not_available">Соединение с интернетом отсутствует!</string>
+    <string name="system_error">Произошла системная ошибка: %1$s</string>
+
+    <!-- Фрагмент регистрации -->
     <string name="reg_registration">Регистрация</string>
     <string name="reg_first_name">Имя</string>
     <string name="reg_last_name">Фамилия</string>
@@ -17,10 +22,7 @@
     <string name="reg_wrong_birth_date">Неправильная дата рождения! Пример правильной даты: 15.06.1995</string>
     <string name="reg_wrong_age">Мы принимаем работников от %1$d до %2$d лет!</string>
     <string name="reg_server_validation_error">Сервер вернул: %1$s, %2$s</string>
-    <string name="internet_is_not_available">Соединение с интернетом отсутствует!</string>
-    <string name="system_error">Произошла системная ошибка: %1$s</string>
     <string name="reg_invalid_password_length">Длина пароля должна быть не меньше %1$d символов и не больше %2$d</string>
-    <string name="unknown_server_error">Ошибка от сервера: %1$s</string>
     <string name="reg_empty_first_name">Укажите имя!</string>
     <string name="reg_empty_last_name">Укажите фамилию!</string>
     <string name="reg_empty_phone">Укажите номер телефона!</string>
@@ -29,4 +31,10 @@
     <string name="reg_wrong_first_name">Имя должно состоять ТОЛЬКО из русских букв, пробелы не допускаются</string>
     <string name="reg_wrong_last_name">Фамилия должна состоять ТОЛЬКО из русских букв, пробелы не допускаются</string>
     <string name="reg_wrong_phone">Задайте корректный российский номер телефона!</string>
+
+    <!-- Фрагмент подтвержденя телефона -->
+    <string name="phone_conf_tv_incoming_call">Нажмите кнопку "Получить код" и к вам поступит звонок.
+        Последние 4 цифры номера - это КОД. Введите его в поле для подтверждения.</string>
+    <string name="phone_conf_code">Код</string>
+    <string name="phone_conf_get_code">Получить код</string>
 </resources>

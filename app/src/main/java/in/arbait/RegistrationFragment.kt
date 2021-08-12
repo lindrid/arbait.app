@@ -98,13 +98,16 @@ class RegistrationFragment : Fragment() {
     btSamePhone.setOnClickListener(setPhoneWaEqualsToPhone)
 
     btDone.setOnClickListener {
+      val str = etPhoneWhatsapp.text.toString()
+      val phoneWa = if (str.isEmpty()) { null } else { str }
+
       val user = User (
         id = null,
         firstName = etFirstName.text.toString(),
         lastName = etLastName.text.toString(),
         birthDate = etBirthDate.text.toString(),
         phone = etPhone.text.toString(),
-        phoneWa = etPhoneWhatsapp.text.toString(),
+        phoneWa = phoneWa,
         password = etPassword.text.toString()
       )
       Log.i (TAG, "User = ${user.toString()}")
@@ -268,11 +271,6 @@ class RegistrationFragment : Fragment() {
         "Укажите номер телефона!")
     }
 
-    if (user.phoneWa.isNullOrEmpty()) {
-      return doWhenFieldEmptyOrWrong(etPhoneWhatsapp, R.string.reg_empty_phone_whatsapp,
-        "Укажите номер телефона в Whatsapp!")
-    }
-
     if (user.birthDate.isNullOrEmpty()) {
       return doWhenFieldEmptyOrWrong(etBirthDate, R.string.reg_empty_birth_date,
         "Укажите дату рождения!")
@@ -355,6 +353,7 @@ class RegistrationFragment : Fragment() {
 
     return true
   }
+
 
 
   private fun getDelimiter(birthDate: String): Char? {
