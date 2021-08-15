@@ -148,11 +148,44 @@ fun showErrorBalloon(context: Context, whereToShow: View, text: String) {
   balloon.showAlignBottom(whereToShow)
 }
 
+// предполагается, что дата last позднее даты first
+fun getDiffDays (first: Date, last: Date): Int {
+  if (last < first) {
+    return -1
+  }
+
+  val a = getCalendar(first)
+  val b = getCalendar(last)
+  val diffMonth = b[Calendar.MONTH] - b[Calendar.MONTH]
+  var diffDays: Int
+
+  if (diffMonth == 0) {
+    diffDays = b[Calendar.DAY_OF_MONTH] - a[Calendar.DAY_OF_MONTH]
+  }
+  // предполагается, что diffMonth > 0
+  else {
+    diffDays = a.getActualMaximum(Calendar.DAY_OF_MONTH) - a[Calendar.DAY_OF_MONTH]
+    diffDays += b[Calendar.DAY_OF_MONTH]
+  }
+
+  val diffHours: Int = b[Calendar.HOUR_OF_DAY] - a[Calendar.HOUR_OF_DAY]
+  if (diffHours > 0)  {
+    diffDays++
+  }
+  else if (diffHours == 0) {
+    val diffMinutes = b[Calendar.MINUTE] - a[Calendar.MINUTE]
+    if (diffMinutes > 0) diffDays++
+  }
+
+  return diffDays
+}
+
 fun getDiffYears (first: Date?, last: Date?): Int {
   val a = getCalendar(first)
   val b = getCalendar(last)
   var diff = b[Calendar.YEAR] - a[Calendar.YEAR]
-  if (a[Calendar.MONTH] > b[Calendar.MONTH] || a[Calendar.MONTH] == b[Calendar.MONTH] && a[Calendar.DATE] > b[Calendar.DATE]) {
+  if (a[Calendar.MONTH] > b[Calendar.MONTH] || a[Calendar.MONTH] == b[Calendar.MONTH] &&
+    a[Calendar.DATE] > b[Calendar.DATE]) {
     diff--
   }
 
