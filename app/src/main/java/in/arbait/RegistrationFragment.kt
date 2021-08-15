@@ -239,7 +239,7 @@ class RegistrationFragment : Fragment() {
 
   private fun doOnServerFieldValidationError (response: Response) {
     val errorStr = getString (
-      R.string.reg_server_validation_error,
+      R.string.server_validation_error,
       response.errorValidationField,
       response.message
     )

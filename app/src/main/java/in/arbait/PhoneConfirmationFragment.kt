@@ -4,7 +4,6 @@ import `in`.arbait.http.*
 import android.os.Bundle
 import androidx.fragment.app.Fragment
 import android.text.method.PasswordTransformationMethod
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -54,54 +53,29 @@ class PhoneConfirmationFragment: Fragment(), View.OnClickListener {
 
   private fun onClickRequestCallButton() {
     server.getIncomingCall { response ->
+      val requestCall = RequestCall(response)
       when (response.code) {
-        SERVER_OK     -> RequestCall().doOnServerOkResult()
-        SYSTEM_ERROR  -> RequestCall().doOnSystemError(response)
-        SERVER_ERROR  -> RequestCall().doOnServerError(response)
+        SERVER_OK     -> requestCall.doOnServerOkResult()
+        SYSTEM_ERROR  -> requestCall.doOnSystemError()
+        SERVER_ERROR  -> requestCall.doOnServerError()
       }
     }
   }
 
-  private inner class RequestCall {
-
-    fun doOnServerOkResult() {
+  private inner class RequestCall (response: Response):
+    ReactionOnServerResponse (TAG, requireContext(), rootView, response)
+  {
+    override fun doOnServerOkResult() {
       callWasRequested = true
     }
 
-    fun doOnServerError(response: Response) {
-      if (response.isItValidationError) {
-        Log.i(TAG, "Поле: ${response.errorValidationField}")
-        doOnServerFieldValidationError(response)
-      }
-
-      val unknownServerError = getString(R.string.unknown_server_error, response.message)
-      showErrorBalloon(requireContext(), rootView, unknownServerError)
-    }
-
-    private fun doOnServerFieldValidationError(response: Response) {
-      val errorStr = getString(
-        R.string.reg_server_validation_error,
-        response.errorValidationField,
-        response.message
-      )
+    override fun doOnServerFieldValidationError(response: Response) {
       when (response.errorValidationField) {
         "code" -> {
-          showErrorBalloon(requireContext(), etCode, errorStr)
+          showErrorBalloon(requireContext(), etCode, serverValidationError())
         }
       }
-      return
     }
-
-    fun doOnSystemError(response: Response) {
-      if (!internetIsAvailable()) {
-        showErrorBalloon(requireContext(), rootView, R.string.internet_is_not_available)
-        return
-      }
-
-      val systemError = getString(R.string.system_error, response.message)
-      showErrorBalloon(requireContext(), rootView, systemError)
-    }
-
   }
 
 }
