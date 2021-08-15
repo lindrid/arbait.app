@@ -31,6 +31,8 @@
     <string name="reg_wrong_first_name">Имя должно состоять ТОЛЬКО из русских букв, пробелы не допускаются</string>
     <string name="reg_wrong_last_name">Фамилия должна состоять ТОЛЬКО из русских букв, пробелы не допускаются</string>
     <string name="reg_wrong_phone">Задайте корректный российский номер телефона!</string>
+    <string name="reg_wrong_first_name_length">Имя должно быть не короче %1$d символов и не длиннее %2$d</string>
+    <string name="reg_wrong_last_name_length">Фамиля должна быть не короче %1$d символов и не длиннее %2$d</string>
 
     <!-- Фрагмент подтвержденя телефона -->
     <string name="phone_conf_tv_incoming_call">Нажмите кнопку "Получить код" и к вам поступит звонок.

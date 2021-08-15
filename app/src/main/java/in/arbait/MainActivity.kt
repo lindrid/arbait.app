@@ -8,9 +8,10 @@ import android.util.Log
 import androidx.fragment.app.Fragment
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
-import java.util.*
+
 
 private const val TAG = "MainActivity"
+
 
 class MainActivity : AppCompatActivity() {
 
@@ -23,8 +24,8 @@ class MainActivity : AppCompatActivity() {
     repository = UserRepository.get()
 
     GlobalScope.launch {
-      var lastUser: User? = repository.getUserLastByDate(true)
-      Log.i (TAG, "DATABASE: $lastUser")
+      val lastUser: User? = repository.getUserLastByDate(true)
+      Log.i (TAG, "Repository.getUserLastByDate(isConfirmed=true): $lastUser")
 
       val currentFragment = supportFragmentManager.findFragmentById(R.id.fragment_container)
 

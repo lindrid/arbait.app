@@ -286,12 +286,38 @@ class RegistrationFragment : Fragment() {
         "Придумайте пароль длиной от $PASSWORD_MIN_LENGTH до $PASSWORD_MAX_LENGTH символов!")
     }
 
-    if (!firstNameIsValid(user.firstName)) {
+    if (firstNameIsValid(user.firstName)) {
+      if (user.firstName.length < FIRST_NAME_MIN_LENGTH ||
+          user.firstName.length > FIRST_NAME_MAX_LENGTH)
+      {
+        val wrongLength = getString (
+          R.string.reg_wrong_first_name_length,
+          FIRST_NAME_MIN_LENGTH,
+          FIRST_NAME_MAX_LENGTH
+        )
+        return doWhenFieldEmptyOrWrong(etFirstName, wrongLength,
+          "Wrong first name length - ${user.firstName}")
+      }
+    }
+    else {
       return doWhenFieldEmptyOrWrong(etFirstName, R.string.reg_wrong_first_name,
         "Wrong first name - ${user.firstName}")
     }
 
-    if (!lastNameIsValid(user.lastName)) {
+    if (lastNameIsValid(user.lastName)) {
+      if (user.lastName.length < LAST_NAME_MIN_LENGTH ||
+        user.lastName.length > LAST_NAME_MAX_LENGTH)
+      {
+        val wrongLength = getString (
+          R.string.reg_wrong_last_name_length,
+          LAST_NAME_MIN_LENGTH,
+          LAST_NAME_MAX_LENGTH
+        )
+        return doWhenFieldEmptyOrWrong(etLastName, wrongLength,
+          "Wrong last name length - ${user.lastName}")
+      }
+    }
+    else {
       return doWhenFieldEmptyOrWrong(etLastName, R.string.reg_wrong_last_name,
         "Wrong last name - ${user.lastName}")
     }
