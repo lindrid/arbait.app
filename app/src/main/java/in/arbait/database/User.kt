@@ -6,13 +6,10 @@ import java.util.*
 
 @Entity
 data class User (
-  @PrimaryKey var id: UUID = UUID.randomUUID(),
-  var phone: String = "",
+  @PrimaryKey var phone: String,
   var password: String = "",
   var isConfirmed: Boolean = false,
   var login: Boolean = false,
-  var createdAt: Date = Date())
-{
-
-}
+  var createdAt: Date = Date()
+) {}
 

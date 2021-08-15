@@ -8,6 +8,7 @@ class App : Application() {
     super.onCreate()
     instance = this
     res = resources
+    UserRepository.initialize(this)
   }
 
   companion object {
