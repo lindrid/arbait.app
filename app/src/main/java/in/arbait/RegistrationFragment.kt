@@ -43,6 +43,7 @@ private val DEFAULT_EDITTEXT_EMERALD_COLOR = Color.parseColor("#02dac5")
 class RegistrationFragment : Fragment() {
 
   private val server = Server()
+  private val repository = UserRepository.get()
 
   private var registrationFields = mutableListOf<EditText>()
   private lateinit var rootView: View
@@ -206,53 +207,80 @@ class RegistrationFragment : Fragment() {
     when (response.code) {
       SERVER_OK -> {
         Log.i (TAG,"Все ок, сервер вернул: ${response.message}")
+        doOnServerOkResult()
       }
       SYSTEM_ERROR -> {
         Log.i (TAG,"Системная ошибка ${response.message}")
-        val systemError = getString(R.string.system_error, response.message)
-        showErrorBalloon(requireContext(), this.rootView, systemError)
+        doOnSystemError(response)
       }
-      else -> {
+      SERVER_ERROR -> {
         Log.i (TAG,"Регистрация не прошла, сервер вернул ${response.message}")
-        if (response.isItValidationError) {
-          Log.i (TAG, "Поле: ${response.errorValidationField}")
-          val errorStr = getString (
-            R.string.reg_server_validation_error,
-            response.errorValidationField,
-            response.message
-          )
-          when (response.errorValidationField) {
-            "first_name" -> {
-              showErrorBalloon(requireContext(), etFirstName, errorStr)
-            }
-            "last_name" -> {
-              showErrorBalloon(requireContext(), etLastName, errorStr)
-            }
-            "birth_date" -> {
-              showErrorBalloon(requireContext(), etBirthDate, errorStr)
-            }
-            "phone" -> {
-              showErrorBalloon(requireContext(), etPhone, errorStr)
-            }
-            "phone_wa" -> {
-              showErrorBalloon(requireContext(), etPhoneWhatsapp, errorStr)
-            }
-            "password" -> {
-              showErrorBalloon(requireContext(), etPassword, errorStr)
-            }
-          }
-          return
-        }
-
-        if (!internetIsAvailable()) {
-          showErrorBalloon(requireContext(), this.rootView, R.string.internet_is_not_available)
-          return
-        }
-
-        val unknownServerError = getString(R.string.unknown_server_error, response.message)
-        showErrorBalloon(requireContext(), this.rootView, unknownServerError)
+        doOnServerError(response)
       }
     }
+  }
+
+  private fun doOnServerError(response: Response) {
+    if (response.isItValidationError) {
+      Log.i (TAG, "Поле: ${response.errorValidationField}")
+      doOnServerFieldValidationError(response)
+    }
+
+    val unknownServerError = getString(R.string.unknown_server_error, response.message)
+    showErrorBalloon(requireContext(), this.rootView, unknownServerError)
+  }
+
+  private fun doOnServerFieldValidationError (response: Response) {
+    val errorStr = getString (
+      R.string.reg_server_validation_error,
+      response.errorValidationField,
+      response.message
+    )
+    when (response.errorValidationField) {
+      "first_name" -> {
+        showErrorBalloon(requireContext(), etFirstName, errorStr)
+      }
+      "last_name" -> {
+        showErrorBalloon(requireContext(), etLastName, errorStr)
+      }
+      "birth_date" -> {
+        showErrorBalloon(requireContext(), etBirthDate, errorStr)
+      }
+      "phone" -> {
+        showErrorBalloon(requireContext(), etPhone, errorStr)
+      }
+      "phone_wa" -> {
+        showErrorBalloon(requireContext(), etPhoneWhatsapp, errorStr)
+      }
+      "password" -> {
+        showErrorBalloon(requireContext(), etPassword, errorStr)
+      }
+    }
+    return
+  }
+
+  private fun doOnSystemError(response: Response) {
+    if (!internetIsAvailable()) {
+      showErrorBalloon(requireContext(), this.rootView, R.string.internet_is_not_available)
+      return
+    }
+
+    val systemError = getString(R.string.system_error, response.message)
+    showErrorBalloon(requireContext(), this.rootView, systemError)
+  }
+
+  private fun doOnServerOkResult() {
+    val now = Calendar.getInstance().time
+    val user = `in`.arbait.database.User(
+      etPhone.text.toString(),
+      etPassword.text.toString(),
+      isConfirmed = false,
+      login = false,
+      createdAt = now
+    )
+    repository.addUser(user)
+    val mainActivity = context as MainActivity
+    mainActivity.replaceOnFragment("PhoneConfirmationFragment")
   }
 
   private fun inputFieldsAreValid(user: User): Boolean {

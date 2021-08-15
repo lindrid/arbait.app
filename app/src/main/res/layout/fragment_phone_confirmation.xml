@@ -18,6 +18,7 @@
         android:id="@+id/tv_phone_conf_incoming_call"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:textColor="@color/black"
         android:text="@string/phone_conf_tv_incoming_call"
         android:textAlignment="center"
         android:textSize="24sp"

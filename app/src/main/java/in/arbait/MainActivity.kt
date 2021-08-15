@@ -45,4 +45,17 @@ class MainActivity : AppCompatActivity() {
       }
     }
   }
+
+  fun replaceOnFragment (fragmentName: String) {
+    val fragment: Fragment = when (fragmentName) {
+      "PhoneConfirmationFragment" -> PhoneConfirmationFragment()
+      else -> RegistrationFragment()
+    }
+
+    supportFragmentManager
+      .beginTransaction()
+      .replace(R.id.fragment_container, fragment)
+      .addToBackStack(null)
+      .commit()
+  }
 }
