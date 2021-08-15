@@ -31,7 +31,7 @@ class Server {
     .addConverterFactory(GsonConverterFactory.create(gson))
     .client(client)
     .build()
-  private lateinit var serverApi: ServerApi
+  private val serverApi = retrofit.create(ServerApi::class.java)
   private val headers = HashMap<String, String>()
 
 
@@ -42,29 +42,56 @@ class Server {
   }
 
   fun registerUser (user: User, onResult: (`in`.arbait.http.Response) -> Unit) {
-    serverApi = retrofit.create(ServerApi::class.java)
-    serverApi.register(headers, user).enqueue(
-      object : Callback<String> {
-        private lateinit var response: `in`.arbait.http.Response
-
-        override fun onFailure(call: Call<String>, t: Throwable) {
-          Log.d (TAG, "register.onFailure: ${t.message}, $t")
-          response = Response(t)
-          onResult(response)
-        }
-        override fun onResponse(call: Call<String>, response: Response<String>) {
-          if (response.isSuccessful) {
-            this.response = Response(response)
-          }
-          else {
-            response.errorBody()?.let {
-              this.response = Response(it)
-            }
-          }
-          onResult(this.response)
-        }
-      }
+    serverApi.register(headers, user).enqueue (
+      getCallbackObject (
+        "register.onFailure",
+        "register.response.isSuccessful",
+        "NOT register.response.isSuccessful, errorBody",
+        onResult
+      )
     )
+  }
+
+  fun getIncomingCall (onResult: (`in`.arbait.http.Response) -> Unit) {
+    serverApi.sendVerRequest(headers).enqueue (
+      getCallbackObject (
+        "getIncomingCall.onFailure",
+        "getIncomingCall.response.isSuccessful",
+        "NOT getIncomingCall.response.isSuccessful, errorBody",
+        onResult
+      )
+    )
+  }
+
+
+  private fun getCallbackObject (
+    msgOnFailure: String,
+    msgOnSuccessful: String,
+    msgOnServerError: String,
+    onResult: (`in`.arbait.http.Response) -> Unit): Callback<String>
+  {
+    return object : Callback<String> {
+      private lateinit var response: `in`.arbait.http.Response
+
+      override fun onFailure(call: Call<String>, t: Throwable) {
+        Log.d (TAG, "$msgOnFailure: ${t.message}, $t")
+        response = Response(t)
+        onResult(response)
+      }
+      override fun onResponse(call: Call<String>, response: Response<String>) {
+        if (response.isSuccessful) {
+          Log.d (TAG, "$msgOnSuccessful: $response")
+          this.response = Response(response)
+        }
+        else {
+          response.errorBody()?.let {
+            Log.d (TAG, "$msgOnServerError: $it")
+            this.response = Response(it)
+          }
+        }
+        onResult(this.response)
+      }
+    }
   }
 
 }

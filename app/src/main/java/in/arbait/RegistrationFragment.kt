@@ -46,7 +46,12 @@ class RegistrationFragment : Fragment() {
   private val repository = UserRepository.get()
 
   private var registrationFields = mutableListOf<EditText>()
+  private var userBirthDate: Date? = null
+
+  private lateinit var birthDateFragmentDialog: BirthDateFragmentDialog
+  private lateinit var supportFragmentManager: FragmentManager
   private lateinit var rootView: View
+
   private lateinit var tvRegistration: TextView
   private lateinit var etFirstName: EditText
   private lateinit var etLastName: EditText
@@ -57,10 +62,7 @@ class RegistrationFragment : Fragment() {
   private lateinit var etPassword: EditText
   private lateinit var btDone: Button
 
-  private var userBirthDate: Date? = null
-  private lateinit var birthDateFragmentDialog: BirthDateFragmentDialog
 
-  private lateinit var supportFragmentManager: FragmentManager
 
   private val setPhoneWaEqualsToPhone = { _: View ->
     etPhoneWhatsapp.text = etPhone.text
@@ -205,19 +207,24 @@ class RegistrationFragment : Fragment() {
 
   private fun onResult (response: Response) {
     when (response.code) {
-      SERVER_OK -> {
-        Log.i (TAG,"Все ок, сервер вернул: ${response.message}")
-        doOnServerOkResult()
-      }
-      SYSTEM_ERROR -> {
-        Log.i (TAG,"Системная ошибка ${response.message}")
-        doOnSystemError(response)
-      }
-      SERVER_ERROR -> {
-        Log.i (TAG,"Регистрация не прошла, сервер вернул ${response.message}")
-        doOnServerError(response)
-      }
+      SERVER_OK     -> doOnServerOkResult()
+      SYSTEM_ERROR  -> doOnSystemError(response)
+      SERVER_ERROR  -> doOnServerError(response)
     }
+  }
+
+  private fun doOnServerOkResult() {
+    val now = Calendar.getInstance().time
+    val user = `in`.arbait.database.User(
+      etPhone.text.toString(),
+      etPassword.text.toString(),
+      isConfirmed = false,
+      login = false,
+      createdAt = now
+    )
+    repository.addUser(user)
+    val mainActivity = context as MainActivity
+    mainActivity.replaceOnFragment("PhoneConfirmationFragment")
   }
 
   private fun doOnServerError(response: Response) {
@@ -267,20 +274,6 @@ class RegistrationFragment : Fragment() {
 
     val systemError = getString(R.string.system_error, response.message)
     showErrorBalloon(requireContext(), this.rootView, systemError)
-  }
-
-  private fun doOnServerOkResult() {
-    val now = Calendar.getInstance().time
-    val user = `in`.arbait.database.User(
-      etPhone.text.toString(),
-      etPassword.text.toString(),
-      isConfirmed = false,
-      login = false,
-      createdAt = now
-    )
-    repository.addUser(user)
-    val mainActivity = context as MainActivity
-    mainActivity.replaceOnFragment("PhoneConfirmationFragment")
   }
 
   private fun inputFieldsAreValid(user: User): Boolean {

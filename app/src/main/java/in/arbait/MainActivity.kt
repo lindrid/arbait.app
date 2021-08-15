@@ -24,8 +24,8 @@ class MainActivity : AppCompatActivity() {
     repository = UserRepository.get()
 
     GlobalScope.launch {
-      val lastUser: User? = repository.getUserLastByDate(true)
-      Log.i (TAG, "Repository.getUserLastByDate(isConfirmed=true): $lastUser")
+      val lastUser: User? = repository.getUserLastByDate(false)
+      Log.i (TAG, "Repository.getUserLastByDate(isConfirmed=false): $lastUser")
 
       val currentFragment = supportFragmentManager.findFragmentById(R.id.fragment_container)
 

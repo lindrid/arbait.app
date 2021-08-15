@@ -17,4 +17,7 @@ interface ServerApi {
     @Body userData: User
   ): Call<String>
 
+  @POST("/api/send_ver_request")
+  fun sendVerRequest (@HeaderMap headers: Map<String, String>): Call<String>
+
 }
