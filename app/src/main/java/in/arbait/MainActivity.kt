@@ -1,6 +1,7 @@
 package `in`.arbait
 
 import `in`.arbait.database.User
+import `in`.arbait.http.sessionIsAlive
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
@@ -31,9 +32,7 @@ class MainActivity : AppCompatActivity() {
         var fragment: Fragment = RegistrationFragment()
 
         if (lastUser != null) {
-          val now = Calendar.getInstance().time
-          val diffDays = getDiffDays(lastUser.createdAt, now)
-          if (diffDays != -1 && diffDays <= 7) {
+          if (sessionIsAlive(lastUser.createdAt)) {
             fragment = PhoneConfirmationFragment()
           }
         }
