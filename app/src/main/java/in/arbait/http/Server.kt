@@ -1,7 +1,9 @@
 package `in`.arbait.http
 
+import android.content.Context
 import android.util.Log
 import com.google.gson.GsonBuilder
+import okhttp3.JavaNetCookieJar
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import org.json.JSONObject
@@ -11,26 +13,38 @@ import retrofit2.Response
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import retrofit2.converter.scalars.ScalarsConverterFactory
+import java.net.CookieManager
+import java.net.CookiePolicy
 
 private const val TAG = "Server"
 
-class Server {
+class Server (private val context: Context) {
 
   private val gson = GsonBuilder()
     .setLenient()
     .create()
+
+  private val cookieManager = CookieManager().apply {
+    setCookiePolicy(CookiePolicy.ACCEPT_ALL)
+  }
+
   private val loggingInterceptor = HttpLoggingInterceptor().apply {
     level = HttpLoggingInterceptor.Level.BODY
   }
+
   private val client = OkHttpClient.Builder()
     .addInterceptor(loggingInterceptor)
+    .addInterceptor(SendSavedCookiesInterceptor(context))
+    .addInterceptor(SaveReceivedCookiesInterceptor(context))
     .build()
+
   private val retrofit = Retrofit.Builder()
     .baseUrl(ARBAIT_BASE_URL)
     .addConverterFactory(ScalarsConverterFactory.create())
     .addConverterFactory(GsonConverterFactory.create(gson))
     .client(client)
     .build()
+
   private val serverApi = retrofit.create(ServerApi::class.java)
   private val headers = HashMap<String, String>()
 

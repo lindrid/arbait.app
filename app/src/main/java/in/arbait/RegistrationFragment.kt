@@ -42,7 +42,7 @@ private val DEFAULT_EDITTEXT_EMERALD_COLOR = Color.parseColor("#02dac5")
 
 class RegistrationFragment : Fragment() {
 
-  private val server = Server()
+  private lateinit var server: Server
   private val repository = UserRepository.get()
 
   private var registrationFields = mutableListOf<EditText>()
@@ -61,7 +61,6 @@ class RegistrationFragment : Fragment() {
   private lateinit var btSamePhone: Button
   private lateinit var etPassword: EditText
   private lateinit var btDone: Button
-
 
 
   private val setPhoneWaEqualsToPhone = { _: View ->
@@ -159,6 +158,7 @@ class RegistrationFragment : Fragment() {
       setRegistrationFieldsListeners()
     }
 
+    server = Server(requireContext())
     this.rootView = view
     return view
   }

@@ -14,7 +14,7 @@ private const val TAG = "PhoneConfirmation"
 
 class PhoneConfirmationFragment: Fragment(), View.OnClickListener {
 
-  private val server = Server()
+  private lateinit var server: Server
   private val repository = UserRepository.get()
   private var callWasRequested = false
 
@@ -38,6 +38,7 @@ class PhoneConfirmationFragment: Fragment(), View.OnClickListener {
 
     btRequestCall.setOnClickListener(this)
 
+    server = Server(requireContext())
     this.rootView = view
     return view
   }
@@ -70,11 +71,7 @@ class PhoneConfirmationFragment: Fragment(), View.OnClickListener {
     }
 
     override fun doOnServerFieldValidationError(response: Response) {
-      when (response.errorValidationField) {
-        "code" -> {
-          showErrorBalloon(requireContext(), etCode, serverValidationError())
-        }
-      }
+
     }
   }
 
