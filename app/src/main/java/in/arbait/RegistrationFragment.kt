@@ -207,73 +207,56 @@ class RegistrationFragment : Fragment() {
 
   private fun onResult (response: Response) {
     when (response.code) {
-      SERVER_OK     -> doOnServerOkResult()
-      SYSTEM_ERROR  -> doOnSystemError(response)
-      SERVER_ERROR  -> doOnServerError(response)
+      SERVER_OK     -> Register(response).doOnServerOkResult()
+      SYSTEM_ERROR  -> Register(response).doOnSystemError()
+      SERVER_ERROR  -> Register(response).doOnServerError()
     }
   }
 
-  private fun doOnServerOkResult() {
-    val now = Calendar.getInstance().time
-    val user = `in`.arbait.database.User(
-      etPhone.text.toString(),
-      etPassword.text.toString(),
-      isConfirmed = false,
-      login = false,
-      createdAt = now
-    )
-    repository.addUser(user)
-    val mainActivity = context as MainActivity
-    mainActivity.replaceOnFragment("PhoneConfirmationFragment")
-  }
-
-  private fun doOnServerError(response: Response) {
-    if (response.isItValidationError) {
-      Log.i (TAG, "Поле: ${response.errorValidationField}")
-      doOnServerFieldValidationError(response)
+  private inner class Register (response: Response):
+    ReactionOnServerResponse (TAG, requireContext(), rootView, response)
+  {
+    override fun doOnServerOkResult() {
+      val now = Calendar.getInstance().time
+      val user = `in`.arbait.database.User(
+        etPhone.text.toString(),
+        etPassword.text.toString(),
+        isConfirmed = false,
+        login = false,
+        createdAt = now
+      )
+      repository.addUser(user)
+      val mainActivity = context as MainActivity
+      mainActivity.replaceOnFragment("PhoneConfirmationFragment")
     }
 
-    val unknownServerError = getString(R.string.unknown_server_error, response.message)
-    showErrorBalloon(requireContext(), this.rootView, unknownServerError)
-  }
-
-  private fun doOnServerFieldValidationError (response: Response) {
-    val errorStr = getString (
-      R.string.server_validation_error,
-      response.errorValidationField,
-      response.message
-    )
-    when (response.errorValidationField) {
-      "first_name" -> {
-        showErrorBalloon(requireContext(), etFirstName, errorStr)
-      }
-      "last_name" -> {
-        showErrorBalloon(requireContext(), etLastName, errorStr)
-      }
-      "birth_date" -> {
-        showErrorBalloon(requireContext(), etBirthDate, errorStr)
-      }
-      "phone" -> {
-        showErrorBalloon(requireContext(), etPhone, errorStr)
-      }
-      "phone_wa" -> {
-        showErrorBalloon(requireContext(), etPhoneWhatsapp, errorStr)
-      }
-      "password" -> {
-        showErrorBalloon(requireContext(), etPassword, errorStr)
+    override fun doOnServerFieldValidationError(response: Response) {
+      val errorStr = getString (
+        R.string.server_validation_error,
+        response.errorValidationField,
+        response.message
+      )
+      when (response.errorValidationField) {
+        "first_name" -> {
+          showErrorBalloon(requireContext(), etFirstName, errorStr)
+        }
+        "last_name" -> {
+          showErrorBalloon(requireContext(), etLastName, errorStr)
+        }
+        "birth_date" -> {
+          showErrorBalloon(requireContext(), etBirthDate, errorStr)
+        }
+        "phone" -> {
+          showErrorBalloon(requireContext(), etPhone, errorStr)
+        }
+        "phone_wa" -> {
+          showErrorBalloon(requireContext(), etPhoneWhatsapp, errorStr)
+        }
+        "password" -> {
+          showErrorBalloon(requireContext(), etPassword, errorStr)
+        }
       }
     }
-    return
-  }
-
-  private fun doOnSystemError(response: Response) {
-    if (!internetIsAvailable()) {
-      showErrorBalloon(requireContext(), this.rootView, R.string.internet_is_not_available)
-      return
-    }
-
-    val systemError = getString(R.string.system_error, response.message)
-    showErrorBalloon(requireContext(), this.rootView, systemError)
   }
 
   private fun inputFieldsAreValid(user: User): Boolean {

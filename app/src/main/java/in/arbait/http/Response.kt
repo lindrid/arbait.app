@@ -6,6 +6,7 @@ import retrofit2.Response
 
 private const val TAG = "http.Response"
 private const val ROOT_VALIDATION_ERROR_JSON_STR = "errors"
+private const val ROOT_ERROR_WITH_CODE_MSG = "error_msg"
 
 const val SYSTEM_ERROR = 0
 const val SERVER_OK = 1
@@ -20,6 +21,9 @@ class Response {
     private set
 
   var isItValidationError = false
+    private set
+
+  var isItErrorWithCode = false
     private set
 
   var errorValidationField = ""
@@ -44,6 +48,12 @@ class Response {
           errorValidationField = pair.first
           message = pair.second
         }
+        return
+      }
+
+      isItErrorWithCode = obj.has(ROOT_ERROR_WITH_CODE_MSG)
+      if (isItErrorWithCode) {
+        message = obj.getString(ROOT_ERROR_WITH_CODE_MSG)
       }
     }
   }

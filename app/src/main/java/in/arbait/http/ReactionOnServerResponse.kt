@@ -16,11 +16,21 @@ abstract class ReactionOnServerResponse (
 ) {
 
   abstract fun doOnServerOkResult()
+  abstract fun doOnServerFieldValidationError(response: Response)
 
   fun doOnServerError() {
     if (response.isItValidationError) {
       Log.i(TAG, "Поле: ${response.errorValidationField}")
       doOnServerFieldValidationError(response)
+      return
+    }
+
+    if (response.isItErrorWithCode) {
+      Log.i (TAG, "Error_with_code: ${response.message}")
+      response.message?.let {
+        showErrorBalloon(context, view, it)
+        return
+      }
     }
 
     App.res?.let {
@@ -41,7 +51,6 @@ abstract class ReactionOnServerResponse (
     }
   }
 
-  abstract fun doOnServerFieldValidationError(response: Response)
 
   fun serverValidationError(): String {
     App.res?.let {

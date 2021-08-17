@@ -24,10 +24,6 @@ class Server (private val context: Context) {
     .setLenient()
     .create()
 
-  private val cookieManager = CookieManager().apply {
-    setCookiePolicy(CookiePolicy.ACCEPT_ALL)
-  }
-
   private val loggingInterceptor = HttpLoggingInterceptor().apply {
     level = HttpLoggingInterceptor.Level.BODY
   }
