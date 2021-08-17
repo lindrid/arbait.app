@@ -53,26 +53,34 @@ class Server (private val context: Context) {
 
   fun registerUser (user: User, onResult: (`in`.arbait.http.Response) -> Unit) {
     serverApi.register(headers, user).enqueue (
-      getCallbackObject (
-        "register.onFailure",
-        "register.response.isSuccessful",
-        "NOT register.response.isSuccessful, errorBody",
-        onResult
-      )
+      getCallbackObjectShort("registerUser", onResult)
     )
   }
 
   fun getIncomingCall (onResult: (`in`.arbait.http.Response) -> Unit) {
     serverApi.sendVerRequest(headers).enqueue (
-      getCallbackObject (
-        "getIncomingCall.onFailure",
-        "getIncomingCall.response.isSuccessful",
-        "NOT getIncomingCall.response.isSuccessful, errorBody",
-        onResult
-      )
+      getCallbackObjectShort("getIncomingCall", onResult)
     )
   }
 
+  fun verifyUser (code: String, onResult: (`in`.arbait.http.Response) -> Unit) {
+    serverApi.verifyUser(headers, code).enqueue(
+      getCallbackObjectShort("verifyUser", onResult)
+    )
+  }
+
+
+  private fun getCallbackObjectShort (
+    funcName: String,
+    onResult: (`in`.arbait.http.Response) -> Unit): Callback<String>
+  {
+    return getCallbackObject(
+      "$funcName.onFailure",
+      "$funcName.response.isSuccessful",
+      "NOT SUCCESSFUL $funcName.response, errorBody",
+      onResult
+    )
+  }
 
   private fun getCallbackObject (
     msgOnFailure: String,

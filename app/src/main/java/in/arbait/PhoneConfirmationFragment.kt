@@ -1,5 +1,6 @@
 package `in`.arbait
 
+import `in`.arbait.database.User
 import `in`.arbait.http.*
 import android.os.Bundle
 import androidx.fragment.app.Fragment
@@ -11,8 +12,9 @@ import android.widget.Button
 import android.widget.EditText
 
 private const val TAG = "PhoneConfirmation"
+private const val CODE_LENGTH = 4
 
-class PhoneConfirmationFragment: Fragment(), View.OnClickListener {
+class PhoneConfirmationFragment (private val user: User): Fragment(), View.OnClickListener {
 
   private lateinit var server: Server
   private val repository = UserRepository.get()
@@ -48,9 +50,59 @@ class PhoneConfirmationFragment: Fragment(), View.OnClickListener {
       R.id.bt_phone_conf_request_call -> {
         onClickRequestCallButton()
       }
+      R.id.bt_phone_conf_done -> {
+        onClickDoneButton()
+      }
     }
   }
 
+
+  private fun onClickDoneButton() {
+    if (!callWasRequested) {
+      showErrorBalloon(requireContext(), rootView, R.string.phone_conf_not_requested_call)
+      return
+    }
+
+    val code = etCode.text.toString()
+
+    if (code.isEmpty()) {
+      showValidationError(requireContext(), etCode, R.string.phone_conf_empty_code)
+      return
+    }
+
+    if (code.length != CODE_LENGTH) {
+      showValidationError(requireContext(), etCode, R.string.phone_conf_wrong_length)
+      return
+    }
+
+    server.verifyUser(code) { response ->
+      val verifyUser = VerifyUser(response)
+      when (response.code) {
+        SERVER_OK     -> verifyUser.doOnServerOkResult()
+        SYSTEM_ERROR  -> verifyUser.doOnSystemError()
+        SERVER_ERROR  -> verifyUser.doOnServerError()
+      }
+    }
+  }
+
+  private inner class VerifyUser (response: Response):
+    ReactionOnServerResponse (TAG, requireContext(), rootView, response)
+  {
+    override fun doOnServerOkResult() {
+      // все ок, пользователь зарегистрирован
+      user.isConfirmed = true
+      repository.updateUser(user)
+    }
+
+    override fun doOnServerFieldValidationError(response: Response) {
+      val errorStr = getString (
+        R.string.server_validation_error,
+        response.errorValidationField,
+        response.message
+      )
+      showErrorBalloon(requireContext(), etCode, errorStr)
+    }
+  }
 
   private fun onClickRequestCallButton() {
     server.getIncomingCall { response ->
@@ -77,8 +129,15 @@ class PhoneConfirmationFragment: Fragment(), View.OnClickListener {
 
 }
 
-private class NumericKeyBoardTransformationMethod: PasswordTransformationMethod() {
-  override fun getTransformation(source: CharSequence, view: View?): CharSequence {
+
+// т.к. android:inputType="numberPassword", чтобы ввод цифр не превращался в *
+// нужно сделать свою трансформацию, которая показывает цифры введенными как есть
+// (а не заменяет их на звездочки, что делает стандартная трансформация для Password)
+
+private class NumericKeyBoardTransformationMethod: PasswordTransformationMethod()
+{
+  override fun getTransformation(source: CharSequence, view: View?): CharSequence
+  {
     return source
   }
 }

@@ -39,4 +39,7 @@
         Последние 4 цифры номера - это КОД. Введите его в поле для подтверждения.</string>
     <string name="phone_conf_code">Код</string>
     <string name="phone_conf_get_code">Получить код</string>
+    <string name="phone_conf_empty_code">Код не должен быть пустым :)</string>
+    <string name="phone_conf_wrong_length">Код должен состоять из 4 символов :)</string>
+    <string name="phone_conf_not_requested_call">Сначала получите код :)</string>
 </resources>

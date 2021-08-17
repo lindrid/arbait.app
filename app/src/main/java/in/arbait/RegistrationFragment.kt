@@ -16,6 +16,7 @@ import androidx.fragment.app.FragmentManager
 import java.util.*
 
 const val BIRTH_DATE_KEY = "birthDate"
+const val USER_ARG = "user"
 
 private const val TAG = "RegistrationFragment"
 private const val BIRTH_DATE_DIALOG_TAG = "BirthDateFragmentDialog"
@@ -226,8 +227,11 @@ class RegistrationFragment : Fragment() {
         createdAt = now
       )
       repository.addUser(user)
+      val args = Bundle().apply {
+        putSerializable(USER_ARG, user)
+      }
       val mainActivity = context as MainActivity
-      mainActivity.replaceOnFragment("PhoneConfirmationFragment")
+      mainActivity.replaceOnFragment("PhoneConfirmationFragment", args)
     }
 
     override fun doOnServerFieldValidationError(response: Response) {

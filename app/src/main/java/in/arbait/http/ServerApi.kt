@@ -1,10 +1,7 @@
 package `in`.arbait.http
 
 import retrofit2.Call
-import retrofit2.http.Body
-import retrofit2.http.HeaderMap
-import retrofit2.http.Headers
-import retrofit2.http.POST
+import retrofit2.http.*
 
 const val ARBAIT_BASE_URL = "http://arbait.in"
 
@@ -19,5 +16,9 @@ interface ServerApi {
 
   @POST("/api/send_ver_request")
   fun sendVerRequest (@HeaderMap headers: Map<String, String>): Call<String>
+
+  @POST("/api/verify_user")
+  fun verifyUser (@HeaderMap headers: Map<String, String>,
+                  @Query("user_ver_code") userVerCode: String): Call<String>
 
 }

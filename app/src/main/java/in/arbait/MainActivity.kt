@@ -34,7 +34,7 @@ class MainActivity : AppCompatActivity() {
 
         if (lastUser != null) {
           if (sessionIsAlive(lastUser.createdAt)) {
-            fragment = PhoneConfirmationFragment()
+            fragment = PhoneConfirmationFragment(lastUser)
           }
         }
 
@@ -46,9 +46,12 @@ class MainActivity : AppCompatActivity() {
     }
   }
 
-  fun replaceOnFragment (fragmentName: String) {
+  fun replaceOnFragment (fragmentName: String, args: Bundle = Bundle()) {
     val fragment: Fragment = when (fragmentName) {
-      "PhoneConfirmationFragment" -> PhoneConfirmationFragment()
+      "PhoneConfirmationFragment" -> {
+        val user = args.getSerializable(USER_ARG) as User
+        PhoneConfirmationFragment(user)
+      }
       else -> RegistrationFragment()
     }
 
