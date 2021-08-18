@@ -132,7 +132,7 @@ fun showErrorBalloon(context: Context, whereToShow: View, text: String) {
   val balloon = createBalloon(context) {
     setArrowSize(10)
     setWidth(BalloonSizeSpec.WRAP)
-    setHeight(65)
+    setHeight(BalloonSizeSpec.WRAP)
     setArrowPosition(0.7f)
     setCornerRadius(4f)
     setAlpha(0.9f)

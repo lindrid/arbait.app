@@ -5,6 +5,7 @@ import `in`.arbait.http.*
 import android.os.Bundle
 import androidx.fragment.app.Fragment
 import android.text.method.PasswordTransformationMethod
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -18,12 +19,12 @@ class PhoneConfirmationFragment (private val user: User): Fragment(), View.OnCli
 
   private lateinit var server: Server
   private val repository = UserRepository.get()
-  private var callWasRequested = false
 
   private lateinit var rootView: View
 
   private lateinit var etCode: EditText
   private lateinit var btRequestCall: Button
+  private lateinit var btDone: Button
 
 
   override fun onCreateView(
@@ -37,8 +38,10 @@ class PhoneConfirmationFragment (private val user: User): Fragment(), View.OnCli
     etCode = view.findViewById(R.id.et_phone_conf_code)
     etCode.transformationMethod = NumericKeyBoardTransformationMethod()
     btRequestCall = view.findViewById(R.id.bt_phone_conf_request_call)
+    btDone = view.findViewById(R.id.bt_phone_conf_done)
 
     btRequestCall.setOnClickListener(this)
+    btDone.setOnClickListener(this)
 
     server = Server(requireContext())
     this.rootView = view
@@ -58,12 +61,13 @@ class PhoneConfirmationFragment (private val user: User): Fragment(), View.OnCli
 
 
   private fun onClickDoneButton() {
-    if (!callWasRequested) {
+    if (!user.callReceived) {
       showErrorBalloon(requireContext(), rootView, R.string.phone_conf_not_requested_call)
       return
     }
 
     val code = etCode.text.toString()
+    Log.i(TAG, "code: $code, code.isEmpty() = ${code.isEmpty()}")
 
     if (code.isEmpty()) {
       showValidationError(requireContext(), etCode, R.string.phone_conf_empty_code)
@@ -89,7 +93,7 @@ class PhoneConfirmationFragment (private val user: User): Fragment(), View.OnCli
     ReactionOnServerResponse (TAG, requireContext(), rootView, response)
   {
     override fun doOnServerOkResult() {
-      // все ок, пользователь зарегистрирован
+      Log.i(TAG, "все ок, пользователь зарегистрирован")
       user.isConfirmed = true
       repository.updateUser(user)
     }
@@ -119,7 +123,8 @@ class PhoneConfirmationFragment (private val user: User): Fragment(), View.OnCli
     ReactionOnServerResponse (TAG, requireContext(), rootView, response)
   {
     override fun doOnServerOkResult() {
-      callWasRequested = true
+      user.callReceived = true
+      repository.updateUser(user)
     }
 
     override fun doOnServerFieldValidationError(response: Response) {

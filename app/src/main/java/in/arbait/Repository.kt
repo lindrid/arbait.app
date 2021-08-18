@@ -2,6 +2,7 @@ package `in`.arbait
 
 import `in`.arbait.database.User
 import `in`.arbait.database.UserDatabase
+import `in`.arbait.database.migration_1_2
 import android.content.Context
 import androidx.room.Room
 import java.util.concurrent.Executors
@@ -14,7 +15,7 @@ class UserRepository private constructor(context: Context) {
     context.applicationContext,
     UserDatabase::class.java,
     DATABASE_NAME
-  ).build()
+  ).addMigrations(migration_1_2).build()
 
   private val userDao = database.userDao()
   private val executor = Executors.newSingleThreadExecutor()

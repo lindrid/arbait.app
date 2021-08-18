@@ -9,6 +9,7 @@ import java.util.*
 data class User (
   @PrimaryKey var phone: String,
   var password: String = "",
+  var callReceived: Boolean = false,
   var isConfirmed: Boolean = false,
   var login: Boolean = false,
   var createdAt: Date = Date()
