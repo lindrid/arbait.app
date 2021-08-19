@@ -20,7 +20,11 @@ class UserRepository private constructor(context: Context) {
   private val userDao = database.userDao()
   private val executor = Executors.newSingleThreadExecutor()
 
-  suspend fun getUserLastByDate(isConfirmed: Boolean): User? {
+  suspend fun getUserLastByDate(): User? {
+    return userDao.getUserLastByDate()
+  }
+
+  suspend fun getUserLastByDate (isConfirmed: Boolean): User? {
     return userDao.getUserLastByDate(isConfirmed)
   }
 

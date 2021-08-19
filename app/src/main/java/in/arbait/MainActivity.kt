@@ -24,8 +24,8 @@ class MainActivity : AppCompatActivity() {
     repository = UserRepository.get()
 
     GlobalScope.launch {
-      val lastUser: User? = repository.getUserLastByDate(false)
-      Log.i (TAG, "Repository.getUserLastByDate(isConfirmed=false): $lastUser")
+      val lastUser: User? = repository.getUserLastByDate()
+      Log.i (TAG, "Repository.getUserLastByDate(): $lastUser")
 
       val currentFragment = supportFragmentManager.findFragmentById(R.id.fragment_container)
 
@@ -33,7 +33,10 @@ class MainActivity : AppCompatActivity() {
         var fragment: Fragment = RegistrationFragment()
 
         if (lastUser != null) {
-          if (sessionIsAlive(lastUser.createdAt)) {
+          if (lastUser.isConfirmed) {
+            fragment = ApplicationsFragment()
+          }
+          else if (sessionIsAlive(lastUser.createdAt)) {
             fragment = PhoneConfirmationFragment(lastUser)
           }
         }
@@ -52,6 +55,7 @@ class MainActivity : AppCompatActivity() {
         val user = args.getSerializable(USER_ARG) as User
         PhoneConfirmationFragment(user)
       }
+      "ApplicationsFragment" -> ApplicationsFragment()
       else -> RegistrationFragment()
     }
 

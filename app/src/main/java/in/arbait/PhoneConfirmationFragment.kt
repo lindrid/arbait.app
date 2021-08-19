@@ -96,6 +96,8 @@ class PhoneConfirmationFragment (private val user: User): Fragment(), View.OnCli
       Log.i(TAG, "все ок, пользователь зарегистрирован")
       user.isConfirmed = true
       repository.updateUser(user)
+      val mainActivity = requireActivity() as MainActivity
+      mainActivity.replaceOnFragment("ApplicationsFragment")
     }
 
     override fun doOnServerFieldValidationError(response: Response) {

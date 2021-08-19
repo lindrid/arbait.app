@@ -42,4 +42,7 @@
     <string name="phone_conf_empty_code">Код не должен быть пустым :)</string>
     <string name="phone_conf_wrong_length">Код должен состоять из 4 символов :)</string>
     <string name="phone_conf_not_requested_call">Сначала получите код :)</string>
+    <string name="apps_time">xx:yy</string>
+    <string name="apps_address">Кирова 54</string>
+    <string name="apps_worker_income">250 рчас</string>
 </resources>
