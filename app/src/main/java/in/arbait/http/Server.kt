@@ -69,6 +69,11 @@ class Server (private val context: Context) {
     )
   }
 
+  fun getAppList (onResult: (`in`.arbait.http.Response) -> Unit) {
+    serverApi.getAppList(headers).enqueue(
+      getCallbackObjectShort("getAppList", onResult))
+  }
+
 
   private fun getCallbackObjectShort (
     funcName: String,
