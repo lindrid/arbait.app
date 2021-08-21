@@ -37,30 +37,34 @@ class Response {
 
   constructor (errorBody: ResponseBody) {
     code = SERVER_ERROR
-
-    errorBody?.let {
-      val obj = JSONObject(it.string())
-      it.close()
-      isItValidationError = obj.has(ROOT_VALIDATION_ERROR_JSON_STR)
-      if (isItValidationError) {
-        val pair = getErrorFieldAndMsg(obj)
-        pair?.let {
-          errorValidationField = pair.first
-          message = pair.second
-        }
-        return
+    val obj = JSONObject(errorBody.string())
+    errorBody.close()
+    isItValidationError = obj.has(ROOT_VALIDATION_ERROR_JSON_STR)
+    if (isItValidationError) {
+      val pair = getErrorFieldAndMsg(obj)
+      pair?.let {
+        errorValidationField = pair.first
+        message = pair.second
       }
+      return
+    }
 
-      isItErrorWithCode = obj.has(ROOT_ERROR_WITH_CODE_MSG)
-      if (isItErrorWithCode) {
-        message = obj.getString(ROOT_ERROR_WITH_CODE_MSG)
-      }
+    isItErrorWithCode = obj.has(ROOT_ERROR_WITH_CODE_MSG)
+    if (isItErrorWithCode) {
+      message = obj.getString(ROOT_ERROR_WITH_CODE_MSG)
     }
   }
 
   constructor (t: Throwable) {
     code = SYSTEM_ERROR
     message = t.message
+  }
+
+  fun parseJsonArray (paramName: String) {
+    if (code == SERVER_OK) {
+      val json = JSONObject(message)
+      val array = json.getJSONArray(paramName)
+    }
   }
 
 

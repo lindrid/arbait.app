@@ -39,11 +39,11 @@ class ApplicationsFragment: Fragment() {
     return view
   }
 
-  private inner class AppList (response: Response):
+  private inner class AppList (private val response: Response):
     ReactionOnServerResponse(TAG, requireContext(), rootView, response)
   {
     override fun doOnServerOkResult() {
-      Log.i(TAG, "сервер отработал без ошибок и вернул список заявок")
+      Log.i(TAG, "сервер отработал без ошибок и вернул список заявок: ${response.message}")
     }
 
     override fun doOnServerFieldValidationError(response: Response) {
