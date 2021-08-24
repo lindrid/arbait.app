@@ -2,7 +2,6 @@ package `in`.arbait
 
 import `in`.arbait.http.*
 import android.os.Bundle
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -14,6 +13,7 @@ private const val TAG = "ApplicationsFragment"
 class ApplicationsFragment: Fragment() {
 
   private lateinit var server: Server
+  private lateinit var appItems: List<ApplicationItem>
 
   private lateinit var rootView: View
   private lateinit var rvApps: RecyclerView
@@ -27,28 +27,9 @@ class ApplicationsFragment: Fragment() {
     rvApps = view.findViewById(R.id.rv_apps_list)
 
     server = Server(requireContext())
-    server.getAppList { response ->
-      val al = AppList(response)
-      when (response.code) {
-        SERVER_OK -> al.doOnServerOkResult()
-        SERVER_ERROR -> al.doOnServerError()
-        SYSTEM_ERROR -> al.doOnSystemError()
-      }
-    }
+    appItems = server.getAppList(requireContext(), rootView)
 
     return view
-  }
-
-  private inner class AppList (private val response: Response):
-    ReactionOnServerResponse(TAG, requireContext(), rootView, response)
-  {
-    override fun doOnServerOkResult() {
-      Log.i(TAG, "сервер отработал без ошибок и вернул список заявок: ${response.message}")
-    }
-
-    override fun doOnServerFieldValidationError(response: Response) {
-
-    }
   }
 
 }

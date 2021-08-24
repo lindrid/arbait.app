@@ -62,4 +62,18 @@ abstract class ReactionOnServerResponse (
     }
     return "ServerValidationError"
   }
+
+  companion object {
+    fun doOnFailure (response: Response, context: Context, view: View) {
+      if (!internetIsAvailable()) {
+        showErrorBalloon(context, view, R.string.internet_is_not_available)
+        return
+      }
+
+      App.res?.let {
+        val systemError = it.getString(R.string.system_error, response.message)
+        showErrorBalloon(context, view, systemError)
+      }
+    }
+  }
 }

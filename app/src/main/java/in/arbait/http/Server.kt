@@ -1,20 +1,22 @@
 package `in`.arbait.http
 
+import `in`.arbait.ApplicationItem
 import android.content.Context
 import android.util.Log
+import android.view.View
 import com.google.gson.GsonBuilder
-import okhttp3.JavaNetCookieJar
+import com.google.gson.JsonDeserializationContext
+import com.google.gson.JsonDeserializer
+import com.google.gson.JsonElement
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
-import org.json.JSONObject
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import retrofit2.converter.scalars.ScalarsConverterFactory
-import java.net.CookieManager
-import java.net.CookiePolicy
+import java.lang.reflect.Type
 
 private const val TAG = "Server"
 
@@ -22,6 +24,7 @@ class Server (private val context: Context) {
 
   private val gson = GsonBuilder()
     .setLenient()
+    .registerTypeAdapter(Boolean::class.java, IntBooleanDeserializer())
     .create()
 
   private val loggingInterceptor = HttpLoggingInterceptor().apply {
@@ -51,6 +54,33 @@ class Server (private val context: Context) {
     headers["X-Authorization"] = "access_token"
   }
 
+  fun getAppList (context: Context, rootView: View): List<ApplicationItem> {
+    var applicationItems: List<ApplicationItem> = mutableListOf()
+
+    serverApi.getAppList(headers).enqueue(
+      object : Callback<ApplicationsResponse> {
+        override fun onFailure (call: Call<ApplicationsResponse>, t: Throwable) {
+          Log.e (TAG, "getAppList FAILED!", t)
+          ReactionOnServerResponse.doOnFailure(Response(t), context, rootView)
+        }
+
+        override fun onResponse (call: Call<ApplicationsResponse>,
+                                 response: Response<ApplicationsResponse>)
+        {
+          Log.i (TAG, "Response received, response.body() = ${response.body()}")
+
+          val appsResponse: ApplicationsResponse? = response.body()
+          applicationItems = appsResponse?.appItems?: mutableListOf()
+
+          Log.i (TAG, "applicationItems = $applicationItems")
+        }
+      }
+    )
+
+    return applicationItems
+  }
+
+
   fun registerUser (user: User, onResult: (`in`.arbait.http.Response) -> Unit) {
     serverApi.register(headers, user).enqueue (
       getCallbackObjectShort("registerUser", onResult)
@@ -67,11 +97,6 @@ class Server (private val context: Context) {
     serverApi.verifyUser(headers, code).enqueue(
       getCallbackObjectShort("verifyUser", onResult)
     )
-  }
-
-  fun getAppList (onResult: (`in`.arbait.http.Response) -> Unit) {
-    serverApi.getAppList(headers).enqueue(
-      getCallbackObjectShort("getAppList", onResult))
   }
 
 
@@ -115,6 +140,17 @@ class Server (private val context: Context) {
         onResult(this.response)
       }
     }
+  }
+
+}
+
+// преобразуем, например, hourly_job = 1 в hourlyJob = true в нашем ApplicationItem
+class IntBooleanDeserializer : JsonDeserializer<Boolean> {
+
+  override fun deserialize (json: JsonElement, typeOfT: Type?,
+                            context: JsonDeserializationContext?): Boolean
+  {
+    return json.asInt == 1
   }
 
 }

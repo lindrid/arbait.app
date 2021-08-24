@@ -1,6 +1,10 @@
 package `in`.arbait
 
+import com.google.gson.JsonDeserializationContext
+import com.google.gson.JsonDeserializer
+import com.google.gson.JsonElement
 import com.google.gson.annotations.SerializedName
+import java.lang.reflect.Type
 import java.util.*
 
 data class ApplicationItem (
@@ -19,6 +23,7 @@ data class ApplicationItem (
   val state: Int,
   @SerializedName("dispatcher_id") val dispatcherId: Int,
 )
+
 
 /*
   id: 4444

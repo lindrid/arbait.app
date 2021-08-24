@@ -4,7 +4,7 @@ import `in`.arbait.ApplicationItem
 import com.google.gson.annotations.SerializedName
 
 
-class ApplicationResponse {
+class ApplicationsResponse {
   @SerializedName("apps")
   lateinit var appItems: List<ApplicationItem>
 }

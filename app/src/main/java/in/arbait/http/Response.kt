@@ -60,13 +60,6 @@ class Response {
     message = t.message
   }
 
-  fun parseJsonArray (paramName: String) {
-    if (code == SERVER_OK) {
-      val json = JSONObject(message)
-      val array = json.getJSONArray(paramName)
-    }
-  }
-
 
   private fun getErrorFieldAndMsg (obj: JSONObject): Pair<String, String>? {
     val errors = obj.getJSONObject("errors")

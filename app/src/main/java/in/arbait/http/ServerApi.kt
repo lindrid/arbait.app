@@ -22,5 +22,5 @@ interface ServerApi {
                   @Query("user_ver_code") userVerCode: String): Call<String>
 
   @GET("/api/app_list/index")
-  fun getAppList (@HeaderMap headers: Map<String, String>): Call<String>
+  fun getAppList (@HeaderMap headers: Map<String, String>): Call<ApplicationsResponse>
 }
