@@ -4,6 +4,8 @@ import `in`.arbait.ApplicationItem
 import android.content.Context
 import android.util.Log
 import android.view.View
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
 import com.google.gson.GsonBuilder
 import com.google.gson.JsonDeserializationContext
 import com.google.gson.JsonDeserializer
@@ -54,8 +56,8 @@ class Server (private val context: Context) {
     headers["X-Authorization"] = "access_token"
   }
 
-  fun getAppList (context: Context, rootView: View): List<ApplicationItem> {
-    var applicationItems: List<ApplicationItem> = mutableListOf()
+  fun getAppList (context: Context, rootView: View): LiveData<List<ApplicationItem>> {
+    val applicationItems: MutableLiveData<List<ApplicationItem>> = MutableLiveData()
 
     serverApi.getAppList(headers).enqueue(
       object : Callback<ApplicationsResponse> {
@@ -70,7 +72,7 @@ class Server (private val context: Context) {
           Log.i (TAG, "Response received, response.body() = ${response.body()}")
 
           val appsResponse: ApplicationsResponse? = response.body()
-          applicationItems = appsResponse?.appItems?: mutableListOf()
+          applicationItems.value = appsResponse?.appItems?: mutableListOf()
 
           Log.i (TAG, "applicationItems = $applicationItems")
         }
