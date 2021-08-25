@@ -65,14 +65,25 @@ abstract class ReactionOnServerResponse (
 
   companion object {
     fun doOnFailure (response: Response, context: Context, view: View) {
-      if (!internetIsAvailable()) {
-        showErrorBalloon(context, view, R.string.internet_is_not_available)
-        return
-      }
+      when (response.code) {
+        SYSTEM_ERROR -> {
+          if (!internetIsAvailable()) {
+            showErrorBalloon(context, view, R.string.internet_is_not_available)
+            return
+          }
 
-      App.res?.let {
-        val systemError = it.getString(R.string.system_error, response.message)
-        showErrorBalloon(context, view, systemError)
+          App.res?.let {
+            val systemError = it.getString(R.string.system_error, response.message)
+            showErrorBalloon(context, view, systemError)
+          }
+        }
+        SERVER_ERROR -> {
+          App.res?.let {
+            response.message?.let { errorMsg ->
+              showErrorBalloon(context, view, errorMsg)
+            }
+          }
+        }
       }
     }
   }

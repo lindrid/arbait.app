@@ -1,8 +1,10 @@
 package `in`.arbait.http
 
+import android.util.Log
 import okhttp3.ResponseBody
 import org.json.JSONObject
 import retrofit2.Response
+import java.lang.reflect.InvocationTargetException
 
 private const val TAG = "http.Response"
 private const val ROOT_VALIDATION_ERROR_JSON_STR = "errors"
@@ -35,29 +37,45 @@ class Response {
     message = response.body()
   }
 
-  constructor (errorBody: ResponseBody) {
+  constructor (errorBody: ResponseBody, errorCode: Int) {
     code = SERVER_ERROR
-    val obj = JSONObject(errorBody.string())
-    errorBody.close()
-    isItValidationError = obj.has(ROOT_VALIDATION_ERROR_JSON_STR)
-    if (isItValidationError) {
-      val pair = getErrorFieldAndMsg(obj)
-      pair?.let {
-        errorValidationField = pair.first
-        message = pair.second
+    // после первого обращения к errorBody.string(), далее
+    // эта команда будет возвращать всегда пустую строку (или null)
+    val errorMsg = "Server error code: $errorCode, message: ${errorBody.string()}"
+    Log.i (TAG, errorMsg)
+    try {
+      // в случае 500 internal server error, следующая операция выбрасывает исключение
+      val obj = JSONObject(errorMsg)
+      isItValidationError = obj.has(ROOT_VALIDATION_ERROR_JSON_STR)
+      if (isItValidationError) {
+        val pair = getErrorFieldAndMsg(obj)
+        pair?.let {
+          errorValidationField = pair.first
+          message = pair.second
+        }
+        return
       }
-      return
+
+      isItErrorWithCode = obj.has(ROOT_ERROR_WITH_CODE_MSG)
+      if (isItErrorWithCode) {
+        message = obj.getString(ROOT_ERROR_WITH_CODE_MSG)
+        return
+      }
+    }
+    catch (exception: Exception) {
     }
 
-    isItErrorWithCode = obj.has(ROOT_ERROR_WITH_CODE_MSG)
-    if (isItErrorWithCode) {
-      message = obj.getString(ROOT_ERROR_WITH_CODE_MSG)
-    }
+    message = errorMsg
   }
 
   constructor (t: Throwable) {
     code = SYSTEM_ERROR
     message = t.message
+  }
+
+  constructor (serverErrorCode: Int, errorMsg: String) {
+    code = SERVER_ERROR
+    message = "Server error code: $serverErrorCode, message: $errorMsg"
   }
 
 

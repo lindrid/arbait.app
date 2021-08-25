@@ -1,6 +1,7 @@
 package `in`.arbait.http
 
 import `in`.arbait.ApplicationItem
+import `in`.arbait.showErrorBalloon
 import android.content.Context
 import android.util.Log
 import android.view.View
@@ -69,12 +70,21 @@ class Server (private val context: Context) {
         override fun onResponse (call: Call<ApplicationsResponse>,
                                  response: Response<ApplicationsResponse>)
         {
-          Log.i (TAG, "Response received, response.body() = ${response.body()}")
+          if (response.code() == 200) {
+            Log.i(TAG, "Response received, response.body() = ${response.body()}")
 
-          val appsResponse: ApplicationsResponse? = response.body()
-          applicationItems.value = appsResponse?.appItems?: mutableListOf()
+            val appsResponse: ApplicationsResponse? = response.body()
+            applicationItems.value = appsResponse?.appItems ?: mutableListOf()
 
-          Log.i (TAG, "applicationItems = $applicationItems")
+            Log.i(TAG, "applicationItems = $applicationItems")
+          }
+          else {
+            Log.e (TAG, "Server error with code ${response.code()}")
+            response.errorBody()?.let {
+              ReactionOnServerResponse.doOnFailure(Response(it, response.code()),
+                context, rootView)
+            }
+          }
         }
       }
     )
@@ -136,7 +146,7 @@ class Server (private val context: Context) {
         else {
           response.errorBody()?.let {
             Log.d (TAG, "$msgOnServerError: $it")
-            this.response = Response(it)
+            this.response = Response(it, response.code())
           }
         }
         onResult(this.response)

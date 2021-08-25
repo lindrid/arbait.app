@@ -13,13 +13,8 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-
 import androidx.core.content.ContextCompat
-
 import androidx.recyclerview.widget.DividerItemDecoration
-
-
-
 
 private const val TAG = "ApplicationsFragment"
 private const val HOURLY_TITLE = "р/ч"
