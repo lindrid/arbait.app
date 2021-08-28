@@ -148,6 +148,16 @@ fun showErrorBalloon(context: Context, whereToShow: View, text: String) {
   balloon.showAlignBottom(whereToShow)
 }
 
+fun isItToday (date: Date): Boolean {
+  val now = Calendar.getInstance().time
+  val a = getCalendar(date)
+  val b = getCalendar(now)
+
+  return ((a[Calendar.YEAR] == b[Calendar.YEAR])    &&
+          (a[Calendar.MONTH] == b[Calendar.MONTH])  &&
+          (a[Calendar.DAY_OF_MONTH] == b[Calendar.DAY_OF_MONTH]))
+}
+
 // предполагается, что дата last позднее даты first
 fun getDiffDays (first: Date, last: Date): Int {
   if (last < first) {
