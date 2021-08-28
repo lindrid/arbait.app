@@ -57,8 +57,9 @@ class Server (private val context: Context) {
     headers["X-Authorization"] = "access_token"
   }
 
-  fun getAppList (context: Context, rootView: View): LiveData<List<ApplicationItem>> {
-    val applicationItems: MutableLiveData<List<ApplicationItem>> = MutableLiveData()
+  fun getAppsResponseList (context: Context, rootView: View): LiveData<ApplicationsResponse>
+  {
+    val applicationsResponse: MutableLiveData<ApplicationsResponse> = MutableLiveData()
 
     serverApi.getAppList(headers).enqueue(
       object : Callback<ApplicationsResponse> {
@@ -74,9 +75,9 @@ class Server (private val context: Context) {
             Log.i(TAG, "Response received, response.body() = ${response.body()}")
 
             val appsResponse: ApplicationsResponse? = response.body()
-            applicationItems.value = appsResponse?.appItems ?: mutableListOf()
+            applicationsResponse.value = appsResponse ?: ApplicationsResponse()
 
-            Log.i(TAG, "applicationItems = $applicationItems")
+            Log.i(TAG, "applicationsResponse = $applicationsResponse")
           }
           else {
             Log.e (TAG, "Server error with code ${response.code()}")
@@ -89,7 +90,7 @@ class Server (private val context: Context) {
       }
     )
 
-    return applicationItems
+    return applicationsResponse
   }
 
 

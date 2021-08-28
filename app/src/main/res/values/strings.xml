@@ -1,6 +1,6 @@
 <resources>
-    <string name="app_name">Arbait</string>
-    <string name="app_name_in_launcher">Arbait</string>
+    <string name="app_name">Арбайт</string>
+    <string name="app_name_in_launcher">Арбайт</string>
     <string name="unknown_server_error">Ошибка от сервера: %1$s</string>
     <string name="internet_is_not_available">Соединение с интернетом отсутствует!</string>
     <string name="system_error">Произошла системная ошибка: %1$s</string>
@@ -42,7 +42,22 @@
     <string name="phone_conf_empty_code">Код не должен быть пустым :)</string>
     <string name="phone_conf_wrong_length">Код должен состоять из 4 символов :)</string>
     <string name="phone_conf_not_requested_call">Сначала получите код :)</string>
+
+    <!-- Фрагмент с заявками -->
     <string name="apps_time">xx:yy</string>
     <string name="apps_address">Кирова 54</string>
-    <string name="apps_worker_income">250 рчас</string>
+    <string name="apps_worker_income">250 р/ч</string>
+    <string name="apps_no_open_apps">На данный момент открытых заявок нет</string>
+    <!--
+    <string name="apps_open_apps_today_header">Сегодня, открытые</string>
+    <string name="apps_open_apps_tomorrow_header">Завтра, открытые</string>
+    <string name="apps_closed_apps_tomorrow_header">Завтра, закрытые</string>
+    <string name="apps_closed_apps_today_header">Сегодня, закрытые</string>
+    <string name="apps_finished_apps_today_header">Сегодня, завершенные</string>
+    -->
+    <string name="apps_today">Сегодня</string>
+    <string name="apps_tomorrow">Завтра</string>
+    <string name="apps_open">Открытые</string>
+    <string name="apps_closed">Закрытые</string>
+    <string name="apps_finished">Завершенные</string>
 </resources>

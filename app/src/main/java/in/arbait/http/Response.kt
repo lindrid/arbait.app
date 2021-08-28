@@ -62,8 +62,7 @@ class Response {
         return
       }
     }
-    catch (exception: Exception) {
-    }
+    catch (exception: Exception) {}
 
     message = errorMsg
   }
@@ -73,22 +72,19 @@ class Response {
     message = t.message
   }
 
-  constructor (serverErrorCode: Int, errorMsg: String) {
-    code = SERVER_ERROR
-    message = "Server error code: $serverErrorCode, message: $errorMsg"
-  }
-
 
   private fun getErrorFieldAndMsg (obj: JSONObject): Pair<String, String>? {
     val errors = obj.getJSONObject("errors")
     val fields = errors.names()
 
-    if (fields.length() > 0) {
-      val field = fields.getString(0)
-      var msg = errors.getString(field)
-      msg = msg.substring(1, msg.length-2) // убираем скобки [] - в начале и в конце
+    fields?.let {
+      if (fields.length() > 0) {
+        val field = fields.getString(0)
+        var msg = errors.getString(field)
+        msg = msg.substring(1, msg.length-2) // убираем скобки [] - в начале и в конце
 
-      return Pair(field, msg)
+        return Pair(field, msg)
+      }
     }
 
     return null
