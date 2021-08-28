@@ -22,7 +22,9 @@ data class ApplicationItem (
   @SerializedName("price_for_worker") val priceForWorker: Int,
   val state: Int,
   @SerializedName("dispatcher_id") val dispatcherId: Int,
-)
+  var expanded: Boolean = true
+) {
+}
 
 
 /*
