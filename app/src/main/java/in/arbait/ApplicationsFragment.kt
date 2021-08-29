@@ -105,11 +105,13 @@ class ApplicationsFragment: Fragment() {
       setTodayAndTomorrowApps(openApps)
     }
 
-    rvApps.adapter = when (updateUiFirstRun && todayApps.isEmpty()) {
+    rvApps.adapter = when (updateUiFirstRun) {
       true  -> {
         updateUiFirstRun = false
-        this.showTomorrowApps = true
-        getConcatOpenAdapter(openApps.isNotEmpty(), true)
+        if (todayApps.isEmpty()) {
+          this.showTomorrowApps = true
+        }
+        getConcatOpenAdapter(openApps.isNotEmpty(), todayApps.isEmpty())
       }
       false -> getConcatOpenAdapter(openApps.isNotEmpty(), showTomorrowApps)
     }
