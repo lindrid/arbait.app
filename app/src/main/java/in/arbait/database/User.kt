@@ -12,6 +12,7 @@ data class User (
   var callReceived: Boolean = false,
   var isConfirmed: Boolean = false,
   var login: Boolean = false,
+  var headerWasPressed: Boolean = false,
   var createdAt: Date = Date()
 ): Serializable {}
 

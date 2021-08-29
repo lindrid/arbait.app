@@ -1,5 +1,6 @@
 package `in`.arbait
 
+import `in`.arbait.database.User
 import `in`.arbait.http.*
 import android.graphics.Color
 import android.os.Bundle
@@ -17,6 +18,8 @@ import androidx.recyclerview.widget.RecyclerView
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.ConcatAdapter
 import androidx.recyclerview.widget.DividerItemDecoration
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 
 private const val TAG = "ApplicationsFragment"
 private const val HOURLY_TITLE = "р/ч"
@@ -29,17 +32,10 @@ private const val DAY_HEADER = 1
 private const val TEXT = 2
 
 private       val OPEN_HEADER_COLOR = Color.parseColor("#2E8B57")
-private const val CLOSED_HEADER_COLOR = Color.RED
-private const val FINISHED_HEADER_COLOR = Color.BLUE
 
 private const val MAIN_HEADER_TEXT_SIZE = 28f
 private const val HEADER_TEXT_SIZE = 24f
 private const val TEXT_SIZE = 18f
-/* ************************************************************* */
-
-private const val APP_OPEN_STATE = 0
-private const val APP_CLOSED_STATE = 1
-private const val APP_FINISHED_STATE = 6
 
 class ApplicationsFragment: Fragment() {
 
@@ -47,9 +43,13 @@ class ApplicationsFragment: Fragment() {
   private lateinit var appsResponse: LiveData<ApplicationsResponse>
   private var adapter: AppAdapter = AppAdapter(emptyList())
 
+  private var user: User? = null
+  private lateinit var repository: UserRepository
+
   private val todayApps = mutableListOf<ApplicationItem>()
   private val tomorrowApps = mutableListOf<ApplicationItem>()
   private var showTomorrowApps = false
+  private var updateUiFirstRun = true
 
   private lateinit var rootView: View
   private lateinit var rvApps: RecyclerView
@@ -91,29 +91,52 @@ class ApplicationsFragment: Fragment() {
     val title = (requireActivity() as AppCompatActivity).supportActionBar?.title
     val apps = getString(R.string.apps_action_bar_title)
     (requireActivity() as AppCompatActivity).supportActionBar?.title = "$title - $apps"
+
+    repository = UserRepository.get()
+    GlobalScope.launch {
+      user = repository.getUserLastByDate()
+    }
   }
 
   private fun updateUI(appsResponse: ApplicationsResponse, showTomorrowApps: Boolean) {
-    rvApps.adapter = getConcatOpenAdapter(appsResponse.openApps, showTomorrowApps)
+    val openApps = appsResponse.openApps
+
+    if (updateUiFirstRun) {
+      setTodayAndTomorrowApps(openApps)
+    }
+
+    rvApps.adapter = when (updateUiFirstRun && todayApps.isEmpty()) {
+      true  -> {
+        updateUiFirstRun = false
+        this.showTomorrowApps = true
+        getConcatOpenAdapter(openApps.isNotEmpty(), true)
+      }
+      false -> getConcatOpenAdapter(openApps.isNotEmpty(), showTomorrowApps)
+    }
   }
 
-  private fun getConcatOpenAdapter(apps: List<ApplicationItem>, showTomorrowApps: Boolean):
+  private fun getConcatOpenAdapter(appsIsNotEmpty: Boolean, showTomorrowApps: Boolean):
       ConcatAdapter
   {
     var concatAdapter = ConcatAdapter()
 
-    setTodayAndTomorrowApps(apps)
-
-    if (apps.isNotEmpty()) {
+    if (appsIsNotEmpty) {
       concatAdapter = ConcatAdapter()
 
       if (tomorrowApps.isNotEmpty()) {
         val appsCount = tomorrowApps.size
-        val tomorrowHeaderText = getString(R.string.apps_tomorrow, appsCount)
+        val tomorrowHeaderText = when (user?.headerWasPressed) {
+          true -> getString(R.string.apps_tomorrow_no_press, appsCount)
+          false -> getString(R.string.apps_tomorrow, appsCount)
+          null -> ""
+        }
         val tomorrowHeaderAdapter = HeaderAdapter(tomorrowHeaderText, DAY_HEADER, true)
         val intermediateAdapter = ConcatAdapter(concatAdapter, tomorrowHeaderAdapter)
-        concatAdapter = if (showTomorrowApps) ConcatAdapter(intermediateAdapter, AppAdapter(tomorrowApps))
-          else intermediateAdapter
+        Log.i (TAG, "showTomorrowApps = $showTomorrowApps")
+        concatAdapter = when (showTomorrowApps) {
+          true  -> ConcatAdapter(intermediateAdapter, AppAdapter(tomorrowApps))
+          false -> intermediateAdapter
+        }
       }
 
       val todayHeaderText = getString(R.string.apps_today)
@@ -142,8 +165,6 @@ class ApplicationsFragment: Fragment() {
   }
 
   private fun setTodayAndTomorrowApps (apps: List<ApplicationItem>) {
-    if (todayApps.isNotEmpty() || tomorrowApps.isNotEmpty()) return
-
     for (i in apps.indices) {
       strToDate(apps[i].date, DATE_FORMAT)?.let {
         when (isItToday(it)) {
@@ -230,6 +251,12 @@ class ApplicationsFragment: Fragment() {
           showTomorrowApps = !showTomorrowApps
           appsResponse.value?.let {
             updateUI(it, showTomorrowApps)
+            user?.let { user ->
+              if (!user.headerWasPressed) {
+                user.headerWasPressed = true
+                repository.updateUser(user)
+              }
+            }
           }
         }
       }

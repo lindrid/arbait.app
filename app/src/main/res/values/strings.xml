@@ -50,6 +50,7 @@
     <string name="apps_no_open_apps">На данный момент заявок нет</string>
     <string name="apps_today">Сегодня</string>
     <string name="apps_tomorrow">Завтра (%1$d шт., жми)</string>
+    <string name="apps_tomorrow_no_press">Завтра (%1$d шт)</string>
     <string name="apps_open">Открытые</string>
     <string name="apps_closed">Закрытые</string>
     <string name="apps_finished">Завершенные</string>
