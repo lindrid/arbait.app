@@ -2,7 +2,10 @@ package `in`.arbait
 
 import `in`.arbait.database.User
 import `in`.arbait.http.*
+import `in`.arbait.http.polling_service.*
+import android.content.Intent
 import android.graphics.Color
+import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
@@ -16,6 +19,7 @@ import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.core.content.ContextCompat
+import androidx.core.content.ContextCompat.startForegroundService
 import androidx.recyclerview.widget.ConcatAdapter
 import androidx.recyclerview.widget.DividerItemDecoration
 import kotlinx.coroutines.GlobalScope
@@ -71,6 +75,7 @@ class ApplicationsFragment: Fragment() {
 
     server = Server(requireContext())
     appsResponse = server.getAppsResponseList(requireContext(), rootView)
+    serviceDoAction(Actions.START)
 
     return view
   }
@@ -98,6 +103,11 @@ class ApplicationsFragment: Fragment() {
     }
   }
 
+  override fun onDestroy() {
+    super.onDestroy()
+    serviceDoAction(Actions.STOP)
+  }
+
   private fun updateUI(appsResponse: ApplicationsResponse, showTomorrowApps: Boolean) {
     val openApps = appsResponse.openApps
 
@@ -105,16 +115,15 @@ class ApplicationsFragment: Fragment() {
       setTodayAndTomorrowApps(openApps)
     }
 
-    rvApps.adapter = when (updateUiFirstRun) {
-      true  -> {
-        updateUiFirstRun = false
-        if (todayApps.isEmpty()) {
-          this.showTomorrowApps = true
-        }
-        getConcatOpenAdapter(openApps.isNotEmpty(), todayApps.isEmpty())
+    rvApps.adapter = if (updateUiFirstRun) {
+      updateUiFirstRun = false
+      if (todayApps.isEmpty()) {
+        this.showTomorrowApps = true
       }
-      false -> getConcatOpenAdapter(openApps.isNotEmpty(), showTomorrowApps)
+      getConcatOpenAdapter(openApps.isNotEmpty(), todayApps.isEmpty())
     }
+    else
+      getConcatOpenAdapter(openApps.isNotEmpty(), showTomorrowApps)
   }
 
   private fun getConcatOpenAdapter(appsIsNotEmpty: Boolean, showTomorrowApps: Boolean):
@@ -266,6 +275,21 @@ class ApplicationsFragment: Fragment() {
 
     override fun getItemCount(): Int {
       return 1
+    }
+  }
+
+  private fun serviceDoAction (action: Actions) {
+    val mainActivity = requireActivity() as MainActivity
+    if (getServiceState(mainActivity) == ServiceState.STOPPED && action == Actions.STOP) return
+    Intent(mainActivity, PollingService::class.java).also {
+      it.action = action.name
+      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+        log("Starting the service in >=26 Mode")
+        mainActivity.startForegroundService(it)
+        return
+      }
+      log("Starting the service in < 26 Mode")
+      mainActivity.startService(it)
     }
   }
 
