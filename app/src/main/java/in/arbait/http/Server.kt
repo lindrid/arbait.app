@@ -25,6 +25,8 @@ private const val TAG = "Server"
 
 class Server (private val context: Context) {
 
+  val applicationsResponse: MutableLiveData<ApplicationsResponse> = MutableLiveData()
+
   private val gson = GsonBuilder()
     .setLenient()
     .registerTypeAdapter(Boolean::class.java, IntBooleanDeserializer())
@@ -57,15 +59,15 @@ class Server (private val context: Context) {
     headers["X-Authorization"] = "access_token"
   }
 
-  fun getAppsResponseList (context: Context, rootView: View): LiveData<ApplicationsResponse>
+  fun getAppsResponseList (context: Context? = null, rootView: View? = null)
   {
-    val applicationsResponse: MutableLiveData<ApplicationsResponse> = MutableLiveData()
-
     serverApi.getAppList(headers).enqueue(
       object : Callback<ApplicationsResponse> {
         override fun onFailure (call: Call<ApplicationsResponse>, t: Throwable) {
           Log.e (TAG, "getAppList FAILED!", t)
-          ReactionOnServerResponse.doOnFailure(Response(t), context, rootView)
+          if (context != null && rootView != null) {
+            ReactionOnServerResponse.doOnFailure(Response(t), context, rootView)
+          }
         }
 
         override fun onResponse (call: Call<ApplicationsResponse>,
@@ -76,21 +78,25 @@ class Server (private val context: Context) {
 
             val appsResponse: ApplicationsResponse? = response.body()
             applicationsResponse.value = appsResponse ?: ApplicationsResponse()
+            Log.i (TAG, "openApps = ${applicationsResponse.value?.openApps}")
 
             Log.i(TAG, "applicationsResponse = $applicationsResponse")
           }
           else {
             Log.e (TAG, "Server error with code ${response.code()}")
             response.errorBody()?.let {
-              ReactionOnServerResponse.doOnFailure(Response(it, response.code()),
-                context, rootView)
+              if (context != null && rootView != null) {
+                ReactionOnServerResponse.doOnFailure(Response(it, response.code()),
+                  context, rootView)
+              }
             }
           }
         }
       }
     )
 
-    return applicationsResponse
+    //return applicationsResponse.value?.openApps
+    //return applicationsResponse
   }
 
 

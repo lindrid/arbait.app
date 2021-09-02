@@ -1,7 +1,9 @@
 package `in`.arbait.http.polling_service
 
+import `in`.arbait.CONTEXT_ARG
 import `in`.arbait.MainActivity
 import `in`.arbait.R
+import `in`.arbait.VIEW_ARG
 import `in`.arbait.http.ApplicationsResponse
 import `in`.arbait.http.Server
 import android.app.*
@@ -14,21 +16,26 @@ import android.os.PowerManager
 import android.util.Log
 import android.view.View
 import android.widget.Toast
+import androidx.lifecycle.LifecycleService
 import androidx.lifecycle.LiveData
+import androidx.lifecycle.Observer
 import kotlinx.coroutines.*
+import com.google.gson.Gson
 
 private const val TAG = "PollingService"
 private const val SERVICE_DELAY_SECONDS: Long = 5
 
 // https://robertohuertas.com/2019/06/29/android_foreground_services/
 // poll the server for applications
-class PollingService : Service()
+class PollingService : LifecycleService()
 {
   private var wakeLock: PowerManager.WakeLock? = null
   private var serviceIsStarted = false
 
   private lateinit var server: Server
   private lateinit var appsResponse: LiveData<ApplicationsResponse>
+  //private lateinit var context: Context
+  //private lateinit var view: View
 
   override fun onBind(intent: Intent): IBinder? {
     log( "Some component want to bind with the service")
@@ -40,6 +47,10 @@ class PollingService : Service()
     log( "onStartCommand executed with startId: $startId")
     if (intent != null) {
       val action = intent.action
+
+      //context =  Gson().fromJson(intent.getStringExtra(CONTEXT_ARG), Context::class.java)
+      //view =  Gson().fromJson(intent.getStringExtra(VIEW_ARG), View::class.java)
+
       log( "using an intent with action $action")
       when (action) {
         Actions.START.name -> startService()
@@ -60,6 +71,18 @@ class PollingService : Service()
     log("The service has been created".toUpperCase())
     val notification = createNotification()
     startForeground(1, notification)
+
+    //server = Server(this)
+    //appsResponse = server.getAppsResponseList()
+
+    /*appsResponse.observe(this,
+      Observer { appsResponse ->
+        appsResponse?.let {
+          log("appsResponse WAS CHANGED!")
+          log( "Open apps size is ${appsResponse.openApps.size}")
+        }
+      }
+    )*/
   }
 
   override fun onDestroy() {
@@ -86,12 +109,13 @@ class PollingService : Service()
     // we're starting a loop in a coroutine
     GlobalScope.launch(Dispatchers.IO) {
       while (serviceIsStarted) {
-        launch(Dispatchers.IO) {
-          //appsResponse = server.getAppsResponseList(context, view)
-          //log("appsResponse.size = ${appsResponse.value?.openApps?.size}")
-          log("asdsad")
-        }
         delay(SERVICE_DELAY_SECONDS * 1 * 1000)
+        launch(Dispatchers.IO) {
+         //appsResponse = server.getAppsResponseList()
+         // appsResponse.value?.let {
+         //   log("appsResponse.size = ${it.openApps.size}")
+         // }
+        }
       }
       log("End of the loop for the service")
     }
@@ -122,6 +146,7 @@ class PollingService : Service()
     // depending on the Android API that we're dealing with we will have
     // to use a specific method to create the notification
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+      log ("---------------------------------asdasdasdasd")
       val notificationManager =
         getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
       val channel = NotificationChannel(
@@ -129,11 +154,12 @@ class PollingService : Service()
         "Endless Service notifications channel",
         NotificationManager.IMPORTANCE_HIGH
       ).let {
+        it.setSound(null, null)
         it.description = "Endless Service channel"
         it.enableLights(true)
         it.lightColor = Color.RED
-        it.enableVibration(true)
-        it.vibrationPattern = longArrayOf(100, 200, 300, 400, 500, 400, 300, 200, 400)
+        //it.enableVibration(false)
+        //it.vibrationPattern = longArrayOf(100, 200, 300, 400, 500, 400, 300, 200, 400)
         it
       }
       notificationManager.createNotificationChannel(channel)
@@ -151,8 +177,8 @@ class PollingService : Service()
       ) else Notification.Builder(this)
 
     return builder
-      .setContentTitle("Endless Service")
-      .setContentText("This is your favorite endless service working")
+      .setContentTitle("Мониторинг заявок")
+      .setContentText("не отключайте, если не хотите пропустить новые заявки")
       .setContentIntent(pendingIntent)
       .setSmallIcon(R.mipmap.ic_launcher)
       .setTicker("Ticker text")

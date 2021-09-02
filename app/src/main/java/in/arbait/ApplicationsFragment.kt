@@ -19,13 +19,17 @@ import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.core.content.ContextCompat
-import androidx.core.content.ContextCompat.startForegroundService
+import androidx.lifecycle.MutableLiveData
 import androidx.recyclerview.widget.ConcatAdapter
 import androidx.recyclerview.widget.DividerItemDecoration
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 
+const val CONTEXT_ARG = "context"
+const val VIEW_ARG = "view"
+
 private const val TAG = "ApplicationsFragment"
+
 private const val HOURLY_TITLE = "р/ч"
 private const val DAILY_TITLE = "8ч"
 private const val DATE_FORMAT = "yyyy-MM-dd"
@@ -45,13 +49,14 @@ class ApplicationsFragment: Fragment() {
 
   private lateinit var server: Server
   private lateinit var appsResponse: LiveData<ApplicationsResponse>
+  private val openApps: MutableLiveData<List<ApplicationItem>> = MutableLiveData()
   private var adapter: AppAdapter = AppAdapter(emptyList())
 
   private var user: User? = null
   private lateinit var repository: UserRepository
 
-  private val todayApps = mutableListOf<ApplicationItem>()
-  private val tomorrowApps = mutableListOf<ApplicationItem>()
+  private var todayApps = mutableListOf<ApplicationItem>()
+  private var tomorrowApps = mutableListOf<ApplicationItem>()
   private var showTomorrowApps = false
   private var updateUiFirstRun = true
 
@@ -74,8 +79,10 @@ class ApplicationsFragment: Fragment() {
     rvApps.addItemDecoration(divider)
 
     server = Server(requireContext())
-    appsResponse = server.getAppsResponseList(requireContext(), rootView)
-    serviceDoAction(Actions.START)
+    server.getAppsResponseList(requireContext(), rootView)
+    appsResponse = server.applicationsResponse
+
+    //serviceDoAction(Actions.START)
 
     return view
   }
@@ -83,19 +90,35 @@ class ApplicationsFragment: Fragment() {
   override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
     super.onViewCreated(view, savedInstanceState)
 
-    Log.i (TAG, "updateUI(appItems) = $appsResponse")
+//    Log.i (TAG, "updateUI(appItems) = $appsResponse")
     appsResponse.observe(viewLifecycleOwner,
       Observer { appsResponse ->
         appsResponse?.let {
-          Log.i(TAG, "Open apps size is ${appsResponse.openApps.size}")
-          updateUI(appsResponse, showTomorrowApps)
+          if ((openApps.value == null) ||
+              (listsAreDifferent(openApps.value!!, it.openApps)))
+          {
+            openApps.value = it.openApps
+          }
         }
       }
     )
 
-    val title = (requireActivity() as AppCompatActivity).supportActionBar?.title
+    openApps.observe(viewLifecycleOwner,
+      Observer { openApps ->
+        openApps?.let {
+          Log.i(TAG, "Open apps size is ${it.size}")
+          Log.i(TAG, "openApps is $it")
+          setTodayAndTomorrowApps(it)
+          showTomorrowApps = todayApps.isEmpty()
+          updateUI(it)
+        }
+      }
+    )
+
+    val actionBar = (requireActivity() as AppCompatActivity).supportActionBar
+    val title = actionBar?.title
     val apps = getString(R.string.apps_action_bar_title)
-    (requireActivity() as AppCompatActivity).supportActionBar?.title = "$title - $apps"
+    actionBar?.title = "$title - $apps"
 
     repository = UserRepository.get()
     GlobalScope.launch {
@@ -108,22 +131,8 @@ class ApplicationsFragment: Fragment() {
     serviceDoAction(Actions.STOP)
   }
 
-  private fun updateUI(appsResponse: ApplicationsResponse, showTomorrowApps: Boolean) {
-    val openApps = appsResponse.openApps
-
-    if (updateUiFirstRun) {
-      setTodayAndTomorrowApps(openApps)
-    }
-
-    rvApps.adapter = if (updateUiFirstRun) {
-      updateUiFirstRun = false
-      if (todayApps.isEmpty()) {
-        this.showTomorrowApps = true
-      }
-      getConcatOpenAdapter(openApps.isNotEmpty(), todayApps.isEmpty())
-    }
-    else
-      getConcatOpenAdapter(openApps.isNotEmpty(), showTomorrowApps)
+  private fun updateUI(openApps: List<ApplicationItem>) {
+      rvApps.adapter = getConcatOpenAdapter(openApps.isNotEmpty(), this.showTomorrowApps)
   }
 
   private fun getConcatOpenAdapter(appsIsNotEmpty: Boolean, showTomorrowApps: Boolean):
@@ -176,6 +185,9 @@ class ApplicationsFragment: Fragment() {
   }
 
   private fun setTodayAndTomorrowApps (apps: List<ApplicationItem>) {
+    todayApps = mutableListOf<ApplicationItem>()
+    tomorrowApps = mutableListOf<ApplicationItem>()
+
     for (i in apps.indices) {
       strToDate(apps[i].date, DATE_FORMAT)?.let {
         when (isItToday(it)) {
@@ -223,6 +235,11 @@ class ApplicationsFragment: Fragment() {
     override fun onBindViewHolder(holder: AppHolder, position: Int) {
       Log.i (TAG, "apps[position] = ${apps[position]}")
       holder.bind(apps[position])
+
+      holder.itemView.setOnClickListener {
+        server.getAppsResponseList(requireContext(), rootView)
+        Log.i (TAG, "asdasdasdas")
+      }
     }
   }
 
@@ -260,8 +277,8 @@ class ApplicationsFragment: Fragment() {
       if (dayIsTomorrow) {
         holder.itemView.setOnClickListener {
           showTomorrowApps = !showTomorrowApps
-          appsResponse.value?.let {
-            updateUI(it, showTomorrowApps)
+          openApps.value?.let {
+            updateUI(it)
             user?.let { user ->
               if (!user.headerWasPressed) {
                 user.headerWasPressed = true
@@ -283,6 +300,13 @@ class ApplicationsFragment: Fragment() {
     if (getServiceState(mainActivity) == ServiceState.STOPPED && action == Actions.STOP) return
     Intent(mainActivity, PollingService::class.java).also {
       it.action = action.name
+
+      //val contextJson = Gson().toJson(requireContext())
+      //val viewJson = Gson().toJson(rootView)
+
+      //it.putExtra(CONTEXT_ARG, contextJson)
+      //it.putExtra(VIEW_ARG, viewJson)
+
       if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
         log("Starting the service in >=26 Mode")
         mainActivity.startForegroundService(it)

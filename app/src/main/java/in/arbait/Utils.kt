@@ -101,6 +101,18 @@ fun phoneNumberIsValid (phoneNumber: String?, countryCode: String?, logTag: Stri
   return false
 }
 
+fun listsAreDifferent (a: List<ApplicationItem>, b: List<ApplicationItem>): Boolean {
+  if (a.size != b.size) return true
+
+  for (i in a.indices) {
+    if (a[i] != b[i]) {
+      return true
+    }
+  }
+
+  return false
+}
+
 @Throws(InterruptedException::class, IOException::class)
 fun internetIsAvailable(): Boolean {
   val command = "ping -c 1 google.com"
