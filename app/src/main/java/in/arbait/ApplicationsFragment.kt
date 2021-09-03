@@ -80,6 +80,7 @@ class ApplicationsFragment: Fragment() {
       pollService?.let {
         appsResponse = it.appsResponse
       }
+      setObservers()
     }
 
     override fun onServiceDisconnected(arg0: ComponentName) {
@@ -104,16 +105,10 @@ class ApplicationsFragment: Fragment() {
     divider.setDrawable(ContextCompat.getDrawable(requireContext(), R.drawable.divider)!!)
     rvApps.addItemDecoration(DividerItemDecoration(context, DividerItemDecoration.VERTICAL))
     rvApps.addItemDecoration(divider)
-    
-    server = Server(requireContext())
-    appsResponse = server.applicationsResponse
-    setObservers()
 
-    // первый раз берем заявки с сервера здесь, далее в PollService
-    server.updateApplicationsResponse()
-
-    //serviceDoAction(Actions.START)
-    //bindService()
+    // заявки считываются с сервера нашим бесконечным PollService'ом
+    serviceDoAction(Actions.START)
+    bindService()
 
     return view
   }

@@ -42,7 +42,6 @@ class PollService : LifecycleService()
 
   override fun onBind(intent: Intent): IBinder? {
     log( "Some component want to bind with the service")
-    // We don't provide binding, so return null
     return binder
   }
 
@@ -139,20 +138,16 @@ class PollService : LifecycleService()
     // depending on the Android API that we're dealing with we will have
     // to use a specific method to create the notification
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-      log ("---------------------------------asdasdasdasd")
       val notificationManager =
         getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
       val channel = NotificationChannel(
         notificationChannelId,
         "Endless Service notifications channel",
-        NotificationManager.IMPORTANCE_HIGH
+        NotificationManager.IMPORTANCE_NONE // без звука и вибрации
       ).let {
-        it.setSound(null, null)
         it.description = "Endless Service channel"
         it.enableLights(true)
         it.lightColor = Color.RED
-        //it.enableVibration(false)
-        //it.vibrationPattern = longArrayOf(100, 200, 300, 400, 500, 400, 300, 200, 400)
         it
       }
       notificationManager.createNotificationChannel(channel)
