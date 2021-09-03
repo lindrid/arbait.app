@@ -59,10 +59,10 @@ class Server (private val context: Context) {
     headers["X-Authorization"] = "access_token"
   }
 
-  fun getAppsResponseList (context: Context? = null, rootView: View? = null)
-  {
-    serverApi.getAppList(headers).enqueue(
+  fun getAppsResponseList (context: Context? = null, rootView: View? = null) {
+    serverApi.getAppList(headers).enqueue (
       object : Callback<ApplicationsResponse> {
+
         override fun onFailure (call: Call<ApplicationsResponse>, t: Throwable) {
           Log.e (TAG, "getAppList FAILED!", t)
           if (context != null && rootView != null) {
@@ -75,11 +75,9 @@ class Server (private val context: Context) {
         {
           if (response.code() == 200) {
             Log.i(TAG, "Response received, response.body() = ${response.body()}")
-
             val appsResponse: ApplicationsResponse? = response.body()
             applicationsResponse.value = appsResponse ?: ApplicationsResponse()
             Log.i (TAG, "openApps = ${applicationsResponse.value?.openApps}")
-
             Log.i(TAG, "applicationsResponse = $applicationsResponse")
           }
           else {
@@ -92,11 +90,9 @@ class Server (private val context: Context) {
             }
           }
         }
+
       }
     )
-
-    //return applicationsResponse.value?.openApps
-    //return applicationsResponse
   }
 
 

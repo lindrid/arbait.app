@@ -3,10 +3,14 @@ package `in`.arbait
 import `in`.arbait.database.User
 import `in`.arbait.http.*
 import `in`.arbait.http.polling_service.*
+import android.content.ComponentName
+import android.content.Context
 import android.content.Intent
+import android.content.ServiceConnection
 import android.graphics.Color
 import android.os.Build
 import android.os.Bundle
+import android.os.IBinder
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
@@ -54,14 +58,35 @@ class ApplicationsFragment: Fragment() {
 
   private var user: User? = null
   private lateinit var repository: UserRepository
+  private var mainActivity = requireActivity() as MainActivity
 
   private var todayApps = mutableListOf<ApplicationItem>()
   private var tomorrowApps = mutableListOf<ApplicationItem>()
   private var showTomorrowApps = false
-  private var updateUiFirstRun = true
 
   private lateinit var rootView: View
   private lateinit var rvApps: RecyclerView
+
+  private var pollService: PollService? = null
+  private var serviceIsBound: Boolean? = null
+
+  private val serviceConnection = object : ServiceConnection {
+    override fun onServiceConnected(className: ComponentName, iBinder: IBinder) {
+      Log.i(TAG, "ServiceConnection: connected to service.")
+      // We've bound to MyService, cast the IBinder and get MyBinder instance
+      val binder = iBinder as PollService.PollBinder
+      pollService = binder.service
+      serviceIsBound = true
+      pollService?.let {
+        appsResponse = it.appsResponse
+      }
+    }
+
+    override fun onServiceDisconnected(arg0: ComponentName) {
+      Log.d(TAG, "ServiceConnection: disconnected from service.")
+      serviceIsBound = false
+    }
+  }
 
   override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
                             savedInstanceState: Bundle?): View?
@@ -78,11 +103,14 @@ class ApplicationsFragment: Fragment() {
     rvApps.addItemDecoration(DividerItemDecoration(context, DividerItemDecoration.VERTICAL))
     rvApps.addItemDecoration(divider)
 
+    /*
     server = Server(requireContext())
     server.getAppsResponseList(requireContext(), rootView)
     appsResponse = server.applicationsResponse
+     */
 
-    //serviceDoAction(Actions.START)
+    serviceDoAction(Actions.START)
+    bindService()
 
     return view
   }
@@ -90,7 +118,6 @@ class ApplicationsFragment: Fragment() {
   override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
     super.onViewCreated(view, savedInstanceState)
 
-//    Log.i (TAG, "updateUI(appItems) = $appsResponse")
     appsResponse.observe(viewLifecycleOwner,
       Observer { appsResponse ->
         appsResponse?.let {
@@ -128,6 +155,7 @@ class ApplicationsFragment: Fragment() {
 
   override fun onDestroy() {
     super.onDestroy()
+    unbindService()
     serviceDoAction(Actions.STOP)
   }
 
@@ -296,9 +324,9 @@ class ApplicationsFragment: Fragment() {
   }
 
   private fun serviceDoAction (action: Actions) {
-    val mainActivity = requireActivity() as MainActivity
     if (getServiceState(mainActivity) == ServiceState.STOPPED && action == Actions.STOP) return
-    Intent(mainActivity, PollingService::class.java).also {
+
+    Intent(mainActivity, PollService::class.java).also {
       it.action = action.name
 
       //val contextJson = Gson().toJson(requireContext())
@@ -317,4 +345,18 @@ class ApplicationsFragment: Fragment() {
     }
   }
 
+  private fun bindService() {
+    val intent = Intent(mainActivity, PollService::class.java)
+    mainActivity.bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE)
+    serviceIsBound = true
+  }
+
+  private fun unbindService() {
+    val mainActivity = requireActivity() as MainActivity
+    serviceIsBound?.let {
+      if (it) {
+        mainActivity.unbindService(serviceConnection)
+      }
+    }
+  }
 }

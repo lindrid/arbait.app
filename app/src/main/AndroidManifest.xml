@@ -17,7 +17,7 @@
         android:name=".App"
     >
         <service
-            android:name=".http.polling_service.PollingService"
+            android:name=".http.polling_service.PollService"
             android:enabled="true"
             android:exported="false">
         </service>

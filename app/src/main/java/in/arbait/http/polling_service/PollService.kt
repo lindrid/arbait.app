@@ -10,6 +10,7 @@ import android.app.*
 import android.content.Context
 import android.content.Intent
 import android.graphics.Color
+import android.os.Binder
 import android.os.Build
 import android.os.IBinder
 import android.os.PowerManager
@@ -27,20 +28,41 @@ private const val SERVICE_DELAY_SECONDS: Long = 5
 
 // https://robertohuertas.com/2019/06/29/android_foreground_services/
 // poll the server for applications
-class PollingService : LifecycleService()
+class PollService : LifecycleService()
 {
   private var wakeLock: PowerManager.WakeLock? = null
   private var serviceIsStarted = false
 
   private lateinit var server: Server
-  private lateinit var appsResponse: LiveData<ApplicationsResponse>
+  lateinit var appsResponse: LiveData<ApplicationsResponse>
+    private set
+
   //private lateinit var context: Context
   //private lateinit var view: View
+
+  private val binder: IBinder = PollBinder()
+
+  inner class PollBinder : Binder() {
+    // Return this instance of MyService so clients can call public methods
+    val service: PollService
+      get() = this@PollService
+  }
 
   override fun onBind(intent: Intent): IBinder? {
     log( "Some component want to bind with the service")
     // We don't provide binding, so return null
-    return null
+    return binder
+  }
+
+  override fun onCreate() {
+    super.onCreate()
+    log("The service has been created".toUpperCase())
+    val notification = createNotification()
+    startForeground(1, notification)
+
+    server = Server(this)
+    server.getAppsResponseList()
+    appsResponse = server.applicationsResponse
   }
 
   override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -66,24 +88,6 @@ class PollingService : LifecycleService()
     return START_STICKY
   }
 
-  override fun onCreate() {
-    super.onCreate()
-    log("The service has been created".toUpperCase())
-    val notification = createNotification()
-    startForeground(1, notification)
-
-    //server = Server(this)
-    //appsResponse = server.getAppsResponseList()
-
-    /*appsResponse.observe(this,
-      Observer { appsResponse ->
-        appsResponse?.let {
-          log("appsResponse WAS CHANGED!")
-          log( "Open apps size is ${appsResponse.openApps.size}")
-        }
-      }
-    )*/
-  }
 
   override fun onDestroy() {
     super.onDestroy()
@@ -111,10 +115,7 @@ class PollingService : LifecycleService()
       while (serviceIsStarted) {
         delay(SERVICE_DELAY_SECONDS * 1 * 1000)
         launch(Dispatchers.IO) {
-         //appsResponse = server.getAppsResponseList()
-         // appsResponse.value?.let {
-         //   log("appsResponse.size = ${it.openApps.size}")
-         // }
+          server.getAppsResponseList()
         }
       }
       log("End of the loop for the service")
