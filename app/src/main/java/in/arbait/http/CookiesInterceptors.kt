@@ -1,5 +1,6 @@
 package `in`.arbait.http
 
+import `in`.arbait.http.polling_service.log
 import android.content.Context
 import android.preference.PreferenceManager
 import okhttp3.Interceptor
@@ -9,7 +10,7 @@ import java.io.IOException
 private const val COOKIES_KEY = "appCookies"
 
 
-class SendSavedCookiesInterceptor(private val context: Context) : Interceptor {
+class SendSavedCookiesInterceptor (private val context: Context) : Interceptor {
 
   @Throws(IOException::class)
   override fun intercept(chain: Interceptor.Chain): Response {
@@ -18,8 +19,10 @@ class SendSavedCookiesInterceptor(private val context: Context) : Interceptor {
       .getDefaultSharedPreferences(context)
       .getStringSet(COOKIES_KEY, HashSet()) as HashSet<String>
 
+    var i = 0
     preferences.forEach {
       builder.addHeader("Cookie", it)
+      log ("SEND: i = $i, Cookie.string = $it")
     }
 
     return chain.proceed(builder.build())
@@ -40,9 +43,12 @@ class SaveReceivedCookiesInterceptor(private val context: Context) : Interceptor
         .getDefaultSharedPreferences(context)
         .getStringSet(COOKIES_KEY, HashSet()) as HashSet<String>
 
+      cookies.clear()
       originalResponse.headers(setCookieHeader).forEach {
         cookies.add(it)
       }
+
+      log ("SAVE: cookies is $cookies")
 
       PreferenceManager
         .getDefaultSharedPreferences(context)
