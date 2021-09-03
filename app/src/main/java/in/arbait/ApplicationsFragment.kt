@@ -94,6 +94,8 @@ class ApplicationsFragment: Fragment() {
     val view = inflater.inflate(R.layout.fragment_applications, container, false)
     rootView = view
 
+    mainActivity = requireActivity() as MainActivity
+
     rvApps = view.findViewById(R.id.rv_app_list)
     rvApps.layoutManager = LinearLayoutManager(context)
     rvApps.adapter = adapter
@@ -102,13 +104,13 @@ class ApplicationsFragment: Fragment() {
     divider.setDrawable(ContextCompat.getDrawable(requireContext(), R.drawable.divider)!!)
     rvApps.addItemDecoration(DividerItemDecoration(context, DividerItemDecoration.VERTICAL))
     rvApps.addItemDecoration(divider)
-
-
+    
     server = Server(requireContext())
-    server.getAppsResponseList(requireContext(), rootView)
     appsResponse = server.applicationsResponse
+    setObservers()
 
-    mainActivity = requireActivity() as MainActivity
+    // первый раз берем заявки с сервера здесь, далее в PollService
+    server.updateApplicationsResponse()
 
     //serviceDoAction(Actions.START)
     //bindService()
@@ -118,30 +120,6 @@ class ApplicationsFragment: Fragment() {
 
   override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
     super.onViewCreated(view, savedInstanceState)
-
-    appsResponse.observe(viewLifecycleOwner,
-      Observer { appsResponse ->
-        appsResponse?.let {
-          if ((openApps.value == null) ||
-              (listsAreDifferent(openApps.value!!, it.openApps)))
-          {
-            openApps.value = it.openApps
-          }
-        }
-      }
-    )
-
-    openApps.observe(viewLifecycleOwner,
-      Observer { openApps ->
-        openApps?.let {
-          Log.i(TAG, "Open apps size is ${it.size}")
-          Log.i(TAG, "openApps is $it")
-          setTodayAndTomorrowApps(it)
-          showTomorrowApps = todayApps.isEmpty()
-          updateUI(it)
-        }
-      }
-    )
 
     val actionBar = (requireActivity() as AppCompatActivity).supportActionBar
     val title = actionBar?.title
@@ -158,6 +136,41 @@ class ApplicationsFragment: Fragment() {
     super.onDestroy()
     unbindService()
     serviceDoAction(Actions.STOP)
+  }
+
+
+  private fun setObservers() {
+    appsResponse.observe(viewLifecycleOwner,
+      Observer { appsResponse ->
+        appsResponse?.let {
+          val response = it.response
+          if (response.code == SERVER_OK) {
+            if ((openApps.value == null) || openAppsDifferFrom(it.openApps)) {
+              openApps.value = it.openApps
+            }
+          }
+          else {
+            ReactionOnResponse.doOnFailure(response, requireContext(), rootView)
+          }
+        }
+      }
+    )
+
+    openApps.observe(viewLifecycleOwner,
+      Observer { openApps ->
+        openApps?.let {
+          Log.i(TAG, "Open apps size is ${it.size}")
+          Log.i(TAG, "openApps is $it")
+          setTodayAndTomorrowApps(it)
+          showTomorrowApps = todayApps.isEmpty()
+          updateUI(it)
+        }
+      }
+    )
+  }
+
+  private fun openAppsDifferFrom (openApps: List<ApplicationItem>): Boolean {
+    return listsAreDifferent(this.openApps.value!!, openApps)
   }
 
   private fun updateUI(openApps: List<ApplicationItem>) {
@@ -266,7 +279,7 @@ class ApplicationsFragment: Fragment() {
       holder.bind(apps[position])
 
       holder.itemView.setOnClickListener {
-        server.getAppsResponseList(requireContext(), rootView)
+        server.updateApplicationsResponse()
         Log.i (TAG, "asdasdasdas")
       }
     }

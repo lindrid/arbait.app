@@ -90,7 +90,7 @@ class PhoneConfirmationFragment (private val user: User): Fragment(), View.OnCli
   }
 
   private inner class VerifyUser (response: Response):
-    ReactionOnServerResponse (TAG, requireContext(), rootView, response)
+    ReactionOnResponse (TAG, requireContext(), rootView, response)
   {
     override fun doOnServerOkResult() {
       Log.i(TAG, "все ок, пользователь зарегистрирован")
@@ -122,7 +122,7 @@ class PhoneConfirmationFragment (private val user: User): Fragment(), View.OnCli
   }
 
   private inner class RequestCall (response: Response):
-    ReactionOnServerResponse (TAG, requireContext(), rootView, response)
+    ReactionOnResponse (TAG, requireContext(), rootView, response)
   {
     override fun doOnServerOkResult() {
       user.callReceived = true

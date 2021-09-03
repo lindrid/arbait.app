@@ -8,7 +8,7 @@ import android.content.Context
 import android.util.Log
 import android.view.View
 
-abstract class ReactionOnServerResponse (
+abstract class ReactionOnResponse (
   private val TAG: String,
   private val context: Context,
   private val view: View,

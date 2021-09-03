@@ -215,7 +215,7 @@ class RegistrationFragment : Fragment() {
   }
 
   private inner class RegisterReaction (response: Response):
-    ReactionOnServerResponse (TAG, requireContext(), rootView, response)
+    ReactionOnResponse (TAG, requireContext(), rootView, response)
   {
     override fun doOnServerOkResult() {
       val now = Calendar.getInstance().time

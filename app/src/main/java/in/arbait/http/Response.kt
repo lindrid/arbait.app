@@ -32,6 +32,10 @@ class Response {
     private set
 
 
+  constructor() {
+    code = SERVER_OK
+  }
+
   constructor (response: Response<String>) {
     code = SERVER_OK
     message = response.body()

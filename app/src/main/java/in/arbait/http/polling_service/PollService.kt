@@ -1,9 +1,7 @@
 package `in`.arbait.http.polling_service
 
-import `in`.arbait.CONTEXT_ARG
 import `in`.arbait.MainActivity
 import `in`.arbait.R
-import `in`.arbait.VIEW_ARG
 import `in`.arbait.http.ApplicationsResponse
 import `in`.arbait.http.Server
 import android.app.*
@@ -15,13 +13,10 @@ import android.os.Build
 import android.os.IBinder
 import android.os.PowerManager
 import android.util.Log
-import android.view.View
 import android.widget.Toast
 import androidx.lifecycle.LifecycleService
 import androidx.lifecycle.LiveData
-import androidx.lifecycle.Observer
 import kotlinx.coroutines.*
-import com.google.gson.Gson
 
 private const val TAG = "PollingService"
 private const val SERVICE_DELAY_SECONDS: Long = 5
@@ -58,7 +53,7 @@ class PollService : LifecycleService()
     startForeground(1, notification)
 
     server = Server(this)
-    server.getAppsResponseList()
+    server.updateApplicationsResponse()
     appsResponse = server.applicationsResponse
   }
 
@@ -112,7 +107,7 @@ class PollService : LifecycleService()
       while (serviceIsStarted) {
         delay(SERVICE_DELAY_SECONDS * 1 * 1000)
         launch(Dispatchers.IO) {
-          server.getAppsResponseList()
+          server.updateApplicationsResponse()
         }
       }
       log("End of the loop for the service")
