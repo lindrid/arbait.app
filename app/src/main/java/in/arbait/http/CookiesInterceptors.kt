@@ -6,6 +6,12 @@ import android.preference.PreferenceManager
 import okhttp3.Interceptor
 import okhttp3.Response
 import java.io.IOException
+import android.content.SharedPreferences
+
+import android.content.Context.MODE_PRIVATE
+
+
+
 
 private const val COOKIES_KEY = "appCookies"
 
@@ -19,10 +25,8 @@ class SendSavedCookiesInterceptor (private val context: Context) : Interceptor {
       .getDefaultSharedPreferences(context)
       .getStringSet(COOKIES_KEY, HashSet()) as HashSet<String>
 
-    var i = 0
     preferences.forEach {
       builder.addHeader("Cookie", it)
-      log ("SEND: i = $i, Cookie.string = $it")
     }
 
     return chain.proceed(builder.build())
@@ -39,22 +43,20 @@ class SaveReceivedCookiesInterceptor(private val context: Context) : Interceptor
     val originalResponse = chain.proceed(chain.request())
 
     if (originalResponse.headers(setCookieHeader).isNotEmpty()) {
-      val cookies = PreferenceManager
+      /*val cookies = PreferenceManager
         .getDefaultSharedPreferences(context)
-        .getStringSet(COOKIES_KEY, HashSet()) as HashSet<String>
+        .getStringSet(COOKIES_KEY, HashSet()) as HashSet<String>*/
 
-      cookies.clear()
+      val cookies: HashSet<String> = HashSet<String>()
+
       originalResponse.headers(setCookieHeader).forEach {
         cookies.add(it)
       }
 
-      log ("SAVE: cookies is $cookies")
-
-      PreferenceManager
-        .getDefaultSharedPreferences(context)
-        .edit()
-        .putStringSet(COOKIES_KEY, cookies)
-        .apply()
+      val preferences: SharedPreferences = PreferenceManager.getDefaultSharedPreferences(context)
+      val editor = preferences.edit()
+      editor.putStringSet(COOKIES_KEY, cookies)
+      editor.commit()
     }
 
     return originalResponse
