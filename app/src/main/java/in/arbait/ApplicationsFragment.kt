@@ -58,7 +58,7 @@ class ApplicationsFragment: Fragment() {
 
   private var user: User? = null
   private lateinit var repository: UserRepository
-  private var mainActivity = requireActivity() as MainActivity
+  private lateinit var mainActivity: MainActivity
 
   private var todayApps = mutableListOf<ApplicationItem>()
   private var tomorrowApps = mutableListOf<ApplicationItem>()
@@ -103,14 +103,15 @@ class ApplicationsFragment: Fragment() {
     rvApps.addItemDecoration(DividerItemDecoration(context, DividerItemDecoration.VERTICAL))
     rvApps.addItemDecoration(divider)
 
-    /*
+
     server = Server(requireContext())
     server.getAppsResponseList(requireContext(), rootView)
     appsResponse = server.applicationsResponse
-     */
 
-    serviceDoAction(Actions.START)
-    bindService()
+    mainActivity = requireActivity() as MainActivity
+
+    //serviceDoAction(Actions.START)
+    //bindService()
 
     return view
   }
@@ -352,7 +353,6 @@ class ApplicationsFragment: Fragment() {
   }
 
   private fun unbindService() {
-    val mainActivity = requireActivity() as MainActivity
     serviceIsBound?.let {
       if (it) {
         mainActivity.unbindService(serviceConnection)

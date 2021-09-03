@@ -37,9 +37,6 @@ class PollService : LifecycleService()
   lateinit var appsResponse: LiveData<ApplicationsResponse>
     private set
 
-  //private lateinit var context: Context
-  //private lateinit var view: View
-
   private val binder: IBinder = PollBinder()
 
   inner class PollBinder : Binder() {

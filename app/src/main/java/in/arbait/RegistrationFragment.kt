@@ -208,13 +208,13 @@ class RegistrationFragment : Fragment() {
 
   private fun onResult (response: Response) {
     when (response.code) {
-      SERVER_OK     -> Register(response).doOnServerOkResult()
-      SYSTEM_ERROR  -> Register(response).doOnSystemError()
-      SERVER_ERROR  -> Register(response).doOnServerError()
+      SERVER_OK     -> RegisterReaction(response).doOnServerOkResult()
+      SYSTEM_ERROR  -> RegisterReaction(response).doOnSystemError()
+      SERVER_ERROR  -> RegisterReaction(response).doOnServerError()
     }
   }
 
-  private inner class Register (response: Response):
+  private inner class RegisterReaction (response: Response):
     ReactionOnServerResponse (TAG, requireContext(), rootView, response)
   {
     override fun doOnServerOkResult() {

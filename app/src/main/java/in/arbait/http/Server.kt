@@ -77,8 +77,8 @@ class Server (private val context: Context) {
             Log.i(TAG, "Response received, response.body() = ${response.body()}")
             val appsResponse: ApplicationsResponse? = response.body()
             applicationsResponse.value = appsResponse ?: ApplicationsResponse()
-            Log.i (TAG, "openApps = ${applicationsResponse.value?.openApps}")
-            Log.i(TAG, "applicationsResponse = $applicationsResponse")
+            //Log.i (TAG, "openApps = ${applicationsResponse.value?.openApps}")
+            //Log.i(TAG, "applicationsResponse = $applicationsResponse")
           }
           else {
             Log.e (TAG, "Server error with code ${response.code()}")
