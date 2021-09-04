@@ -10,11 +10,7 @@ import android.content.SharedPreferences
 
 import android.content.Context.MODE_PRIVATE
 
-
-
-
 private const val COOKIES_KEY = "appCookies"
-
 
 class SendSavedCookiesInterceptor (private val context: Context) : Interceptor {
 
@@ -31,6 +27,7 @@ class SendSavedCookiesInterceptor (private val context: Context) : Interceptor {
 
     return chain.proceed(builder.build())
   }
+
 }
 
 class SaveReceivedCookiesInterceptor(private val context: Context) : Interceptor {
@@ -43,10 +40,6 @@ class SaveReceivedCookiesInterceptor(private val context: Context) : Interceptor
     val originalResponse = chain.proceed(chain.request())
 
     if (originalResponse.headers(setCookieHeader).isNotEmpty()) {
-      /*val cookies = PreferenceManager
-        .getDefaultSharedPreferences(context)
-        .getStringSet(COOKIES_KEY, HashSet()) as HashSet<String>*/
-
       val cookies: HashSet<String> = HashSet<String>()
 
       originalResponse.headers(setCookieHeader).forEach {

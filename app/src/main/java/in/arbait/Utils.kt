@@ -101,6 +101,25 @@ fun phoneNumberIsValid (phoneNumber: String?, countryCode: String?, logTag: Stri
   return false
 }
 
+fun elementsFromANotInB (a: List<ApplicationItem>, b: List<ApplicationItem>): List<ApplicationItem> {
+  val list: MutableList<ApplicationItem> = mutableListOf()
+
+  for (i in a.indices) {
+    var bHasElement = false
+    for (j in b.indices) {
+      if (a[i] == b[j]) {
+        bHasElement = true
+        break
+      }
+    }
+    if (!bHasElement) {
+      list.add(a[i])
+    }
+  }
+
+  return list
+}
+
 fun listsAreDifferent (a: List<ApplicationItem>, b: List<ApplicationItem>): Boolean {
   if (a.size != b.size) return true
 

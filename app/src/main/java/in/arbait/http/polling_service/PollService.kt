@@ -1,10 +1,13 @@
 package `in`.arbait.http.polling_service
 
-import `in`.arbait.MainActivity
-import `in`.arbait.R
+import `in`.arbait.*
 import `in`.arbait.http.ApplicationsResponse
+import `in`.arbait.http.SERVER_OK
 import `in`.arbait.http.Server
+import android.annotation.SuppressLint
 import android.app.*
+import android.app.NotificationManager.IMPORTANCE_HIGH
+import android.app.NotificationManager.IMPORTANCE_NONE
 import android.content.Context
 import android.content.Intent
 import android.graphics.Color
@@ -16,23 +19,31 @@ import android.util.Log
 import android.widget.Toast
 import androidx.lifecycle.LifecycleService
 import androidx.lifecycle.LiveData
+import androidx.lifecycle.Observer
 import kotlinx.coroutines.*
 
 private const val TAG = "PollingService"
 private const val SERVICE_DELAY_SECONDS: Long = 5
 
+private const val SERVICE_NOTIFICATION_ID = 1
+private const val SERVICE_NOTIFICATION_CHANNEL_ID = "Мониторинг заявок"
+
+private const val NEW_APP_NOTIFICATION_ID = 2
+private const val NEW_APP_NOTIFICATION_CHANNEL_ID = "Новая заявка"
+
 // https://robertohuertas.com/2019/06/29/android_foreground_services/
 // poll the server for applications
-class PollService : LifecycleService()
-{
-  private var wakeLock: PowerManager.WakeLock? = null
-  private var serviceIsStarted = false
-
-  private lateinit var server: Server
+class PollService : LifecycleService() {
   lateinit var appsResponse: LiveData<ApplicationsResponse>
     private set
 
+  private var openApps: List<ApplicationItem> = emptyList()
+
+  private var wakeLock: PowerManager.WakeLock? = null
+  private var serviceIsStarted = false
+  private lateinit var server: Server
   private val binder: IBinder = PollBinder()
+
 
   inner class PollBinder : Binder() {
     // Return this instance of MyService so clients can call public methods
@@ -41,6 +52,7 @@ class PollService : LifecycleService()
   }
 
   override fun onBind(intent: Intent): IBinder? {
+    super.onBind(intent)
     log( "Some component want to bind with the service")
     return binder
   }
@@ -48,15 +60,43 @@ class PollService : LifecycleService()
   override fun onCreate() {
     super.onCreate()
     log("The service has been created".toUpperCase())
-    val notification = createNotification()
-    startForeground(1, notification)
+    // уведомление о запуске сервиса - без звука и вибрации
+    val notification = createNotification (SERVICE_NOTIFICATION_CHANNEL_ID, IMPORTANCE_HIGH)
+    startForeground(SERVICE_NOTIFICATION_ID, notification)
 
     server = Server(this)
     server.updateApplicationsResponse()
     appsResponse = server.applicationsResponse
+
+    var firstTime = true
+    appsResponse.observe(this,
+      Observer { appsResponse ->
+        appsResponse?.let {
+          log("OBSERVER , firstTime = $firstTime")
+          val response = it.response
+          if (response.code == SERVER_OK) {
+            val openAppsFromServer = it.openApps
+            log("openAppsFromServer = $openAppsFromServer")
+            if (openAppsFromServer.isNotEmpty()) {
+              if (firstTime) {
+                openApps = openAppsFromServer
+                firstTime = false
+              }
+              val newApps = elementsFromANotInB(openAppsFromServer, openApps)
+              log("newApps = $newApps")
+              log("newApps.size = ${newApps.size}")
+              if (newApps.isNotEmpty()) {
+
+              }
+            }
+          }
+        }
+      }
+    )
   }
 
   override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+    super.onStartCommand(intent, flags, startId)
     log( "onStartCommand executed with startId: $startId")
     if (intent != null) {
       val action = intent.action
@@ -79,12 +119,12 @@ class PollService : LifecycleService()
     return START_STICKY
   }
 
-
   override fun onDestroy() {
     super.onDestroy()
     log("The service has been destroyed".toUpperCase())
     Toast.makeText(this, "Service destroyed", Toast.LENGTH_SHORT).show()
   }
+
 
   private fun startService() {
     if (serviceIsStarted) return
@@ -132,8 +172,17 @@ class PollService : LifecycleService()
     setServiceState(this, ServiceState.STOPPED)
   }
 
-  private fun createNotification(): Notification {
-    val notificationChannelId = "ENDLESS SERVICE CHANNEL"
+  private fun createNewAppNotification (applicationItem: ApplicationItem): Notification {
+    return createNotification(NEW_APP_NOTIFICATION_CHANNEL_ID, IMPORTANCE_HIGH)
+  }
+
+  private fun createNotification (notificationChannelId: String,
+                                  importance: Int,
+                                  name: String = notificationChannelId,
+                                  title: String = notificationChannelId,
+                                  text: String = ""): Notification
+  {
+    //val notificationChannelId = "ENDLESS SERVICE CHANNEL"
 
     // depending on the Android API that we're dealing with we will have
     // to use a specific method to create the notification
@@ -142,8 +191,8 @@ class PollService : LifecycleService()
         getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
       val channel = NotificationChannel(
         notificationChannelId,
-        "Endless Service notifications channel",
-        NotificationManager.IMPORTANCE_NONE // без звука и вибрации
+        name,
+        importance
       ).let {
         it.description = "Endless Service channel"
         it.enableLights(true)
@@ -165,8 +214,8 @@ class PollService : LifecycleService()
       ) else Notification.Builder(this)
 
     return builder
-      .setContentTitle("Мониторинг заявок")
-      .setContentText("не отключайте, если не хотите пропустить новые заявки")
+      .setContentTitle(title)
+      .setContentText(text)
       .setContentIntent(pendingIntent)
       .setSmallIcon(R.mipmap.ic_launcher)
       .setTicker("Ticker text")
