@@ -4,10 +4,8 @@ import `in`.arbait.*
 import `in`.arbait.http.ApplicationsResponse
 import `in`.arbait.http.SERVER_OK
 import `in`.arbait.http.Server
-import android.annotation.SuppressLint
 import android.app.*
-import android.app.NotificationManager.IMPORTANCE_HIGH
-import android.app.NotificationManager.IMPORTANCE_NONE
+import android.app.NotificationManager.*
 import android.content.Context
 import android.content.Intent
 import android.graphics.Color
@@ -21,6 +19,7 @@ import androidx.lifecycle.LifecycleService
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.Observer
 import kotlinx.coroutines.*
+import android.app.NotificationManager
 
 private const val TAG = "PollingService"
 private const val SERVICE_DELAY_SECONDS: Long = 5
@@ -30,6 +29,9 @@ private const val SERVICE_NOTIFICATION_CHANNEL_ID = "Мониторинг зая
 
 private const val NEW_APP_NOTIFICATION_ID = 2
 private const val NEW_APP_NOTIFICATION_CHANNEL_ID = "Новая заявка"
+
+private const val TEXT_IN = "в"
+private const val TEXT_TOMORROW = "Завтра"
 
 // https://robertohuertas.com/2019/06/29/android_foreground_services/
 // poll the server for applications
@@ -44,6 +46,7 @@ class PollService : LifecycleService() {
   private lateinit var server: Server
   private val binder: IBinder = PollBinder()
 
+  private var notificationId = NEW_APP_NOTIFICATION_ID
 
   inner class PollBinder : Binder() {
     // Return this instance of MyService so clients can call public methods
@@ -61,7 +64,7 @@ class PollService : LifecycleService() {
     super.onCreate()
     log("The service has been created".toUpperCase())
     // уведомление о запуске сервиса - без звука и вибрации
-    val notification = createNotification (SERVICE_NOTIFICATION_CHANNEL_ID, IMPORTANCE_HIGH)
+    val notification = createNotification (SERVICE_NOTIFICATION_CHANNEL_ID, IMPORTANCE_DEFAULT)
     startForeground(SERVICE_NOTIFICATION_ID, notification)
 
     server = Server(this)
@@ -78,17 +81,19 @@ class PollService : LifecycleService() {
             val openAppsFromServer = it.openApps
             log("openAppsFromServer = $openAppsFromServer")
             if (openAppsFromServer.isNotEmpty()) {
-              if (firstTime) {
-                openApps = openAppsFromServer
-                firstTime = false
-              }
               val newApps = elementsFromANotInB(openAppsFromServer, openApps)
+              openApps = openAppsFromServer
               log("newApps = $newApps")
               log("newApps.size = ${newApps.size}")
-              if (newApps.isNotEmpty()) {
-
+              if (newApps.isNotEmpty() && !firstTime) {
+                for (i in newApps.indices) {
+                  val n = createNewAppNotification(newApps[i])
+                  showNotification(notificationId, n)
+                  notificationId++
+                }
               }
             }
+            if (firstTime) firstTime = false
           }
         }
       }
@@ -172,18 +177,37 @@ class PollService : LifecycleService() {
     setServiceState(this, ServiceState.STOPPED)
   }
 
-  private fun createNewAppNotification (applicationItem: ApplicationItem): Notification {
-    return createNotification(NEW_APP_NOTIFICATION_CHANNEL_ID, IMPORTANCE_HIGH)
+  private fun showNotification(id: Int, notification: Notification) {
+    val notificationManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
+    notificationManager.notify(id, notification)
+  }
+
+  private fun createNewAppNotification (newApp: ApplicationItem): Notification {
+    val title = newApp.address
+
+    var word: String = ""
+    strToDate(newApp.date, DATE_FORMAT)?.let {
+      word = if (isItToday(it)) TEXT_IN.uppercase() else "$TEXT_TOMORROW $TEXT_IN"
+    }
+    val suffix = if (newApp.hourlyJob) " $TEXT_HOURLY_PAYMENT" else "/$TEXT_DAILY_PAYMENT"
+    val price = "${newApp.priceForWorker}$suffix"
+    val people = "${newApp.workerTotal} $TEXT_PEOPLE"
+    val text = "$word ${newApp.time}, $price, $people"
+
+    return createNotification ( NEW_APP_NOTIFICATION_CHANNEL_ID,
+                                IMPORTANCE_HIGH,
+                                true,
+                                title,
+                                text)
   }
 
   private fun createNotification (notificationChannelId: String,
                                   importance: Int,
-                                  name: String = notificationChannelId,
+                                  vibration: Boolean = false,
                                   title: String = notificationChannelId,
-                                  text: String = ""): Notification
+                                  text: String = "",
+                                  name: String = notificationChannelId): Notification
   {
-    //val notificationChannelId = "ENDLESS SERVICE CHANNEL"
-
     // depending on the Android API that we're dealing with we will have
     // to use a specific method to create the notification
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -194,7 +218,8 @@ class PollService : LifecycleService() {
         name,
         importance
       ).let {
-        it.description = "Endless Service channel"
+        it.enableVibration(vibration)
+        it.description = notificationChannelId
         it.enableLights(true)
         it.lightColor = Color.RED
         it

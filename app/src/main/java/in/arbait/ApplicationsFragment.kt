@@ -34,9 +34,10 @@ const val VIEW_ARG = "view"
 
 private const val TAG = "ApplicationsFragment"
 
-private const val HOURLY_TITLE = "р/ч"
-private const val DAILY_TITLE = "8ч"
-private const val DATE_FORMAT = "yyyy-MM-dd"
+const val TEXT_HOURLY_PAYMENT = "р/ч"
+const val TEXT_DAILY_PAYMENT = "8ч"
+const val TEXT_PEOPLE = "чел"
+const val DATE_FORMAT = "yyyy-MM-dd"
 
 /* Headers and messages (those that are instead of applications) */
 private const val MAIN_HEADER = 0
@@ -250,8 +251,8 @@ class ApplicationsFragment: Fragment() {
 
       val price = app.priceForWorker.toString()
       tvIncome.text = when (app.hourlyJob) {
-        true -> "$price $HOURLY_TITLE"
-        false -> "$price/$DAILY_TITLE"
+        true -> "$price $TEXT_HOURLY_PAYMENT"
+        false -> "$price/$TEXT_DAILY_PAYMENT"
       }
     }
 
