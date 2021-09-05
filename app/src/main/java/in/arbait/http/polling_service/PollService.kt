@@ -82,7 +82,7 @@ class PollService : LifecycleService() {
             log("openAppsFromServer = $openAppsFromServer")
             if (openAppsFromServer.isNotEmpty()) {
               val newApps = elementsFromANotInB(openAppsFromServer, openApps)
-              val closeApps = elementsFromANotInB(openApps, openAppsFromServer)
+              val closedApps = elementsFromANotInB(openApps, openAppsFromServer)
               log("newApps = $newApps")
               log("newApps.size = ${newApps.size}")
               openApps = openAppsFromServer
@@ -92,9 +92,9 @@ class PollService : LifecycleService() {
                   showNotification(newApps[i].id, n)
                 }
               }
-              if (closeApps.isNotEmpty()) {
-                for (j in closeApps.indices) {
-                  removeNotification(closeApps[j].id)
+              if (closedApps.isNotEmpty()) {
+                for (j in closedApps.indices) {
+                  removeNotification(closedApps[j].id)
                 }
               }
             }

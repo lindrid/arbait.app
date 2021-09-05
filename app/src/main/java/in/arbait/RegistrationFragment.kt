@@ -33,10 +33,6 @@ private const val WORKER_AGE_UP_TO = 65
 
 private const val FIRST_NAME_MIN_LENGTH = 2
 private const val FIRST_NAME_MAX_LENGTH = 20
-private const val LAST_NAME_MIN_LENGTH = 2
-private const val LAST_NAME_MAX_LENGTH = 20
-private const val PASSWORD_MIN_LENGTH = 5
-private const val PASSWORD_MAX_LENGTH = 25
 
 private val DEFAULT_EDITTEXT_EMERALD_COLOR = Color.parseColor("#02dac5")
 
@@ -55,12 +51,11 @@ class RegistrationFragment : Fragment() {
 
   private lateinit var tvRegistration: TextView
   private lateinit var etFirstName: EditText
-  private lateinit var etLastName: EditText
   private lateinit var etBirthDate: EditText
   private lateinit var etPhone: EditText
   private lateinit var etPhoneWhatsapp: EditText
   private lateinit var btSamePhone: Button
-  private lateinit var etPassword: EditText
+  private lateinit var etDebitCard: EditText
   private lateinit var btDone: Button
 
 
@@ -80,20 +75,18 @@ class RegistrationFragment : Fragment() {
     tvRegistration = view.findViewById(R.id.tv_reg_registration)
 
     etFirstName = view.findViewById(R.id.et_reg_first_name)
-    etLastName = view.findViewById(R.id.et_reg_last_name)
     etBirthDate = view.findViewById(R.id.et_reg_birth_date)
     etPhone = view.findViewById(R.id.et_reg_phone)
     etPhoneWhatsapp = view.findViewById(R.id.et_reg_phone_whatsapp)
     btSamePhone = view.findViewById(R.id.bt_reg_same_phone)
-    etPassword = view.findViewById(R.id.et_reg_password)
+    etDebitCard = view.findViewById(R.id.et_reg_debit_card)
     btDone = view.findViewById(R.id.bt_reg_done)
 
     registrationFields.add(etFirstName)
-    registrationFields.add(etLastName)
     registrationFields.add(etBirthDate)
     registrationFields.add(etPhone)
     registrationFields.add(etPhoneWhatsapp)
-    registrationFields.add(etPassword)
+    registrationFields.add(etDebitCard)
 
     etPhone.addTextChangedListener(PhoneNumberFormattingTextWatcher())
     etPhoneWhatsapp.addTextChangedListener(PhoneNumberFormattingTextWatcher())
@@ -107,11 +100,10 @@ class RegistrationFragment : Fragment() {
       val user = User (
         id = null,
         firstName = etFirstName.text.toString(),
-        lastName = etLastName.text.toString(),
         birthDate = etBirthDate.text.toString(),
         phone = etPhone.text.toString(),
         phoneWa = phoneWa,
-        password = etPassword.text.toString()
+        debitCard = etDebitCard.text.toString()
       )
       Log.i (TAG, "User = ${user.toString()}")
 
@@ -123,11 +115,10 @@ class RegistrationFragment : Fragment() {
     }
 
     etFirstName.setText("Дмитрий")
-    etLastName.setText("Федоров")
     etBirthDate.setText("08.06.1987")
     etPhone.setText("89240078897")
     etPhoneWhatsapp.setText("89240078897")
-    etPassword.setText("12")
+    etDebitCard.setText("1234 5678 9123 4567")
 
     Log.i (TAG, "manufacturer is $MANUFACTURER")
     Log.i (TAG, "Android version is $VERSION")
@@ -221,7 +212,6 @@ class RegistrationFragment : Fragment() {
       val now = Calendar.getInstance().time
       val user = `in`.arbait.database.User(
         etPhone.text.toString(),
-        etPassword.text.toString(),
         isConfirmed = false,
         login = false,
         createdAt = now
@@ -244,9 +234,6 @@ class RegistrationFragment : Fragment() {
         "first_name" -> {
           showErrorBalloon(requireContext(), etFirstName, errorStr)
         }
-        "last_name" -> {
-          showErrorBalloon(requireContext(), etLastName, errorStr)
-        }
         "birth_date" -> {
           showErrorBalloon(requireContext(), etBirthDate, errorStr)
         }
@@ -256,8 +243,8 @@ class RegistrationFragment : Fragment() {
         "phone_wa" -> {
           showErrorBalloon(requireContext(), etPhoneWhatsapp, errorStr)
         }
-        "password" -> {
-          showErrorBalloon(requireContext(), etPassword, errorStr)
+        "debit_card" -> {
+          showErrorBalloon(requireContext(), etDebitCard, errorStr)
         }
       }
     }
@@ -269,11 +256,6 @@ class RegistrationFragment : Fragment() {
         "Укажите имя!")
     }
 
-    if (user.lastName.isNullOrEmpty()) {
-      return doWhenFieldEmptyOrWrong(etLastName, R.string.reg_empty_last_name,
-        "Укажите фамилию!")
-    }
-
     if (user.phone.isNullOrEmpty()) {
       return doWhenFieldEmptyOrWrong(etPhone, R.string.reg_empty_phone,
         "Укажите номер телефона!")
@@ -282,16 +264,6 @@ class RegistrationFragment : Fragment() {
     if (user.birthDate.isNullOrEmpty()) {
       return doWhenFieldEmptyOrWrong(etBirthDate, R.string.reg_empty_birth_date,
         "Укажите дату рождения!")
-    }
-
-    if (user.password.isNullOrEmpty()) {
-      val emptyPassword = getString (
-        R.string.reg_empty_password,
-        PASSWORD_MIN_LENGTH,
-        PASSWORD_MAX_LENGTH
-      )
-      return doWhenFieldEmptyOrWrong(etPassword, emptyPassword,
-        "Придумайте пароль длиной от $PASSWORD_MIN_LENGTH до $PASSWORD_MAX_LENGTH символов!")
     }
 
     if (firstNameIsValid(user.firstName)) {
@@ -310,24 +282,6 @@ class RegistrationFragment : Fragment() {
     else {
       return doWhenFieldEmptyOrWrong(etFirstName, R.string.reg_wrong_first_name,
         "Wrong first name - ${user.firstName}")
-    }
-
-    if (lastNameIsValid(user.lastName)) {
-      if (user.lastName.length < LAST_NAME_MIN_LENGTH ||
-        user.lastName.length > LAST_NAME_MAX_LENGTH)
-      {
-        val wrongLength = getString (
-          R.string.reg_wrong_last_name_length,
-          LAST_NAME_MIN_LENGTH,
-          LAST_NAME_MAX_LENGTH
-        )
-        return doWhenFieldEmptyOrWrong(etLastName, wrongLength,
-          "Wrong last name length - ${user.lastName}")
-      }
-    }
-    else {
-      return doWhenFieldEmptyOrWrong(etLastName, R.string.reg_wrong_last_name,
-        "Wrong last name - ${user.lastName}")
     }
 
     if (!dateIsValid(user.birthDate)) {
@@ -374,15 +328,6 @@ class RegistrationFragment : Fragment() {
     if (!phoneNumberIsValid(user.phone, "RU", TAG)) {
       return doWhenFieldEmptyOrWrong(etPhone, R.string.reg_wrong_phone,
         "Wrong phone ${user.phone}")
-    }
-
-    if (!passwordIsValid(user.password)) {
-      val invalidPassword = getString (
-        R.string.reg_invalid_password_length,
-        PASSWORD_MIN_LENGTH,
-        PASSWORD_MAX_LENGTH
-      )
-      return doWhenFieldEmptyOrWrong(etPassword, invalidPassword, invalidPassword)
     }
 
     return true
@@ -448,13 +393,5 @@ class RegistrationFragment : Fragment() {
       return true
     }
     return false
-  }
-
-  private fun passwordIsValid(password: String?): Boolean {
-    if (password == null) {
-      return false
-    }
-
-    return password.length in PASSWORD_MIN_LENGTH..PASSWORD_MAX_LENGTH
   }
 }

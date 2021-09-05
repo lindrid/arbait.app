@@ -8,7 +8,6 @@ import java.util.*
 @Entity
 data class User (
   @PrimaryKey var phone: String,
-  var password: String = "",
   var callReceived: Boolean = false,
   var isConfirmed: Boolean = false,
   var login: Boolean = false,
