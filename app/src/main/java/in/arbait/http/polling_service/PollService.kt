@@ -82,14 +82,19 @@ class PollService : LifecycleService() {
             log("openAppsFromServer = $openAppsFromServer")
             if (openAppsFromServer.isNotEmpty()) {
               val newApps = elementsFromANotInB(openAppsFromServer, openApps)
-              openApps = openAppsFromServer
+              val closeApps = elementsFromANotInB(openApps, openAppsFromServer)
               log("newApps = $newApps")
               log("newApps.size = ${newApps.size}")
+              openApps = openAppsFromServer
               if (newApps.isNotEmpty() && !firstTime) {
                 for (i in newApps.indices) {
                   val n = createNewAppNotification(newApps[i])
-                  showNotification(notificationId, n)
-                  notificationId++
+                  showNotification(newApps[i].id, n)
+                }
+              }
+              if (closeApps.isNotEmpty()) {
+                for (j in closeApps.indices) {
+                  removeNotification(closeApps[j].id)
                 }
               }
             }
@@ -180,6 +185,12 @@ class PollService : LifecycleService() {
   private fun showNotification(id: Int, notification: Notification) {
     val notificationManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
     notificationManager.notify(id, notification)
+  }
+
+  private fun removeNotification(id: Int) {
+    val notificationManager =
+      applicationContext.getSystemService(NOTIFICATION_SERVICE) as NotificationManager
+    notificationManager.cancel(id)
   }
 
   private fun createNewAppNotification (newApp: ApplicationItem): Notification {
