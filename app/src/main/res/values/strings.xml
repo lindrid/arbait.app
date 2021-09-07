@@ -9,14 +9,14 @@
     <!-- Фрагмент регистрации -->
     <string name="reg_registration">Регистрация</string>
     <string name="reg_first_name">Имя</string>
-    <string name="reg_last_name">Фамилия</string>
-    <string name="reg_phone">Телефон</string>
+    <string name="reg_phone">Телефон для связи</string>
     <string name="reg_phone_whatsapp">Телефон в Whatsapp</string>
     <string name="reg_b_same">Тот же</string>
+    <string name="reg_birth_date">Дата рождения</string>
     <string name="reg_age">Возраст (полных лет)</string>
     <string name="reg_done">Готово</string>
-    <string name="reg_password">Пароль</string>
-    <string name="reg_birth_date">Дата рождения</string>
+    <string name="reg_debit_card">Карта/телефон</string>
+    <string name="reg_wrong_debit_card">Введите правильный номер карты или телефона, привязанного к карте</string>
     <string name="reg_dialog_cancel">Отмена</string>
     <string name="reg_dialog_ok">OK</string>
     <string name="reg_empty_birth_date">Укажите дату рождения! Пример правильной даты: 15.06.1995</string>
@@ -55,6 +55,4 @@
     <string name="apps_closed">Закрытые</string>
     <string name="apps_finished">Завершенные</string>
     <string name="apps_action_bar_title">Заявки</string>
-    <string name="reg_debit_card">Номер карты</string>
-    <string name="reg_wrong_debit_card">Введите правильный номер карты (телефон не принимается)</string>
 </resources>

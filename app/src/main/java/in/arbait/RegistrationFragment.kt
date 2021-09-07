@@ -5,6 +5,7 @@ import android.graphics.Color
 import android.os.Bundle
 import android.telephony.PhoneNumberFormattingTextWatcher
 import android.util.Log
+import android.view.KeyEvent
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -94,6 +95,14 @@ class RegistrationFragment : Fragment() {
 
     btSamePhone.setOnClickListener(setPhoneWaEqualsToPhone)
 
+    etDebitCard.setOnKeyListener { _, keyCode, event ->
+      if (event.action == KeyEvent.ACTION_DOWN) {
+        Log.i (TAG, "keyCode = $keyCode")
+        DebitCardFormatWatcher.itWasDelete = (keyCode == KeyEvent.KEYCODE_DEL)
+      }
+      false // very important
+    }
+
     btDone.setOnClickListener {
       val str = etPhoneWhatsapp.text.toString()
       val phoneWa = if (str.isEmpty()) { null } else { str }
@@ -119,7 +128,6 @@ class RegistrationFragment : Fragment() {
     etBirthDate.setText("08.06.1987")
     etPhone.setText("89240078897")
     etPhoneWhatsapp.setText("89240078897")
-    etDebitCard.setText("1234 5678 9123 4567")
 
     Log.i (TAG, "manufacturer is $MANUFACTURER")
     Log.i (TAG, "Android version is $VERSION")
