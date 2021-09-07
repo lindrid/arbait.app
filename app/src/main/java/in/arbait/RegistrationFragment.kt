@@ -90,6 +90,7 @@ class RegistrationFragment : Fragment() {
 
     etPhone.addTextChangedListener(PhoneNumberFormattingTextWatcher())
     etPhoneWhatsapp.addTextChangedListener(PhoneNumberFormattingTextWatcher())
+    etDebitCard.addTextChangedListener(DebitCardFormatWatcher())
 
     btSamePhone.setOnClickListener(setPhoneWaEqualsToPhone)
 
@@ -330,10 +331,13 @@ class RegistrationFragment : Fragment() {
         "Wrong phone ${user.phone}")
     }
 
+    if (!debitCardIsValid(user.debitCard, TAG)) {
+      return doWhenFieldEmptyOrWrong(etDebitCard, R.string.reg_wrong_debit_card,
+        "Wrong debitCard ${user.debitCard}")
+    }
+
     return true
   }
-
-
 
   private fun getDelimiter(birthDate: String): Char? {
     return when {
@@ -393,5 +397,14 @@ class RegistrationFragment : Fragment() {
       return true
     }
     return false
+  }
+
+  private fun debitCardIsValid(debitCard: String?, tag: String): Boolean {
+    if (debitCard.isNullOrEmpty()) return true
+    for (i in debitCard.indices) {
+      val validChar = (Character.isDigit(debitCard[i]) || debitCard[i] == ' ')
+      if (!validChar) return false
+    }
+    return true
   }
 }

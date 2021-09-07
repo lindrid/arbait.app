@@ -5,6 +5,9 @@ import okhttp3.ResponseBody
 import org.json.JSONObject
 import retrofit2.Response
 import java.lang.reflect.InvocationTargetException
+import android.R.string
+import java.net.URLDecoder
+
 
 private const val TAG = "http.Response"
 private const val ROOT_VALIDATION_ERROR_JSON_STR = "errors"
@@ -45,12 +48,14 @@ class Response {
     code = SERVER_ERROR
     // после первого обращения к errorBody.string(), далее
     // эта команда будет возвращать всегда пустую строку (или null)
-    val errorMsg = "Server error code: $errorCode, message: ${errorBody.string()}"
+    val errorBodyStr = errorBody.string()
+    val errorMsg = "Server error code: $errorCode, message: $errorBodyStr"
     Log.i (TAG, errorMsg)
     try {
       // в случае 500 internal server error, следующая операция выбрасывает исключение
-      val obj = JSONObject(errorMsg)
+      val obj = JSONObject(errorBodyStr)
       isItValidationError = obj.has(ROOT_VALIDATION_ERROR_JSON_STR)
+      Log.i (TAG, "isItValidationError = $isItValidationError")
       if (isItValidationError) {
         val pair = getErrorFieldAndMsg(obj)
         pair?.let {

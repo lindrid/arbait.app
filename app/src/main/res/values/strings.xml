@@ -56,4 +56,5 @@
     <string name="apps_finished">Завершенные</string>
     <string name="apps_action_bar_title">Заявки</string>
     <string name="reg_debit_card">Номер карты</string>
+    <string name="reg_wrong_debit_card">Введите правильный номер карты (телефон не принимается)</string>
 </resources>

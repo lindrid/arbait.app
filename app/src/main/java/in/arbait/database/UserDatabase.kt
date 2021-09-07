@@ -6,7 +6,6 @@ import androidx.room.TypeConverters
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 
-
 @Database(entities = [User::class], version = 4)
 @TypeConverters(UserTypeConverters::class)
 abstract class UserDatabase: RoomDatabase() {
