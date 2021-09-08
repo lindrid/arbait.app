@@ -95,10 +95,33 @@ class RegistrationFragment : Fragment() {
 
     btSamePhone.setOnClickListener(setPhoneWaEqualsToPhone)
 
-    etDebitCard.setOnKeyListener { _, keyCode, event ->
+    etDebitCard.setOnKeyListener { dc, keyCode, event ->
       if (event.action == KeyEvent.ACTION_DOWN) {
         Log.i (TAG, "keyCode = $keyCode")
-        DebitCardFormatWatcher.itWasDelete = (keyCode == KeyEvent.KEYCODE_DEL)
+        val itWasDeleteWasTrue = DebitCardFormatWatcher.itWasDelete
+        DebitCardFormatWatcher.itWasDelete = keyCode == KeyEvent.KEYCODE_DEL
+        /*if (DebitCardFormatWatcher.itWasDelete) {
+          val v = DebitCardFormatWatcher.value
+          val text = (dc as EditText).text.toString()
+          // если удаляемый (последний) символ это цифра
+          if (text.isNotEmpty() && Character.isDigit(text[text.length-1])) {
+            DebitCardFormatWatcher.value =
+              if (v.length > 1)
+                v.subSequence(0, v.length - 1).toString()
+              else
+                ""
+            Log.i (TAG, "value = ${DebitCardFormatWatcher.value}")
+          }
+        }*/
+
+        // нажата цифра от 0 до 9
+        if (keyCode in 7..16) {
+          DebitCardFormatWatcher.value += (keyCode-7).toString()
+          if (itWasDeleteWasTrue) {
+            DebitCardFormatWatcher.needsToInsertInPhone = true
+          }
+        }
+        Log.i (TAG, "value = ${DebitCardFormatWatcher.value}")
       }
       false // very important
     }
