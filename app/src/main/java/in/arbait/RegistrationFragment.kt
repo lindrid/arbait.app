@@ -15,6 +15,11 @@ import android.widget.TextView
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
 import java.util.*
+import android.widget.Toast
+
+import android.view.inputmethod.EditorInfo
+import android.widget.TextView.OnEditorActionListener
+
 
 const val BIRTH_DATE_KEY = "birthDate"
 const val USER_ARG = "user"
@@ -95,36 +100,43 @@ class RegistrationFragment : Fragment() {
 
     btSamePhone.setOnClickListener(setPhoneWaEqualsToPhone)
 
-    etDebitCard.setOnKeyListener { dc, keyCode, event ->
-      if (event.action == KeyEvent.ACTION_DOWN) {
-        Log.i (TAG, "keyCode = $keyCode")
+    /*etDebitCard.setOnKeyListener(View.OnKeyListener { v, keyCode, event ->
+      Log.i(TAG, "keycode = $keyCode, event = ${event.toString()}")
+      if (event.action == KeyEvent.ACTION_DOWN || event.action == KeyEvent.ACTION_UP) {
+        Log.i(TAG, "keyCode = $keyCode")
         val itWasDeleteWasTrue = DebitCardFormatWatcher.itWasDelete
         DebitCardFormatWatcher.itWasDelete = keyCode == KeyEvent.KEYCODE_DEL
-        /*if (DebitCardFormatWatcher.itWasDelete) {
-          val v = DebitCardFormatWatcher.value
-          val text = (dc as EditText).text.toString()
-          // если удаляемый (последний) символ это цифра
-          if (text.isNotEmpty() && Character.isDigit(text[text.length-1])) {
-            DebitCardFormatWatcher.value =
-              if (v.length > 1)
-                v.subSequence(0, v.length - 1).toString()
-              else
-                ""
-            Log.i (TAG, "value = ${DebitCardFormatWatcher.value}")
-          }
-        }*/
 
         // нажата цифра от 0 до 9
         if (keyCode in 7..16) {
-          DebitCardFormatWatcher.value += (keyCode-7).toString()
+          DebitCardFormatWatcher.value += (keyCode - 7).toString()
           if (itWasDeleteWasTrue) {
             DebitCardFormatWatcher.needsToInsertInPhone = true
           }
         }
-        Log.i (TAG, "value = ${DebitCardFormatWatcher.value}")
+        Log.i(TAG, "value = ${DebitCardFormatWatcher.value}")
       }
-      false // very important
-    }
+      return true
+    })*/
+
+    /*etDebitCard.setOnEditorActionListener { v, actionId, event ->
+      Log.i (TAG, "actionId = $actionId, event = $event")
+      true
+      return if ( actionId == EditorInfo.IME_ACTION_DONE ||
+                      event.keyCode == KeyEvent.KEYCODE_ENTER &&
+                      event.action == KeyEvent.ACTION_DOWN)
+          {
+            Toast.makeText(
+              this,
+              editText.getText().toString().toString() + "Enter Pressed",
+              Toast.LENGTH_LONG
+            ).show()
+            true
+          }
+          else {
+            false
+          }
+    }*/
 
     btDone.setOnClickListener {
       val str = etPhoneWhatsapp.text.toString()
