@@ -61,7 +61,7 @@ class RegistrationFragment : Fragment() {
   private lateinit var etPhone: EditText
   private lateinit var etPhoneWhatsapp: EditText
   private lateinit var btSamePhone: Button
-  private lateinit var etDebitCard: EditText
+  private lateinit var etDebitCard: MonitoringEditText
   private lateinit var btDone: Button
 
 
@@ -85,7 +85,7 @@ class RegistrationFragment : Fragment() {
     etPhone = view.findViewById(R.id.et_reg_phone)
     etPhoneWhatsapp = view.findViewById(R.id.et_reg_phone_whatsapp)
     btSamePhone = view.findViewById(R.id.bt_reg_same_phone)
-    etDebitCard = view.findViewById(R.id.et_reg_debit_card)
+    etDebitCard = view.findViewById(R.id.et_reg_debit_card) as MonitoringEditText
     btDone = view.findViewById(R.id.bt_reg_done)
 
     registrationFields.add(etFirstName)
@@ -96,7 +96,7 @@ class RegistrationFragment : Fragment() {
 
     etPhone.addTextChangedListener(PhoneNumberFormattingTextWatcher())
     etPhoneWhatsapp.addTextChangedListener(PhoneNumberFormattingTextWatcher())
-    etDebitCard.addTextChangedListener(DebitCardFormatWatcher())
+    etDebitCard.addTextChangedListener(DebitCardFormatWatcher(etDebitCard, viewLifecycleOwner))
 
     btSamePhone.setOnClickListener(setPhoneWaEqualsToPhone)
 

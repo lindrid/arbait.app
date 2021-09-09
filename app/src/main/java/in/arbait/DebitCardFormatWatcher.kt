@@ -4,12 +4,23 @@ import android.text.TextUtils
 import android.text.Editable
 import android.text.TextWatcher
 import android.util.Log
+import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.Observer
 
 private const val TAG = "DebitCardFormatWatcher"
 
-private const val MINIMAL_LENGTH_OF_DEBIT_CARD = 11
+private const val LENGTH_OF_PHONE_NUMBER_WITHOUT_PLUS = 11
+private const val MINIMAL_LENGTH_OF_COPIED_TEXT = 11
 
-class DebitCardFormatWatcher : TextWatcher {
+class DebitCardFormatWatcher (private val editText: MonitoringEditText,
+  private val viewLifecycleOwner: LifecycleOwner) : TextWatcher {
+
+  private var newString = "" //: MutableLiveData<String> = MutableLiveData()
+
+  private var onTextChangedString = ""
+
+  private lateinit var textWasPasted: LiveData<Boolean>
 
   private var sWasChangedByMe = false
 
@@ -22,18 +33,28 @@ class DebitCardFormatWatcher : TextWatcher {
   private var itWasDelete = false
 
   private var needsToInsertFormatSymbol = false
-  //var needsToInsertInCard = true
 
   private var value = ""
 
+  init {
+    textWasPasted = editText.textWasPasted
+    textWasPasted.observe(viewLifecycleOwner,
+      Observer { textWasPasted ->
+        if (textWasPasted) {
+          doOnPasteText()
+          sWasChangedByMe = true
+          editText.setText(newString)
+          editText.setSelection(editText.length())
+          editText.resetLiveData()
+        }
+      }
+    )
+  }
+
   override fun onTextChanged(s: CharSequence, start: Int, before: Int, count: Int) {
-    val userPastedText = (count >= MINIMAL_LENGTH_OF_DEBIT_CARD && !sWasChangedByMe)
-    if (userPastedText) {
-      Log.i("b-l-a", "!!!!!!!!!!!!!!!!!")
-      Log.i ("b-l-a", "sWasChangedByMe = $sWasChangedByMe")
-      Log.i("b-l-a", "s = $s, start = $start, before = $before, count = $count")
-      Log.i("b-l-a", "!!!!!!!!!!!!!!!!!")
-    }
+    if (sWasChangedByMe) return
+
+    onTextChangedString = s.toString()
   }
   override fun beforeTextChanged(s: CharSequence, start: Int, count: Int, after: Int) {
     if (sWasChangedByMe) return
@@ -171,6 +192,115 @@ class DebitCardFormatWatcher : TextWatcher {
     }
   }
 
+  private fun doOnPasteText() {
+    Log.i("doOnPasteText", "!!!!!!!!!!!!!!!!!")
+
+    emptyVars()
+    Log.i ("doOnPasteText", "onTextChangedString = $onTextChangedString")
+    value = onTextChangedString.toString()
+    var index = getNotDigitIndex(value)
+    while (index != -1) {
+      value = value.removeRange(index, index + 1)
+      index = getNotDigitIndex(value)
+    }
+    firstDigit = value[0].toString()
+    // 7 (951) 000-22-3  4
+    Log.i ("doOnPasteText", "value = $value, firstDigit = $firstDigit")
+
+    val funL1: () -> Unit = {
+      Log.i ("doOnPasteText", "funL1()")
+      newString = if ((firstDigit == "7") || (firstDigit == "8")) "+7" else "+7 ($firstDigit"
+    }
+
+    val funL2: () -> Unit = {
+      Log.i ("doOnPasteText", "funL2()")
+      funL1()
+      if (firstDigit == "9")
+        newString += value[1]
+      else
+        newString += " (${value[1]}"
+    }
+
+    val funL3: () -> Unit = {
+      Log.i ("doOnPasteText", "funL3()")
+      funL2()
+      newString += value[2]
+    }
+
+    val funL4: () -> Unit = {
+      Log.i ("doOnPasteText", "funL4()")
+      funL3()
+      newString += value[3] + ")"
+    }
+
+    val funL5: () -> Unit = {
+      Log.i ("doOnPasteText", "funL5()")
+      funL4()
+      newString += " " + value[4]
+    }
+
+    val funL6: () -> Unit = {
+      Log.i ("doOnPasteText", "funL6()")
+      funL5()
+      newString += value[5]
+    }
+
+    val funL7: () -> Unit = {
+      Log.i ("doOnPasteText", "funL7()")
+      funL6()
+      newString += value[6]
+    }
+
+    val funL8: () -> Unit = {
+      Log.i ("doOnPasteText", "funL8()")
+      funL7()
+      newString += "-" + value[7]
+    }
+
+    val funL9: () -> Unit = {
+      Log.i ("doOnPasteText", "funL9()")
+      funL8()
+      newString += value[8]
+    }
+
+    val funL10: () -> Unit = {
+      Log.i ("doOnPasteText", "funL10()")
+      funL9()
+      newString += "-" + value[9]
+    }
+
+    val funL11: () -> Unit = {
+      Log.i ("doOnPasteText", "funL11()")
+      funL10()
+      newString += value[10]
+    }
+
+    if (value.isNotEmpty() && value.length <= LENGTH_OF_PHONE_NUMBER_WITHOUT_PLUS &&
+      (firstDigit == "7") || (firstDigit == "8") || (firstDigit == "9"))
+    {       // это номер телефона
+      isItPhoneNumber = true // по-умолчанию = false
+      when (value.length) {
+        1 -> funL1()
+        2 -> funL2()
+        3 -> funL3()
+        4 -> funL4()
+        5 -> funL5()
+        6 -> funL6()
+        7 -> funL7()
+        8 -> funL8()
+        9 -> funL9()
+        10 -> funL10()
+        11 -> funL11()
+      }
+
+      Log.i ("doOnPasteText", "newString = $newString")
+    }
+    else {  // это номер карты
+
+    }
+    Log.i("doOnPasteText", "!!!!!!!!!!!!!!!!!")
+  }
+
   private fun addedSymbolIsDigit(s: String): Boolean {
     if (beforeText.length >= s.length) return false
 
@@ -179,6 +309,17 @@ class DebitCardFormatWatcher : TextWatcher {
 
   private fun symbolsWasDeleted(afterText: String): Boolean {
     return beforeText.length > afterText.length
+  }
+
+  private fun getNotDigitIndex(s: String): Int {
+    if (s.isEmpty()) return -1
+
+    for (i in s.indices) {
+      if (!Character.isDigit(s[i]))
+        return i
+    }
+
+    return -1
   }
 
   private fun getWrongSymbolIndex(s: String): Int {
@@ -203,6 +344,7 @@ class DebitCardFormatWatcher : TextWatcher {
     firstDigit = ""
     itWasDelete = false
     beforeText = ""
+    newString = ""
   }
 
   private fun getValue(s: String): String {
