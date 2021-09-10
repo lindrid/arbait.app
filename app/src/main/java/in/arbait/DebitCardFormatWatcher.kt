@@ -24,8 +24,6 @@ class DebitCardFormatWatcher (private val editText: MonitoringEditText,
 
   private var sWasChangedByMe = false
 
-  private var previousPhoneNumber: String = ""
-
   private var firstDigit: String = ""
 
   private var beforeText = ""
@@ -63,10 +61,6 @@ class DebitCardFormatWatcher (private val editText: MonitoringEditText,
     if (sWasChangedByMe) return
 
     beforeText = s.toString()
-
-    if (isItPhoneNumber) {
-      previousPhoneNumber = s.toString()
-    }
   }
 
   override fun afterTextChanged(s: Editable) {
@@ -95,7 +89,7 @@ class DebitCardFormatWatcher (private val editText: MonitoringEditText,
     value = getValue(s.toString())
 
     Log.i (TAG, "length = $length, isItPhoneNumber = $isItPhoneNumber, itWasDelete = $itWasDelete" +
-        ", value = $value, previousPhoneNumber = $previousPhoneNumber, firstDigit = $firstDigit")
+        ", value = $value, firstDigit = $firstDigit")
 
     if (s.isNotEmpty() && !itWasDelete) {
       Log.i (TAG, "AAA")
@@ -192,10 +186,6 @@ class DebitCardFormatWatcher (private val editText: MonitoringEditText,
         ) && !isItPhoneNumber && itWasDelete)
       {
         Log.i (TAG, "VALUE = $value")
-        /*isItPhoneNumber = true
-        sWasChangedByMe = true
-        s.replace(0, length, previousPhoneNumber)
-        return*/
         onTextChangedString = value
         finallyDoOnPasteText()
         return
@@ -388,7 +378,6 @@ class DebitCardFormatWatcher (private val editText: MonitoringEditText,
 
   private fun emptyVars() {
     isItPhoneNumber = false
-    previousPhoneNumber = ""
     needsToInsertFormatSymbol = false
     value = ""
     firstDigit = ""
