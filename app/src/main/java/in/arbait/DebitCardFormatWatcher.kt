@@ -40,14 +40,18 @@ class DebitCardFormatWatcher (private val editText: MonitoringEditText,
     textWasPasted.observe(viewLifecycleOwner,
       Observer { textWasPasted ->
         if (textWasPasted) {
-          doOnPasteText()
-          sWasChangedByMe = true
-          editText.setText(newString)
-          editText.setSelection(editText.length())
-          editText.resetLiveData()
+          finallyDoOnPasteText()
         }
       }
     )
+  }
+
+  private fun finallyDoOnPasteText() {
+    doOnPasteText()
+    sWasChangedByMe = true
+    editText.setText(newString)
+    editText.setSelection(editText.length())
+    editText.resetLiveData()
   }
 
   override fun onTextChanged(s: CharSequence, start: Int, before: Int, count: Int) {
@@ -181,17 +185,19 @@ class DebitCardFormatWatcher (private val editText: MonitoringEditText,
         emptyVars()
       }
 
-      //Log.i (TAG, "previousPhoneNumber = $previousPhoneNumber")
       if (
         (
           (length == 12 && (firstDigit == "9")) ||
           (length == 13 && ((firstDigit == "7") || (firstDigit == "8")))
-        ) &&
-          !isItPhoneNumber && previousPhoneNumber != "")
+        ) && !isItPhoneNumber && itWasDelete)
       {
-        isItPhoneNumber = true
+        Log.i (TAG, "VALUE = $value")
+        /*isItPhoneNumber = true
         sWasChangedByMe = true
         s.replace(0, length, previousPhoneNumber)
+        return*/
+        onTextChangedString = value
+        finallyDoOnPasteText()
         return
       }
     }
