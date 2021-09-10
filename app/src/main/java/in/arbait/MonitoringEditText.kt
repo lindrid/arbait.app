@@ -4,18 +4,20 @@ import android.R
 import android.content.Context
 import android.util.AttributeSet
 import android.util.Log
+import android.view.KeyEvent
 import android.widget.Toast
 import androidx.appcompat.widget.AppCompatEditText
+import androidx.fragment.app.FragmentManager
 import androidx.lifecycle.MutableLiveData
 
 private const val TAG = "MonitoringEditText"
 
 /**
  * An EditText, which notifies when something was cut/copied/pasted inside it.
- * @author Lukas Knuth
+ * @author Lukas Knuth && Dmitry Fedorov
  * @version 1.0
  */
-class MonitoringEditText : AppCompatEditText {
+class MonitoringEditText: AppCompatEditText {
   private val context2: Context
 
   var textWasPasted: MutableLiveData<Boolean> = MutableLiveData(false)
@@ -31,10 +33,12 @@ class MonitoringEditText : AppCompatEditText {
 
   constructor(context: Context) : super(context) {
     this.context2 = context
+    setListener()
   }
 
   constructor(context: Context, attrs: AttributeSet?) : super(context, attrs) {
     this.context2 = context
+    setListener()
   }
 
   constructor(context: Context, attrs: AttributeSet?, defStyle: Int) : super(
@@ -43,6 +47,19 @@ class MonitoringEditText : AppCompatEditText {
     defStyle
   ) {
     this.context2 = context
+    setListener()
+  }
+
+  private fun setListener() {
+    this.setOnKeyListener { v, keyCode, event ->
+      Log.i (TAG, "v = $v, keyCode = $keyCode, event = $event")
+      if (event.action == KeyEvent.ACTION_DOWN && keyCode == KeyEvent.KEYCODE_ENTER) {
+        val rf = FragmentManager.findFragment<RegistrationFragment>(this)
+        rf.getFocusToNextEditText(this.id)
+        true
+      }
+      false
+    }
   }
 
   /**

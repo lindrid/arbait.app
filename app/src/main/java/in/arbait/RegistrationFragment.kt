@@ -3,9 +3,7 @@ package `in`.arbait
 import `in`.arbait.http.*
 import android.graphics.Color
 import android.os.Bundle
-import android.telephony.PhoneNumberFormattingTextWatcher
 import android.util.Log
-import android.view.KeyEvent
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -15,10 +13,8 @@ import android.widget.TextView
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
 import java.util.*
-import android.widget.Toast
 
-import android.view.inputmethod.EditorInfo
-import android.widget.TextView.OnEditorActionListener
+import androidx.appcompat.widget.AppCompatButton
 
 
 const val BIRTH_DATE_KEY = "birthDate"
@@ -59,14 +55,17 @@ class RegistrationFragment : Fragment() {
   private lateinit var etFirstName: EditText
   private lateinit var etBirthDate: EditText
   private lateinit var etPhone: MonitoringEditText
-  private lateinit var etPhoneWhatsapp: MonitoringEditText
-  private lateinit var btSamePhone: Button
+  private lateinit var etPhoneWa: MonitoringEditText
+  private lateinit var btSamePhone: AppCompatButton
+  private lateinit var btSamePhoneWa: AppCompatButton
   private lateinit var etDebitCard: MonitoringEditText
   private lateinit var btDone: Button
 
-
   private val setPhoneWaEqualsToPhone = { _: View ->
-    etPhoneWhatsapp.text = etPhone.text
+    etPhoneWa.text = etPhone.text
+  }
+  private val setDebitCardEqualsToPhoneWa = { _: View ->
+    etDebitCard.text = etPhoneWa.text
   }
 
 
@@ -83,25 +82,27 @@ class RegistrationFragment : Fragment() {
     etFirstName = view.findViewById(R.id.et_reg_first_name)
     etBirthDate = view.findViewById(R.id.et_reg_birth_date)
     etPhone = view.findViewById(R.id.et_reg_phone) as MonitoringEditText
-    etPhoneWhatsapp = view.findViewById(R.id.et_reg_phone_whatsapp) as MonitoringEditText
+    etPhoneWa = view.findViewById(R.id.et_reg_phone_wa) as MonitoringEditText
     btSamePhone = view.findViewById(R.id.bt_reg_same_phone)
+    btSamePhoneWa = view.findViewById(R.id.bt_reg_same_phone_wa)
     etDebitCard = view.findViewById(R.id.et_reg_debit_card) as MonitoringEditText
     btDone = view.findViewById(R.id.bt_reg_done)
 
     registrationFields.add(etFirstName)
     registrationFields.add(etBirthDate)
     registrationFields.add(etPhone)
-    registrationFields.add(etPhoneWhatsapp)
+    registrationFields.add(etPhoneWa)
     registrationFields.add(etDebitCard)
 
     etPhone.addTextChangedListener(PhoneFormatWatcher(etPhone, viewLifecycleOwner))
-    etPhoneWhatsapp.addTextChangedListener(PhoneFormatWatcher(etPhoneWhatsapp, viewLifecycleOwner))
+    etPhoneWa.addTextChangedListener(PhoneFormatWatcher(etPhoneWa, viewLifecycleOwner))
     etDebitCard.addTextChangedListener(DebitCardFormatWatcher(etDebitCard, viewLifecycleOwner))
 
     btSamePhone.setOnClickListener(setPhoneWaEqualsToPhone)
+    btSamePhoneWa.setOnClickListener(setDebitCardEqualsToPhoneWa)
 
     btDone.setOnClickListener {
-      val str = etPhoneWhatsapp.text.toString()
+      val str = etPhoneWa.text.toString()
       val phoneWa = if (str.isEmpty()) { null } else { str }
 
       val user = User (
@@ -121,12 +122,6 @@ class RegistrationFragment : Fragment() {
       }
     }
 
-    /*
-    etFirstName.setText("Дмитрий")
-    etBirthDate.setText("08.06.1987")
-    etPhone.setText("89240078897")
-    etPhoneWhatsapp.setText("89240078897")
-*/
     Log.i (TAG, "manufacturer is $MANUFACTURER")
     Log.i (TAG, "Android version is $VERSION")
 
@@ -160,6 +155,14 @@ class RegistrationFragment : Fragment() {
     server = Server(requireContext())
     this.rootView = view
     return view
+  }
+
+  fun getFocusToNextEditText (precedingEditTextId: Int) {
+    when (precedingEditTextId) {
+      R.id.et_reg_phone -> {
+        //etPhone.clearFocus()
+      }
+    }
   }
 
 
@@ -248,7 +251,7 @@ class RegistrationFragment : Fragment() {
           showErrorBalloon(requireContext(), etPhone, errorStr)
         }
         "phone_wa" -> {
-          showErrorBalloon(requireContext(), etPhoneWhatsapp, errorStr)
+          showErrorBalloon(requireContext(), etPhoneWa, errorStr)
         }
         "debit_card" -> {
           showErrorBalloon(requireContext(), etDebitCard, errorStr)
@@ -335,11 +338,6 @@ class RegistrationFragment : Fragment() {
     if (!phoneNumberIsValid(user.phone, "RU", TAG)) {
       return doWhenFieldEmptyOrWrong(etPhone, R.string.reg_wrong_phone,
         "Wrong phone ${user.phone}")
-    }
-
-    if (!debitCardIsValid(user.debitCard, TAG)) {
-      return doWhenFieldEmptyOrWrong(etDebitCard, R.string.reg_wrong_debit_card,
-        "Wrong debitCard ${user.debitCard}")
     }
 
     return true
