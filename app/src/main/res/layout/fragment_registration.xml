@@ -31,7 +31,7 @@
         app:layout_constraintHorizontal_bias="0.502"
         app:layout_constraintStart_toStartOf="parent" />
 
-    <EditText
+    <in.arbait.MonitoringEditText
         android:id="@+id/et_reg_phone"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -44,7 +44,7 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent" />
 
-    <EditText
+    <in.arbait.MonitoringEditText
         android:id="@+id/et_reg_phone_whatsapp"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"

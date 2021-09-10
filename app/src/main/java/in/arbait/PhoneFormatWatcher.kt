@@ -8,12 +8,12 @@ import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.Observer
 
-private const val TAG = "DebitCardFormatWatcher"
+private const val TAG = "PhoneFormatWatcher"
 
-private const val MAX_LENGTH_OF_CARD_NUMBER_WITHOUT_SPACE = 18
 private const val LENGTH_OF_PHONE_NUMBER_WITHOUT_PLUS = 11
+private const val MAX_FORMATTED_PHONE_LENGTH = 18
 
-class DebitCardFormatWatcher (private val editText: MonitoringEditText,
+class PhoneFormatWatcher (private val editText: MonitoringEditText,
   private val viewLifecycleOwner: LifecycleOwner) : TextWatcher {
 
   private var newString = "" //: MutableLiveData<String> = MutableLiveData()
@@ -23,8 +23,6 @@ class DebitCardFormatWatcher (private val editText: MonitoringEditText,
   private var textWasPasted: LiveData<Boolean> = editText.textWasPasted
 
   private var sWasChangedByMe = false
-
-  private var previousPhoneNumber: String = ""
 
   private var firstDigit: String = ""
 
@@ -59,10 +57,6 @@ class DebitCardFormatWatcher (private val editText: MonitoringEditText,
     if (sWasChangedByMe) return
 
     beforeText = s.toString()
-
-    if (isItPhoneNumber) {
-      previousPhoneNumber = s.toString()
-    }
   }
 
   override fun afterTextChanged(s: Editable) {
@@ -80,9 +74,9 @@ class DebitCardFormatWatcher (private val editText: MonitoringEditText,
 
     val length = s.length
 
-    if (length >= 23) {
+    if (length >= MAX_FORMATTED_PHONE_LENGTH + 1) {
       sWasChangedByMe = true
-      s.delete(22, length)
+      s.delete(MAX_FORMATTED_PHONE_LENGTH, length)
       return
     }
 
@@ -90,109 +84,60 @@ class DebitCardFormatWatcher (private val editText: MonitoringEditText,
     itWasDelete = symbolsWasDeleted(s.toString())
     value = getValue(s.toString())
 
-    Log.i (TAG, "length = $length, isItPhoneNumber = $isItPhoneNumber, itWasDelete = $itWasDelete" +
-        ", value = $value, previousPhoneNumber = $previousPhoneNumber, firstDigit = $firstDigit")
+    Log.i (TAG, "length = $length, itWasDelete = $itWasDelete" +
+        ", value = $value, firstDigit = $firstDigit")
 
     if (s.isNotEmpty() && !itWasDelete) {
-      Log.i (TAG, "AAA")
-      if (isItPhoneNumber || length == 1) {
-        if (s[0] == '7' || s[0] == '8' || s[0] == '9' || s[0] == '+') {
-          isItPhoneNumber = true
-          Log.i (TAG, "isItPhoneNumber = $isItPhoneNumber")
-
-          if (length == 19) {
-            isItPhoneNumber = false
-            val n = value.length
-            sWasChangedByMe = true
-            s.replace(0, length, "${value.subSequence(0, 4)} ${value.subSequence(4, 8)}" +
-                " ${value.subSequence(8, n)}")
-
-            Log.i(TAG, "value = $value")
-            Log.i(TAG, "s = ${s.toString()}")
+        if (Character.isDigit(s[0]) || s[0] == '+') {
+          if (s[0] == '+') {
+            when (length) {
+              2 -> if (s[1] != '7') {
+                s.replace(1, 1, "7 (")
+                sWasChangedByMe = true
+              }
+              3 -> {
+                s.insert(2, " (")
+                sWasChangedByMe = true
+              }
+              4 -> if (needsToInsertFormatSymbol) {
+                s.insert(3, "(")
+                sWasChangedByMe = true
+              }
+              8 -> {
+                s.insert(7, ") ")
+                sWasChangedByMe = true
+              }
+              9 -> if (needsToInsertFormatSymbol) {
+                s.insert(8," ")
+                sWasChangedByMe = true
+              }
+              13 -> {
+                s.insert(12, "-")
+                sWasChangedByMe = true
+              }
+              16 -> {
+                s.insert(15, "-")
+                sWasChangedByMe = true
+              }
+            }
           }
           else {
-            if (s[0] == '+') {
-              when (length) {
-                2 -> if (s[1] != '7') {
-                  s.replace(1, 1, "7 (")
-                  sWasChangedByMe = true
-                }
-                3 -> {
-                  s.insert(2, " (")
-                  sWasChangedByMe = true
-                }
-                4 -> if (needsToInsertFormatSymbol) {
-                  s.insert(3, "(")
-                  sWasChangedByMe = true
-                }
-                8 -> {
-                  s.insert(7, ") ")
-                  sWasChangedByMe = true
-                }
-                9 -> if (needsToInsertFormatSymbol) {
-                  s.insert(8," ")
-                  sWasChangedByMe = true
-                }
-                13 -> {
-                  s.insert(12, "-")
-                  sWasChangedByMe = true
-                }
-                16 -> {
-                  s.insert(15, "-")
-                  sWasChangedByMe = true
-                }
-              }
+            val c = s[0]
+            firstDigit = c.toString()
+            if (c == '7' || c == '8') {
+              sWasChangedByMe = true
+              s.replace(0, length, "+7")
             }
             else {
-              val c = s[0]
-              if (c == '7' || c == '8') {
-                firstDigit = c.toString()
-                sWasChangedByMe = true
-                s.replace(0, length, "+7")
-              }
-              else {
-                firstDigit = "9"
-                sWasChangedByMe = true
-                s.replace(0, length, "+7 ($c")
-              }
+              sWasChangedByMe = true
+              s.replace(0, length, "+7 ($c")
             }
           }
         }
-        else {
-          isItPhoneNumber = false
-        }
-      }
-
-      if (!isItPhoneNumber) {
-        // Insert char where needed.
-        if (length % 5 == 0) {
-          val c = s[length - 1]
-          Log.i (TAG, "insert $space")
-          // Only if its a digit where there should be a space we insert a space
-          if (Character.isDigit(c) && TextUtils.split(s.toString(), space.toString()).size <= 4) {
-            sWasChangedByMe = true
-            s.insert(length - 1, space.toString())
-          }
-        }
-      }
     }
     else if (itWasDelete) {
       if (s.isEmpty()) {
         emptyVars()
-      }
-
-      //Log.i (TAG, "previousPhoneNumber = $previousPhoneNumber")
-      if (
-        (
-          (length == 12 && (firstDigit == "9")) ||
-          (length == 13 && ((firstDigit == "7") || (firstDigit == "8")))
-        ) &&
-          !isItPhoneNumber && previousPhoneNumber != "")
-      {
-        isItPhoneNumber = true
-        sWasChangedByMe = true
-        s.replace(0, length, previousPhoneNumber)
-        return
       }
     }
   }
@@ -309,13 +254,11 @@ class DebitCardFormatWatcher (private val editText: MonitoringEditText,
       newString += value[10]
     }
 
-    Log.i ("doOnPasteText", "value.length = ${value.length}")
+    if (value.length > LENGTH_OF_PHONE_NUMBER_WITHOUT_PLUS)
+      value = value.substring(0, LENGTH_OF_PHONE_NUMBER_WITHOUT_PLUS)
 
-    if (value.isNotEmpty() && value.length <= LENGTH_OF_PHONE_NUMBER_WITHOUT_PLUS &&
-      ((firstDigit == "7") || (firstDigit == "8") || (firstDigit == "9")))
+    if (value.isNotEmpty() && (firstDigit == "7") || (firstDigit == "8") || (firstDigit == "9"))
     {       // это номер телефона
-      isItPhoneNumber = true // по-умолчанию = false
-      Log.i ("doOnPasteText", "This is Phone!")
       when (value.length) {
         1 -> funL1()
         2 -> funL2()
@@ -328,16 +271,6 @@ class DebitCardFormatWatcher (private val editText: MonitoringEditText,
         9 -> funL9()
         10 -> funL10()
         11 -> funL11()
-      }
-    }
-    else {  // это номер карты
-      isItPhoneNumber = false
-      newString = ""
-      Log.i ("doOnPasteText", "This is CARD!")
-      for (i in value.indices) {
-        if (i > MAX_LENGTH_OF_CARD_NUMBER_WITHOUT_SPACE - 1)
-          break
-        newString += if ((i > 0) && i % 4 == 0) { " " + value[i] } else { value[i] }
       }
     }
 
@@ -381,8 +314,6 @@ class DebitCardFormatWatcher (private val editText: MonitoringEditText,
   }
 
   private fun emptyVars() {
-    isItPhoneNumber = false
-    previousPhoneNumber = ""
     needsToInsertFormatSymbol = false
     value = ""
     firstDigit = ""
@@ -395,18 +326,15 @@ class DebitCardFormatWatcher (private val editText: MonitoringEditText,
     if (s.isEmpty()) return value
 
     if (firstDigit.isEmpty() || !Character.isDigit(firstDigit[0])) {
-      if (isItPhoneNumber) {
-        firstDigit = if (s.length > 1 && s[0] == '+' && s[1] == '7') "7" else s[0].toString()
-        if (!Character.isDigit(firstDigit[0])) {
-          firstDigit = ""
-        }
+      firstDigit = if (s.length > 1 && s[0] == '+' && s[1] == '7') "7" else s[0].toString()
+      if (!Character.isDigit(firstDigit[0])) {
+        firstDigit = ""
       }
-      else firstDigit = s[0].toString()
     }
     value = firstDigit
 
     val fdIndex = when {
-      isItPhoneNumber && firstDigit == "8" -> s.indexOf("7")
+      firstDigit == "8" -> s.indexOf("7")
       firstDigit.isEmpty() -> -1
       else -> s.indexOf(firstDigit)
     }
@@ -417,16 +345,5 @@ class DebitCardFormatWatcher (private val editText: MonitoringEditText,
     }
     Log.i (TAG, "value = $value, s = $s")
     return value
-  }
-
-  companion object {
-    // +7 (924) 007-88-97
-    // 8924 0078 8978 - 12
-    // 9240 0788 978 - 11
-    var isItPhoneNumber: Boolean = false
-      private set
-
-    // Change this to what you want... ' ', '-' etc..
-    private const val space = ' '
   }
 }

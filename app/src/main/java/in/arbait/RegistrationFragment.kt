@@ -58,8 +58,8 @@ class RegistrationFragment : Fragment() {
   private lateinit var tvRegistration: TextView
   private lateinit var etFirstName: EditText
   private lateinit var etBirthDate: EditText
-  private lateinit var etPhone: EditText
-  private lateinit var etPhoneWhatsapp: EditText
+  private lateinit var etPhone: MonitoringEditText
+  private lateinit var etPhoneWhatsapp: MonitoringEditText
   private lateinit var btSamePhone: Button
   private lateinit var etDebitCard: MonitoringEditText
   private lateinit var btDone: Button
@@ -82,8 +82,8 @@ class RegistrationFragment : Fragment() {
 
     etFirstName = view.findViewById(R.id.et_reg_first_name)
     etBirthDate = view.findViewById(R.id.et_reg_birth_date)
-    etPhone = view.findViewById(R.id.et_reg_phone)
-    etPhoneWhatsapp = view.findViewById(R.id.et_reg_phone_whatsapp)
+    etPhone = view.findViewById(R.id.et_reg_phone) as MonitoringEditText
+    etPhoneWhatsapp = view.findViewById(R.id.et_reg_phone_whatsapp) as MonitoringEditText
     btSamePhone = view.findViewById(R.id.bt_reg_same_phone)
     etDebitCard = view.findViewById(R.id.et_reg_debit_card) as MonitoringEditText
     btDone = view.findViewById(R.id.bt_reg_done)
@@ -94,49 +94,11 @@ class RegistrationFragment : Fragment() {
     registrationFields.add(etPhoneWhatsapp)
     registrationFields.add(etDebitCard)
 
-    etPhone.addTextChangedListener(PhoneNumberFormattingTextWatcher())
-    etPhoneWhatsapp.addTextChangedListener(PhoneNumberFormattingTextWatcher())
+    etPhone.addTextChangedListener(PhoneFormatWatcher(etPhone, viewLifecycleOwner))
+    etPhoneWhatsapp.addTextChangedListener(PhoneFormatWatcher(etPhoneWhatsapp, viewLifecycleOwner))
     etDebitCard.addTextChangedListener(DebitCardFormatWatcher(etDebitCard, viewLifecycleOwner))
 
     btSamePhone.setOnClickListener(setPhoneWaEqualsToPhone)
-
-    /*etDebitCard.setOnKeyListener(View.OnKeyListener { v, keyCode, event ->
-      Log.i(TAG, "keycode = $keyCode, event = ${event.toString()}")
-      if (event.action == KeyEvent.ACTION_DOWN || event.action == KeyEvent.ACTION_UP) {
-        Log.i(TAG, "keyCode = $keyCode")
-        val itWasDeleteWasTrue = DebitCardFormatWatcher.itWasDelete
-        DebitCardFormatWatcher.itWasDelete = keyCode == KeyEvent.KEYCODE_DEL
-
-        // нажата цифра от 0 до 9
-        if (keyCode in 7..16) {
-          DebitCardFormatWatcher.value += (keyCode - 7).toString()
-          if (itWasDeleteWasTrue) {
-            DebitCardFormatWatcher.needsToInsertInPhone = true
-          }
-        }
-        Log.i(TAG, "value = ${DebitCardFormatWatcher.value}")
-      }
-      return true
-    })*/
-
-    /*etDebitCard.setOnEditorActionListener { v, actionId, event ->
-      Log.i (TAG, "actionId = $actionId, event = $event")
-      true
-      return if ( actionId == EditorInfo.IME_ACTION_DONE ||
-                      event.keyCode == KeyEvent.KEYCODE_ENTER &&
-                      event.action == KeyEvent.ACTION_DOWN)
-          {
-            Toast.makeText(
-              this,
-              editText.getText().toString().toString() + "Enter Pressed",
-              Toast.LENGTH_LONG
-            ).show()
-            true
-          }
-          else {
-            false
-          }
-    }*/
 
     btDone.setOnClickListener {
       val str = etPhoneWhatsapp.text.toString()
@@ -159,11 +121,12 @@ class RegistrationFragment : Fragment() {
       }
     }
 
+    /*
     etFirstName.setText("Дмитрий")
     etBirthDate.setText("08.06.1987")
     etPhone.setText("89240078897")
     etPhoneWhatsapp.setText("89240078897")
-
+*/
     Log.i (TAG, "manufacturer is $MANUFACTURER")
     Log.i (TAG, "Android version is $VERSION")
 
