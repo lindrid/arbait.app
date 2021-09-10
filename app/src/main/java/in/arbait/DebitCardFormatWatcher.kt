@@ -10,8 +10,8 @@ import androidx.lifecycle.Observer
 
 private const val TAG = "DebitCardFormatWatcher"
 
+private const val MAX_LENGTH_OF_CARD_NUMBER_WITHOUT_SPACE = 18
 private const val LENGTH_OF_PHONE_NUMBER_WITHOUT_PLUS = 11
-private const val MINIMAL_LENGTH_OF_COPIED_TEXT = 11
 
 class DebitCardFormatWatcher (private val editText: MonitoringEditText,
   private val viewLifecycleOwner: LifecycleOwner) : TextWatcher {
@@ -20,7 +20,7 @@ class DebitCardFormatWatcher (private val editText: MonitoringEditText,
 
   private var onTextChangedString = ""
 
-  private lateinit var textWasPasted: LiveData<Boolean>
+  private var textWasPasted: LiveData<Boolean> = editText.textWasPasted
 
   private var sWasChangedByMe = false
 
@@ -37,7 +37,6 @@ class DebitCardFormatWatcher (private val editText: MonitoringEditText,
   private var value = ""
 
   init {
-    textWasPasted = editText.textWasPasted
     textWasPasted.observe(viewLifecycleOwner,
       Observer { textWasPasted ->
         if (textWasPasted) {
@@ -72,12 +71,18 @@ class DebitCardFormatWatcher (private val editText: MonitoringEditText,
       return
     }
 
-    val length = s.length
-
     val wrongSymbolIndex = getWrongSymbolIndex(s.toString())
     if (wrongSymbolIndex != -1) {
       sWasChangedByMe = true
       s.delete(wrongSymbolIndex, wrongSymbolIndex + 1)
+      return
+    }
+
+    val length = s.length
+
+    if (length >= 23) {
+      sWasChangedByMe = true
+      s.delete(22, length)
       return
     }
 
@@ -160,7 +165,7 @@ class DebitCardFormatWatcher (private val editText: MonitoringEditText,
 
       if (!isItPhoneNumber) {
         // Insert char where needed.
-        if ((length % 5 == 0) || (length == 20)) {
+        if (length % 5 == 0) {
           val c = s[length - 1]
           Log.i (TAG, "insert $space")
           // Only if its a digit where there should be a space we insert a space
@@ -204,7 +209,8 @@ class DebitCardFormatWatcher (private val editText: MonitoringEditText,
       index = getNotDigitIndex(value)
     }
     firstDigit = value[0].toString()
-    // 7 (951) 000-22-3  4
+    // 9510002234
+    // +7 (951) 000-22-34
     Log.i ("doOnPasteText", "value = $value, firstDigit = $firstDigit")
 
     val funL1: () -> Unit = {
@@ -224,19 +230,31 @@ class DebitCardFormatWatcher (private val editText: MonitoringEditText,
     val funL3: () -> Unit = {
       Log.i ("doOnPasteText", "funL3()")
       funL2()
-      newString += value[2]
+      newString +=
+        if (firstDigit == "9")
+          value[2] + ")"
+        else
+          value[2]
     }
 
     val funL4: () -> Unit = {
       Log.i ("doOnPasteText", "funL4()")
       funL3()
-      newString += value[3] + ")"
+      newString +=
+        if (firstDigit == "9")
+          " " + value[3]
+        else
+          value[3] + ")"
     }
 
     val funL5: () -> Unit = {
       Log.i ("doOnPasteText", "funL5()")
       funL4()
-      newString += " " + value[4]
+      newString +=
+        if (firstDigit == "9")
+          value[4]
+        else
+          " " + value[4]
     }
 
     val funL6: () -> Unit = {
@@ -248,25 +266,41 @@ class DebitCardFormatWatcher (private val editText: MonitoringEditText,
     val funL7: () -> Unit = {
       Log.i ("doOnPasteText", "funL7()")
       funL6()
-      newString += value[6]
+      newString +=
+        if (firstDigit == "9")
+          "-" + value[6]
+        else
+          value[6]
     }
 
     val funL8: () -> Unit = {
       Log.i ("doOnPasteText", "funL8()")
       funL7()
-      newString += "-" + value[7]
+      newString +=
+        if (firstDigit == "9")
+          value[7]
+        else
+          "-" + value[7]
     }
 
     val funL9: () -> Unit = {
       Log.i ("doOnPasteText", "funL9()")
       funL8()
-      newString += value[8]
+      newString +=
+        if (firstDigit == "9")
+          "-" + value[8]
+        else
+          value[8]
     }
 
     val funL10: () -> Unit = {
       Log.i ("doOnPasteText", "funL10()")
       funL9()
-      newString += "-" + value[9]
+      newString +=
+        if (firstDigit == "9")
+          value[9]
+        else
+          "-" + value[9]
     }
 
     val funL11: () -> Unit = {
@@ -292,13 +326,19 @@ class DebitCardFormatWatcher (private val editText: MonitoringEditText,
         10 -> funL10()
         11 -> funL11()
       }
-
-      Log.i ("doOnPasteText", "newString = $newString")
     }
     else {  // это номер карты
-
+      isItPhoneNumber = false
+      newString = ""
+      for (i in value.indices) {
+        if (i > MAX_LENGTH_OF_CARD_NUMBER_WITHOUT_SPACE - 1)
+          break
+        newString += if ((i > 0) && i % 4 == 0) { " " + value[i] } else { value[i] }
+      }
     }
-    Log.i("doOnPasteText", "!!!!!!!!!!!!!!!!!")
+
+    Log.i ("doOnPasteText", "newString = $newString")
+    Log.i ("doOnPasteText", "!!!!!!!!!!!!!!!!!")
   }
 
   private fun addedSymbolIsDigit(s: String): Boolean {

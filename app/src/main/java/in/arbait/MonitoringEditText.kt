@@ -56,6 +56,7 @@ class MonitoringEditText : AppCompatEditText {
   override fun onTextContextMenuItem(id: Int): Boolean {
     // Do your thing:
     val consumed = super.onTextContextMenuItem(id)
+    Log.i (TAG, "$consumed")
     when (id) {
       R.id.cut -> onTextCut()
       R.id.paste -> onTextPaste()
