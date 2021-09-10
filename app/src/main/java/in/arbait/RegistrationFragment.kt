@@ -157,14 +157,6 @@ class RegistrationFragment : Fragment() {
     return view
   }
 
-  fun getFocusToNextEditText (precedingEditTextId: Int) {
-    when (precedingEditTextId) {
-      R.id.et_reg_phone -> {
-        //etPhone.clearFocus()
-      }
-    }
-  }
-
 
   private fun setRegistrationFieldsListeners (withoutBirthDate: Boolean = false) {
     registrationFields.forEach { field ->

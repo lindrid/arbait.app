@@ -27,7 +27,7 @@
         android:inputType="textCapSentences"
         android:textSize="20sp"
         android:imeOptions="actionNext"
-        app:layout_constraintBottom_toTopOf="@+id/et_reg_birth_date"
+    app:layout_constraintBottom_toTopOf="@+id/et_reg_birth_date"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.502"
         app:layout_constraintStart_toStartOf="parent" />

@@ -33,12 +33,10 @@ class MonitoringEditText: AppCompatEditText {
 
   constructor(context: Context) : super(context) {
     this.context2 = context
-    setListener()
   }
 
   constructor(context: Context, attrs: AttributeSet?) : super(context, attrs) {
     this.context2 = context
-    setListener()
   }
 
   constructor(context: Context, attrs: AttributeSet?, defStyle: Int) : super(
@@ -47,19 +45,6 @@ class MonitoringEditText: AppCompatEditText {
     defStyle
   ) {
     this.context2 = context
-    setListener()
-  }
-
-  private fun setListener() {
-    this.setOnKeyListener { v, keyCode, event ->
-      Log.i (TAG, "v = $v, keyCode = $keyCode, event = $event")
-      if (event.action == KeyEvent.ACTION_DOWN && keyCode == KeyEvent.KEYCODE_ENTER) {
-        val rf = FragmentManager.findFragment<RegistrationFragment>(this)
-        rf.getFocusToNextEditText(this.id)
-        true
-      }
-      false
-    }
   }
 
   /**
