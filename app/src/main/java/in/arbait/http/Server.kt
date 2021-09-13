@@ -1,11 +1,7 @@
 package `in`.arbait.http
 
-import `in`.arbait.ApplicationItem
-import `in`.arbait.showErrorBalloon
 import android.content.Context
 import android.util.Log
-import android.view.View
-import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import com.google.gson.GsonBuilder
 import com.google.gson.JsonDeserializationContext

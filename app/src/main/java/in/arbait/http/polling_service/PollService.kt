@@ -1,6 +1,7 @@
 package `in`.arbait.http.polling_service
 
 import `in`.arbait.*
+import `in`.arbait.http.ApplicationItem
 import `in`.arbait.http.ApplicationsResponse
 import `in`.arbait.http.SERVER_OK
 import `in`.arbait.http.Server

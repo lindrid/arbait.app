@@ -26,13 +26,22 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.MutableLiveData
 import androidx.recyclerview.widget.ConcatAdapter
 import androidx.recyclerview.widget.DividerItemDecoration
+import com.skydoves.balloon.extensions.dp
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
+import android.R.attr.name
+import android.R.attr.name
+import android.R.attr.name
 
 const val CONTEXT_ARG = "context"
 const val VIEW_ARG = "view"
 
 private const val TAG = "ApplicationsFragment"
+
+const val TEXT_TIME = "Время"
+const val TEXT_ADDRESS = "Адрес"
+const val TEXT_INCOME = "Ставка"
+const val TEXT_WORKERS = "Люди"
 
 const val TEXT_HOURLY_PAYMENT = "р/ч"
 const val TEXT_DAILY_PAYMENT = "8ч"
@@ -54,13 +63,13 @@ class ApplicationsFragment: Fragment() {
 
   private lateinit var server: Server
   private lateinit var appsResponse: LiveData<ApplicationsResponse>
-  private val openApps: MutableLiveData<List<ApplicationItem>> = MutableLiveData()
   private var adapter: AppAdapter = AppAdapter(emptyList())
 
   private var user: User? = null
   private lateinit var repository: UserRepository
   private lateinit var mainActivity: MainActivity
 
+  private val openApps: MutableLiveData<List<ApplicationItem>> = MutableLiveData()
   private var todayApps = mutableListOf<ApplicationItem>()
   private var tomorrowApps = mutableListOf<ApplicationItem>()
   private var showTomorrowApps = false
@@ -201,13 +210,9 @@ class ApplicationsFragment: Fragment() {
       val todayHeaderAdapter = HeaderAdapter(todayHeaderText, DAY_HEADER)
 
       val addAdapter = when (todayApps.isNotEmpty()) {
-        true -> {
-          ConcatAdapter(todayHeaderAdapter, AppAdapter(todayApps))
-        }
-        false -> {
-            ConcatAdapter(todayHeaderAdapter, HeaderAdapter(getString(R.string.apps_no_open_apps),
-              TEXT))
-        }
+        true -> ConcatAdapter(todayHeaderAdapter, AppAdapter(todayApps))
+        false ->  ConcatAdapter(todayHeaderAdapter, HeaderAdapter(
+                    getString(R.string.apps_no_open_apps), TEXT))
       }
 
       concatAdapter = ConcatAdapter (concatAdapter, addAdapter)
@@ -240,14 +245,31 @@ class ApplicationsFragment: Fragment() {
     private val tvTime: TextView = view.findViewById(R.id.tv_app_time)
     private val tvAddress: TextView = view.findViewById(R.id.tv_app_address)
     private val tvIncome: TextView = view.findViewById(R.id.tv_app_worker_income)
-    private lateinit var app: ApplicationItem
+    private val tvWorkers: TextView = view.findViewById(R.id.tv_app_workers)
+    private var app: ApplicationItem? = null
 
-    fun bind (app: ApplicationItem) {
+    fun bind (app: ApplicationItem?) {
+      if (app == null) {
+        tvTime.text = TEXT_TIME
+        tvTime.setTextColor(OPEN_HEADER_COLOR)
+
+        tvAddress.text = TEXT_ADDRESS
+        tvAddress.setTextColor(OPEN_HEADER_COLOR)
+
+        tvIncome.text = TEXT_INCOME
+        tvIncome.setTextColor(OPEN_HEADER_COLOR)
+
+        tvWorkers.text = TEXT_WORKERS
+        tvWorkers.setTextColor(OPEN_HEADER_COLOR)
+        return
+      }
+
       this.app = app
       Log.i (TAG, "app is $app")
 
       tvTime.text = app.time
       tvAddress.text = app.address
+      tvWorkers.text = "${app.workerCount} / ${app.workerTotal}"
 
       val price = app.priceForWorker.toString()
       tvIncome.text = when (app.hourlyJob) {
@@ -261,23 +283,40 @@ class ApplicationsFragment: Fragment() {
     }
   }
 
-  private inner class AppAdapter (var apps: List<ApplicationItem>): RecyclerView.Adapter<AppHolder> ()
+  private inner class AppAdapter (apps: List<ApplicationItem?>):
+    RecyclerView.Adapter<AppHolder> ()
   {
+    private val HEADER_TYPE = 0
+    private val ITEM_TYPE = 1
+    private val apps: MutableList<ApplicationItem?> = mutableListOf()
+
+    init {
+      this.apps.add(null)
+      for (i in apps.indices)
+        this.apps.add(apps[i])
+    }
+
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): AppHolder {
-      val view = layoutInflater.inflate(R.layout.list_item_app, parent, false)
+      val view = if (viewType == HEADER_TYPE)
+        layoutInflater.inflate(R.layout.list_item_app_header, parent, false)
+      else
+        layoutInflater.inflate(R.layout.list_item_app, parent, false)
+
       return AppHolder(view)
     }
 
     override fun getItemCount() = apps.size
 
+    override fun getItemViewType(position: Int): Int {
+      if (position == 0)
+        return HEADER_TYPE
+
+      return ITEM_TYPE
+    }
+
     override fun onBindViewHolder(holder: AppHolder, position: Int) {
       Log.i (TAG, "apps[position] = ${apps[position]}")
       holder.bind(apps[position])
-
-      holder.itemView.setOnClickListener {
-        server.updateApplicationsResponse()
-        Log.i (TAG, "asdasdasdas")
-      }
     }
   }
 
