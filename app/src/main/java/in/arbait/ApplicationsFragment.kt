@@ -34,11 +34,6 @@ const val VIEW_ARG = "view"
 
 private const val TAG = "ApplicationsFragment"
 
-enum class AppStatus {
-  OPEN,
-  CLOSED
-}
-
 const val TEXT_HOURLY_PAYMENT = "р/ч"
 const val TEXT_DAILY_PAYMENT = "8ч"
 const val TEXT_PEOPLE = "чел"
@@ -50,7 +45,6 @@ private const val DAY_HEADER = 1
 private const val TEXT = 2
 
 private       val OPEN_HEADER_COLOR = Color.parseColor("#2E8B57")
-private       val CLOSED_HEADER_COLOR = Color.BLUE
 
 private const val MAIN_HEADER_TEXT_SIZE = 28f
 private const val HEADER_TEXT_SIZE = 24f
@@ -60,21 +54,16 @@ class ApplicationsFragment: Fragment() {
 
   private lateinit var server: Server
   private lateinit var appsResponse: LiveData<ApplicationsResponse>
-  private var adapter: AppAdapter = AppAdapter(emptyList())
-
   private val openApps: MutableLiveData<List<ApplicationItem>> = MutableLiveData()
-  private var todayApps = mutableListOf<ApplicationItem>()
-  private var tomorrowApps = mutableListOf<ApplicationItem>()
-  private var showTomorrowApps = false
-
-  private val closedApps: MutableLiveData<List<ApplicationItem>> = MutableLiveData()
-  private var todayClosedApps = mutableListOf<ApplicationItem>()
-  private var tomorrowClosedApps = mutableListOf<ApplicationItem>()
-  private var showClosedApps = false
+  private var adapter: AppAdapter = AppAdapter(emptyList())
 
   private var user: User? = null
   private lateinit var repository: UserRepository
   private lateinit var mainActivity: MainActivity
+
+  private var todayApps = mutableListOf<ApplicationItem>()
+  private var tomorrowApps = mutableListOf<ApplicationItem>()
+  private var showTomorrowApps = false
 
   private lateinit var rootView: View
   private lateinit var rvApps: RecyclerView
@@ -92,7 +81,7 @@ class ApplicationsFragment: Fragment() {
       pollService?.let {
         appsResponse = it.appsResponse
       }
-      setAppsResponseObserver()
+      setObservers()
     }
 
     override fun onServiceDisconnected(arg0: ComponentName) {
@@ -146,30 +135,15 @@ class ApplicationsFragment: Fragment() {
   }
 
 
-  private fun setAppsResponseObserver() {
+  private fun setObservers() {
     appsResponse.observe(viewLifecycleOwner,
       Observer { appsResponse ->
         appsResponse?.let {
           val response = it.response
           if (response.code == SERVER_OK) {
-            var needsToUpdate = false
-
             if ((openApps.value == null) || openAppsDifferFrom(it.openApps)) {
               openApps.value = it.openApps
-              setTodayAndTomorrowApps(AppStatus.OPEN)
-              showTomorrowApps = todayApps.isEmpty()
-              needsToUpdate = true
             }
-
-            if ((closedApps.value == null) || closedAppsDifferFrom(it.closedApps)) {
-              closedApps.value = it.closedApps
-              setTodayAndTomorrowApps(AppStatus.CLOSED)
-              showClosedApps = true
-              needsToUpdate = true
-            }
-
-            if (needsToUpdate)
-              updateUI()
           }
           else {
             ReactionOnResponse.doOnFailure(response, requireContext(), rootView)
@@ -177,33 +151,32 @@ class ApplicationsFragment: Fragment() {
         }
       }
     )
+
+    openApps.observe(viewLifecycleOwner,
+      Observer { openApps ->
+        openApps?.let {
+          Log.i(TAG, "Open apps size is ${it.size}")
+          Log.i(TAG, "openApps is $it")
+          setTodayAndTomorrowApps(it)
+          showTomorrowApps = todayApps.isEmpty()
+          updateUI(it)
+        }
+      }
+    )
   }
 
   private fun openAppsDifferFrom (openApps: List<ApplicationItem>): Boolean {
-    if (this.openApps.value == null) return true
     return listsAreDifferent(this.openApps.value!!, openApps)
   }
 
-  private fun closedAppsDifferFrom (closedApps: List<ApplicationItem>): Boolean {
-    if (this.closedApps.value == null) return true
-    return listsAreDifferent(this.closedApps.value!!, closedApps)
+  private fun updateUI(openApps: List<ApplicationItem>) {
+      rvApps.adapter = getConcatOpenAdapter(openApps.isNotEmpty(), this.showTomorrowApps)
   }
 
-  private fun updateUI() {
-    val openAdapter = getConcatOpenAdapter()
-    val closedAdapter = getConcatClosedAdapter()
-
-    rvApps.adapter = ConcatAdapter(openAdapter, closedAdapter)
-  }
-
-  private fun getConcatOpenAdapter():
+  private fun getConcatOpenAdapter(appsIsNotEmpty: Boolean, showTomorrowApps: Boolean):
       ConcatAdapter
   {
     var concatAdapter = ConcatAdapter()
-    var appsIsNotEmpty = false
-    openApps.value?.let {
-      appsIsNotEmpty = true
-    }
 
     if (appsIsNotEmpty) {
       concatAdapter = ConcatAdapter()
@@ -211,12 +184,11 @@ class ApplicationsFragment: Fragment() {
       if (tomorrowApps.isNotEmpty()) {
         val appsCount = tomorrowApps.size
         val tomorrowHeaderText = when (user?.headerWasPressed) {
-          true -> getString(R.string.apps_tomorrow_wasnt_pressed, appsCount)
+          true -> getString(R.string.apps_tomorrow_no_press, appsCount)
           false -> getString(R.string.apps_tomorrow, appsCount)
           null -> ""
         }
-        val tomorrowHeaderAdapter = HeaderAdapter(AppStatus.OPEN, tomorrowHeaderText,
-          DAY_HEADER, true)
+        val tomorrowHeaderAdapter = HeaderAdapter(tomorrowHeaderText, DAY_HEADER, true)
         val intermediateAdapter = ConcatAdapter(concatAdapter, tomorrowHeaderAdapter)
         Log.i (TAG, "showTomorrowApps = $showTomorrowApps")
         concatAdapter = when (showTomorrowApps) {
@@ -226,16 +198,15 @@ class ApplicationsFragment: Fragment() {
       }
 
       val todayHeaderText = getString(R.string.apps_today)
-      val todayHeaderAdapter = HeaderAdapter(AppStatus.OPEN, todayHeaderText, DAY_HEADER)
+      val todayHeaderAdapter = HeaderAdapter(todayHeaderText, DAY_HEADER)
 
       val addAdapter = when (todayApps.isNotEmpty()) {
         true -> {
           ConcatAdapter(todayHeaderAdapter, AppAdapter(todayApps))
         }
         false -> {
-          ConcatAdapter(todayHeaderAdapter,
-            HeaderAdapter(AppStatus.OPEN, getString(R.string.apps_no_open_apps), TEXT)
-          )
+            ConcatAdapter(todayHeaderAdapter, HeaderAdapter(getString(R.string.apps_no_open_apps),
+              TEXT))
         }
       }
 
@@ -243,106 +214,27 @@ class ApplicationsFragment: Fragment() {
     }
     else {
       val todayHeaderText = getString(R.string.apps_today)
-      val todayHeaderAdapter = HeaderAdapter(AppStatus.OPEN, todayHeaderText, DAY_HEADER)
+      val todayHeaderAdapter = HeaderAdapter(todayHeaderText, DAY_HEADER)
       concatAdapter = ConcatAdapter (todayHeaderAdapter,
-        HeaderAdapter(AppStatus.OPEN, getString(R.string.apps_no_open_apps), TEXT))
+        HeaderAdapter(getString(R.string.apps_no_open_apps), TEXT))
     }
 
     return concatAdapter
   }
 
-  private fun getConcatClosedAdapter():
-      ConcatAdapter
-  {
-    var concatAdapter = ConcatAdapter()
-    var appsIsNotEmpty = false
-    closedApps.value?.let {
-      appsIsNotEmpty = true
-    }
+  private fun setTodayAndTomorrowApps (apps: List<ApplicationItem>) {
+    todayApps = mutableListOf<ApplicationItem>()
+    tomorrowApps = mutableListOf<ApplicationItem>()
 
-    if (appsIsNotEmpty) {
-      concatAdapter = ConcatAdapter()
-
-      if (tomorrowClosedApps.isNotEmpty()) {
-        val appsSize = tomorrowClosedApps.size
-        val tomorrowHeaderText = when (user?.headerWasPressed) {                        //!
-          null -> ""
-          else -> getString(R.string.apps_tomorrow, appsSize)
-        }
-        val tomorrowHeaderAdapter = HeaderAdapter(AppStatus.CLOSED, tomorrowHeaderText,
-          DAY_HEADER, true)
-        val intermediateAdapter = ConcatAdapter(concatAdapter, tomorrowHeaderAdapter)
-        concatAdapter = ConcatAdapter(intermediateAdapter, AppAdapter(tomorrowClosedApps))    //!
-      }
-
-      val todayHeaderText = getString(R.string.apps_today)
-      val todayHeaderAdapter = HeaderAdapter(AppStatus.CLOSED, todayHeaderText, DAY_HEADER)
-
-      val addAdapter = when (todayClosedApps.isNotEmpty()) {
-        true -> {
-          ConcatAdapter(todayHeaderAdapter, AppAdapter(todayClosedApps))
-        }
-        false -> {
-          ConcatAdapter(todayHeaderAdapter,
-            HeaderAdapter(AppStatus.CLOSED, getString(R.string.apps_no_open_apps), TEXT)
-          )
-        }
-      }
-
-      concatAdapter = ConcatAdapter (concatAdapter, addAdapter)
-    }
-    else {
-      val todayHeaderText = getString(R.string.apps_today)
-      val todayHeaderAdapter = HeaderAdapter(AppStatus.CLOSED, todayHeaderText, DAY_HEADER)
-      concatAdapter = ConcatAdapter (todayHeaderAdapter,
-        HeaderAdapter(AppStatus.CLOSED, getString(R.string.apps_no_open_apps), TEXT)
-      )
-    }
-
-    return concatAdapter
-  }
-
-  private fun setTodayAndTomorrowApps (appStatus: AppStatus) {
-    var today = todayApps
-    var tomorrow = tomorrowApps
-    var apps = openApps
-    if (appStatus == AppStatus.CLOSED) {
-      today = todayClosedApps
-      tomorrow = tomorrowClosedApps
-      apps = closedApps
-    }
-
-    apps.value?.let { apps ->
-      today = mutableListOf<ApplicationItem>()
-      tomorrow = mutableListOf<ApplicationItem>()
-
-      for (i in apps.indices) {
-        strToDate(apps[i].date, DATE_FORMAT)?.let {
-          when (isItToday(it)) {
-            true -> today.add(apps[i])
-            false -> tomorrow.add(apps[i])
-          }
+    for (i in apps.indices) {
+      strToDate(apps[i].date, DATE_FORMAT)?.let {
+        when (isItToday(it)) {
+          true -> todayApps.add(apps[i])
+          false -> tomorrowApps.add(apps[i])
         }
       }
     }
   }
-
-  /*
-  private fun setTodayAndTomorrowClosedApps () {
-    this.closedApps.value?.let { closedApps ->
-      todayClosedApps = mutableListOf<ApplicationItem>()
-      tomorrowClosedApps = mutableListOf<ApplicationItem>()
-
-      for (i in closedApps.indices) {
-        strToDate(closedApps[i].date, DATE_FORMAT)?.let {
-          when (isItToday(it)) {
-            true -> todayClosedApps.add(closedApps[i])
-            false -> tomorrowClosedApps.add(closedApps[i])
-          }
-        }
-      }
-    }
-  }*/
 
   private inner class AppHolder (view: View): RecyclerView.ViewHolder(view), View.OnClickListener {
     private val tvTime: TextView = view.findViewById(R.id.tv_app_time)
@@ -400,8 +292,8 @@ class ApplicationsFragment: Fragment() {
     }
   }
 
-  private inner class HeaderAdapter (val appStatus: AppStatus, val headerText: String,
-                                     val headerType: Int, val dayIsTomorrow: Boolean = false):
+  private inner class HeaderAdapter (val headerText: String, val headerType: Int,
+                                     val dayIsTomorrow: Boolean = false):
     RecyclerView.Adapter<HeaderHolder>()
   {
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): HeaderHolder {
@@ -424,7 +316,7 @@ class ApplicationsFragment: Fragment() {
         holder.itemView.setOnClickListener {
           showTomorrowApps = !showTomorrowApps
           openApps.value?.let {
-            updateUI()
+            updateUI(it)
             user?.let { user ->
               if (!user.headerWasPressed) {
                 user.headerWasPressed = true
