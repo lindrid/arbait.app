@@ -34,14 +34,8 @@ const val VIEW_ARG = "view"
 
 private const val TAG = "ApplicationsFragment"
 
-const val TEXT_TIME = "Время"
-const val TEXT_ADDRESS = "Адрес"
-const val TEXT_INCOME = "Ставка"
-const val TEXT_WORKERS = "Кол-во чел"
-
 const val TEXT_HOURLY_PAYMENT = "р/ч"
 const val TEXT_DAILY_PAYMENT = "8ч"
-const val TEXT_PEOPLE = "чел"
 const val DATE_FORMAT = "yyyy-MM-dd"
 
 private       val OPEN_HEADER_COLOR = Color.parseColor("#2E8B57")
@@ -242,24 +236,24 @@ class ApplicationsFragment: Fragment() {
   }
 
   private inner class AppHolder (view: View): RecyclerView.ViewHolder(view), View.OnClickListener {
-    private val tvTime: TextView = view.findViewById(R.id.tv_app_time)
-    private val tvAddress: TextView = view.findViewById(R.id.tv_app_address)
-    private val tvIncome: TextView = view.findViewById(R.id.tv_app_worker_income)
-    private val tvWorkers: TextView = view.findViewById(R.id.tv_app_workers)
+    private val tvTime: TextView = view.findViewById(R.id.tv_apps_time)
+    private val tvAddress: TextView = view.findViewById(R.id.tv_apps_address)
+    private val tvIncome: TextView = view.findViewById(R.id.tv_apps_worker_income)
+    private val tvWorkers: TextView = view.findViewById(R.id.tv_apps_workers)
     private var app: ApplicationItem? = null
 
     fun bind (app: ApplicationItem?) {
       if (app == null) {
-        tvTime.text = TEXT_TIME
+        tvTime.text = getString(R.string.apps_time)
         tvTime.setTextColor(OPEN_HEADER_COLOR)
 
-        tvAddress.text = TEXT_ADDRESS
+        tvAddress.text = getString(R.string.apps_address)
         tvAddress.setTextColor(OPEN_HEADER_COLOR)
 
-        tvIncome.text = TEXT_INCOME
+        tvIncome.text = getString(R.string.apps_worker_income)
         tvIncome.setTextColor(OPEN_HEADER_COLOR)
 
-        tvWorkers.text = TEXT_WORKERS
+        tvWorkers.text = getString(R.string.apps_workers)
         tvWorkers.setTextColor(OPEN_HEADER_COLOR)
         return
       }

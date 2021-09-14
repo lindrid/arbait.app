@@ -26,13 +26,10 @@ private const val TAG = "PollingService"
 private const val SERVICE_DELAY_SECONDS: Long = 5
 
 private const val SERVICE_NOTIFICATION_ID = 1
-private const val SERVICE_NOTIFICATION_CHANNEL_ID = "Мониторинг заявок"
+private val SERVICE_NOTIFICATION_CHANNEL_ID = App.res?.getString(R.string.poll_service_channel_id)
 
 private const val NEW_APP_NOTIFICATION_ID = 2
-private const val NEW_APP_NOTIFICATION_CHANNEL_ID = "Новая заявка"
-
-private const val TEXT_IN = "в"
-private const val TEXT_TOMORROW = "Завтра"
+private val NEW_APP_NOTIFICATION_CHANNEL_ID = App.res?.getString(R.string.poll_new_app_channel_id)
 
 // https://robertohuertas.com/2019/06/29/android_foreground_services/
 // poll the server for applications
@@ -199,11 +196,17 @@ class PollService : LifecycleService() {
 
     var word: String = ""
     strToDate(newApp.date, DATE_FORMAT)?.let {
-      word = if (isItToday(it)) TEXT_IN.uppercase() else "$TEXT_TOMORROW $TEXT_IN"
+      word = if (isItToday(it))
+        getString(R.string.poll_in).uppercase()
+      else
+        getString(R.string.poll_tomorrow_in)
     }
-    val suffix = if (newApp.hourlyJob) " $TEXT_HOURLY_PAYMENT" else "/$TEXT_DAILY_PAYMENT"
+    val suffix = if (newApp.hourlyJob)
+      getString(R.string.poll_hourly_suffix)
+    else
+      getString(R.string.poll_daily_suffix)
     val price = "${newApp.priceForWorker}$suffix"
-    val people = "${newApp.workerTotal} $TEXT_PEOPLE"
+    val people = getString(R.string.poll_people, newApp.workerTotal)
     val text = "$word ${newApp.time}, $price, $people"
 
     return createNotification ( NEW_APP_NOTIFICATION_CHANNEL_ID,

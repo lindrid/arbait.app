@@ -8,7 +8,7 @@
 >
 
     <TextView
-        android:id="@+id/tv_app_time"
+        android:id="@+id/tv_apps_time"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="16dp"
@@ -22,12 +22,12 @@
         android:textSize="18sp"
         android:typeface="normal"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toStartOf="@id/tv_app_address"
+        app:layout_constraintEnd_toStartOf="@id/tv_apps_address"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
     <TextView
-        android:id="@+id/tv_app_address"
+        android:id="@+id/tv_apps_address"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="16dp"
@@ -39,13 +39,13 @@
         android:textColor="@color/black"
         android:textSize="18sp"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toStartOf="@id/tv_app_worker_income"
-        app:layout_constraintStart_toEndOf="@id/tv_app_time"
+        app:layout_constraintEnd_toStartOf="@id/tv_apps_worker_income"
+        app:layout_constraintStart_toEndOf="@id/tv_apps_time"
         app:layout_constraintTop_toTopOf="parent" />
 
 
     <TextView
-        android:id="@+id/tv_app_worker_income"
+        android:id="@+id/tv_apps_worker_income"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="16dp"
@@ -59,12 +59,12 @@
         android:textSize="18sp"
         android:typeface="normal"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toStartOf="@id/tv_app_workers"
-        app:layout_constraintStart_toEndOf="@id/tv_app_address"
+        app:layout_constraintEnd_toStartOf="@id/tv_apps_workers"
+        app:layout_constraintStart_toEndOf="@id/tv_apps_address"
         app:layout_constraintTop_toTopOf="parent" />
 
     <TextView
-        android:id="@+id/tv_app_workers"
+        android:id="@+id/tv_apps_workers"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="16dp"
@@ -79,7 +79,7 @@
         android:typeface="normal"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toEndOf="@id/tv_app_worker_income"
+        app:layout_constraintStart_toEndOf="@id/tv_apps_worker_income"
         app:layout_constraintTop_toTopOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

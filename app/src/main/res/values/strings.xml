@@ -44,9 +44,10 @@
     <string name="phone_conf_not_requested_call">Сначала получите код :)</string>
 
     <!-- Фрагмент с заявками -->
-    <string name="apps_time">xx:yy</string>
-    <string name="apps_address">Кирова 54</string>
-    <string name="apps_worker_income">250 р/ч</string>
+    <string name="apps_time">Время</string>
+    <string name="apps_address">Адрес</string>
+    <string name="apps_worker_income">Ставка</string>
+    <string name="apps_workers">Кол-во чел</string>
     <string name="apps_no_open_apps">На данный момент заявок нет</string>
     <string name="apps_today">Сегодня</string>
     <string name="apps_tomorrow">Завтра (%1$d шт., жми)</string>
@@ -55,5 +56,14 @@
     <string name="apps_closed">Закрытые</string>
     <string name="apps_finished">Завершенные</string>
     <string name="apps_action_bar_title">Заявки</string>
-    <string name="apps_workers">0 / 2</string>
+
+    <!-- Poll service -->
+    <string name="poll_people">$1%d чел</string>
+    <string name="poll_in">в</string>
+    <string name="poll_tomorrow_in">Завтра в</string>
+    <string name="poll_hourly_suffix">р/ч</string>
+    <string name="poll_daily_suffix">/8ч</string>
+    <string name="poll_service_channel_id">Поиск заявок</string>
+    <string name="poll_new_app_channel_id">Новая заявка</string>
+
 </resources>
