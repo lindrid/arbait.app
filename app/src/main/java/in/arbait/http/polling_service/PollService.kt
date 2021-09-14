@@ -26,10 +26,10 @@ private const val TAG = "PollingService"
 private const val SERVICE_DELAY_SECONDS: Long = 5
 
 private const val SERVICE_NOTIFICATION_ID = 1
-private val SERVICE_NOTIFICATION_CHANNEL_ID = App.res?.getString(R.string.poll_service_channel_id)
+private val SERVICE_NOTIFICATION_CHANNEL_ID = App.res!!.getString(R.string.poll_service_channel_id)
 
 private const val NEW_APP_NOTIFICATION_ID = 2
-private val NEW_APP_NOTIFICATION_CHANNEL_ID = App.res?.getString(R.string.poll_new_app_channel_id)
+private val NEW_APP_NOTIFICATION_CHANNEL_ID = App.res!!.getString(R.string.poll_new_app_channel_id)
 
 // https://robertohuertas.com/2019/06/29/android_foreground_services/
 // poll the server for applications
