@@ -64,8 +64,8 @@ class RegistrationFragment : Fragment() {
   private val setPhoneWaEqualsToPhone = { _: View ->
     etPhoneWa.text = etPhone.text
   }
-  private val setDebitCardEqualsToPhoneWa = { _: View ->
-    etDebitCard.text = etPhoneWa.text
+  private val setDebitCardEqualsToPhone = { _: View ->
+    etDebitCard.text = etPhone.text
   }
 
 
@@ -99,7 +99,7 @@ class RegistrationFragment : Fragment() {
     etDebitCard.addTextChangedListener(DebitCardFormatWatcher(etDebitCard, viewLifecycleOwner))
 
     btSamePhone.setOnClickListener(setPhoneWaEqualsToPhone)
-    btSamePhoneWa.setOnClickListener(setDebitCardEqualsToPhoneWa)
+    btSamePhoneWa.setOnClickListener(setDebitCardEqualsToPhone)
 
     btDone.setOnClickListener {
       val str = etPhoneWa.text.toString()
