@@ -26,12 +26,8 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.MutableLiveData
 import androidx.recyclerview.widget.ConcatAdapter
 import androidx.recyclerview.widget.DividerItemDecoration
-import com.skydoves.balloon.extensions.dp
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
-import android.R.attr.name
-import android.R.attr.name
-import android.R.attr.name
 
 const val CONTEXT_ARG = "context"
 const val VIEW_ARG = "view"
@@ -41,19 +37,19 @@ private const val TAG = "ApplicationsFragment"
 const val TEXT_TIME = "Время"
 const val TEXT_ADDRESS = "Адрес"
 const val TEXT_INCOME = "Ставка"
-const val TEXT_WORKERS = "Люди"
+const val TEXT_WORKERS = "Кол-во чел"
 
 const val TEXT_HOURLY_PAYMENT = "р/ч"
 const val TEXT_DAILY_PAYMENT = "8ч"
 const val TEXT_PEOPLE = "чел"
 const val DATE_FORMAT = "yyyy-MM-dd"
 
+private       val OPEN_HEADER_COLOR = Color.parseColor("#2E8B57")
+
 /* Headers and messages (those that are instead of applications) */
 private const val MAIN_HEADER = 0
 private const val DAY_HEADER = 1
 private const val TEXT = 2
-
-private       val OPEN_HEADER_COLOR = Color.parseColor("#2E8B57")
 
 private const val MAIN_HEADER_TEXT_SIZE = 28f
 private const val HEADER_TEXT_SIZE = 24f
@@ -186,6 +182,7 @@ class ApplicationsFragment: Fragment() {
       ConcatAdapter
   {
     var concatAdapter = ConcatAdapter()
+    var headerIsSet = false
 
     if (appsIsNotEmpty) {
       concatAdapter = ConcatAdapter()
@@ -201,7 +198,10 @@ class ApplicationsFragment: Fragment() {
         val intermediateAdapter = ConcatAdapter(concatAdapter, tomorrowHeaderAdapter)
         Log.i (TAG, "showTomorrowApps = $showTomorrowApps")
         concatAdapter = when (showTomorrowApps) {
-          true  -> ConcatAdapter(intermediateAdapter, AppAdapter(tomorrowApps))
+          true  -> {
+            headerIsSet = true
+            ConcatAdapter(intermediateAdapter, AppAdapter(tomorrowApps, true))
+          }
           false -> intermediateAdapter
         }
       }
@@ -210,7 +210,7 @@ class ApplicationsFragment: Fragment() {
       val todayHeaderAdapter = HeaderAdapter(todayHeaderText, DAY_HEADER)
 
       val addAdapter = when (todayApps.isNotEmpty()) {
-        true -> ConcatAdapter(todayHeaderAdapter, AppAdapter(todayApps))
+        true -> ConcatAdapter(todayHeaderAdapter, AppAdapter(todayApps, !headerIsSet))
         false ->  ConcatAdapter(todayHeaderAdapter, HeaderAdapter(
                     getString(R.string.apps_no_open_apps), TEXT))
       }
@@ -283,21 +283,23 @@ class ApplicationsFragment: Fragment() {
     }
   }
 
-  private inner class AppAdapter (apps: List<ApplicationItem?>):
+  private inner class AppAdapter (apps: List<ApplicationItem?>, val hasHeader: Boolean = false):
     RecyclerView.Adapter<AppHolder> ()
   {
-    private val HEADER_TYPE = 0
-    private val ITEM_TYPE = 1
+    private val headerType = 0
+    private val itemType = 1
     private val apps: MutableList<ApplicationItem?> = mutableListOf()
 
     init {
-      this.apps.add(null)
+      if (hasHeader)
+        this.apps.add(null)
+
       for (i in apps.indices)
         this.apps.add(apps[i])
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): AppHolder {
-      val view = if (viewType == HEADER_TYPE)
+      val view = if (viewType == headerType)
         layoutInflater.inflate(R.layout.list_item_app_header, parent, false)
       else
         layoutInflater.inflate(R.layout.list_item_app, parent, false)
@@ -308,10 +310,10 @@ class ApplicationsFragment: Fragment() {
     override fun getItemCount() = apps.size
 
     override fun getItemViewType(position: Int): Int {
-      if (position == 0)
-        return HEADER_TYPE
+      if (position == 0 && hasHeader)
+        return headerType
 
-      return ITEM_TYPE
+      return itemType
     }
 
     override fun onBindViewHolder(holder: AppHolder, position: Int) {
@@ -319,7 +321,6 @@ class ApplicationsFragment: Fragment() {
       holder.bind(apps[position])
     }
   }
-
 
   private inner class HeaderHolder (view: View) : RecyclerView.ViewHolder(view) {
     private val tvAppsHeader: TextView = view.findViewById(R.id.tv_apps_header)
