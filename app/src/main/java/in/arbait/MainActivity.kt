@@ -1,6 +1,7 @@
 package `in`.arbait
 
 import `in`.arbait.database.User
+import `in`.arbait.models.ApplicationItem
 import `in`.arbait.http.sessionIsAlive
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
@@ -51,11 +52,15 @@ class MainActivity : AppCompatActivity() {
 
   fun replaceOnFragment (fragmentName: String, args: Bundle = Bundle()) {
     val fragment: Fragment = when (fragmentName) {
-      "PhoneConfirmationFragment" -> {
+      "PhoneConfirmation" -> {
         val user = args.getSerializable(USER_ARG) as User
         PhoneConfirmationFragment(user)
       }
-      "ApplicationsFragment" -> ApplicationsFragment()
+      "Application" -> {
+        val appItem = args.getSerializable(APP_ARG) as ApplicationItem
+        ApplicationFragment(appItem)
+      }
+      "Applications" -> ApplicationsFragment()
       else -> RegistrationFragment()
     }
 

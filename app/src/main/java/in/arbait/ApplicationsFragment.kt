@@ -3,6 +3,8 @@ package `in`.arbait
 import `in`.arbait.database.User
 import `in`.arbait.http.*
 import `in`.arbait.http.polling_service.*
+import `in`.arbait.models.ApplicationItem
+import android.annotation.SuppressLint
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
@@ -29,16 +31,11 @@ import androidx.recyclerview.widget.DividerItemDecoration
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 
-const val CONTEXT_ARG = "context"
-const val VIEW_ARG = "view"
+const val DATE_FORMAT = "yyyy-MM-dd"
+const val APP_ARG = "application_id"
 
 private const val TAG = "ApplicationsFragment"
-
-const val TEXT_HOURLY_PAYMENT = "р/ч"
-const val TEXT_DAILY_PAYMENT = "8ч"
-const val DATE_FORMAT = "yyyy-MM-dd"
-
-private       val OPEN_HEADER_COLOR = Color.parseColor("#2E8B57")
+private val OPEN_HEADER_COLOR = Color.parseColor("#2E8B57")
 
 /* Headers and messages (those that are instead of applications) */
 private const val MAIN_HEADER = 0
@@ -242,6 +239,7 @@ class ApplicationsFragment: Fragment() {
     private val tvWorkers: TextView = view.findViewById(R.id.tv_apps_workers)
     private var app: ApplicationItem? = null
 
+    @SuppressLint("SetTextI18n")
     fun bind (app: ApplicationItem?) {
       if (app == null) {
         tvTime.text = getString(R.string.apps_time)
@@ -267,13 +265,21 @@ class ApplicationsFragment: Fragment() {
 
       val price = app.priceForWorker.toString()
       tvIncome.text = when (app.hourlyJob) {
-        true -> "$price $TEXT_HOURLY_PAYMENT"
-        false -> "$price/$TEXT_DAILY_PAYMENT"
+        true -> "$price ${getString(R.string.hourly_suffix)}"
+        false -> "$price${getString(R.string.daily_suffix)}"
       }
     }
 
     override fun onClick(v: View?) {
-      //callbacks?.onCrimeSelected(crime.id)
+      Log.i ("AppHolder", "onClick()")
+      app?.let { app ->
+        Log.i ("AppHolder", "app is not null")
+        val args = Bundle().apply {
+          putSerializable(APP_ARG, app)
+        }
+        val mainActivity = context as MainActivity
+        mainActivity.replaceOnFragment("Application", args)
+      }
     }
   }
 
@@ -313,6 +319,7 @@ class ApplicationsFragment: Fragment() {
     override fun onBindViewHolder(holder: AppHolder, position: Int) {
       Log.i (TAG, "apps[position] = ${apps[position]}")
       holder.bind(apps[position])
+      holder.itemView.setOnClickListener(holder)
     }
   }
 

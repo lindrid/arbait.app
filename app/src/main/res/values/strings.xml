@@ -6,6 +6,12 @@
     <string name="system_error">Произошла системная ошибка: %1$s</string>
     <string name="server_validation_error">Сервер вернул: %1$s, %2$s</string>
 
+    <string name="people">$1%d чел</string>
+    <string name="in">в</string>
+    <string name="tomorrow_in">Завтра в</string>
+    <string name="hourly_suffix"> р/ч</string>
+    <string name="daily_suffix">/8ч</string>
+
     <!-- Фрагмент регистрации -->
     <string name="reg_registration">Регистрация</string>
     <string name="reg_first_name">Имя</string>
@@ -58,12 +64,20 @@
     <string name="apps_action_bar_title">Заявки</string>
 
     <!-- Poll service -->
-    <string name="poll_people">$1%d чел</string>
-    <string name="poll_in">в</string>
-    <string name="poll_tomorrow_in">Завтра в</string>
-    <string name="poll_hourly_suffix">р/ч</string>
-    <string name="poll_daily_suffix">/8ч</string>
     <string name="poll_service_channel_id">Поиск заявок</string>
     <string name="poll_new_app_channel_id">Новая заявка</string>
+
+    <!-- ApplicationFragment -->
+    <string name="app_address"><![CDATA[<u>Адрес:</u> %s]]></string>
+    <string name="app_time"><![CDATA[<u>Время:</u> %s]]></string>
+    <string name="app_worker_income"><![CDATA[<u>Ставка:</u> %s]]></string>
+    <string name="app_description"><![CDATA[<u>Описание</u> %s]]></string>
+    <string name="app_pay_method"><![CDATA[<u>Оплата</u> %s]]></string>
+    <string name="app_on_card">на карту</string>
+    <string name="app_cash">налчика</string>
+    <string name="app_worker_count"><![CDATA[<u>Кол-во работников</u> %s]]></string>
+    <string name="app_enroll">Записаться</string>
+    <string name="app_call_client">Позвонить заказчику</string>
+    <string name="app_back">Назад</string>
 
 </resources>

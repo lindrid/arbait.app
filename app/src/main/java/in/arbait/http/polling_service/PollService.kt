@@ -1,7 +1,7 @@
 package `in`.arbait.http.polling_service
 
 import `in`.arbait.*
-import `in`.arbait.http.ApplicationItem
+import `in`.arbait.models.ApplicationItem
 import `in`.arbait.http.ApplicationsResponse
 import `in`.arbait.http.SERVER_OK
 import `in`.arbait.http.Server
@@ -197,16 +197,16 @@ class PollService : LifecycleService() {
     var word: String = ""
     strToDate(newApp.date, DATE_FORMAT)?.let {
       word = if (isItToday(it))
-        getString(R.string.poll_in).uppercase()
+        getString(R.string.`in`).uppercase()
       else
-        getString(R.string.poll_tomorrow_in)
+        getString(R.string.tomorrow_in)
     }
     val suffix = if (newApp.hourlyJob)
-      getString(R.string.poll_hourly_suffix)
+      getString(R.string.hourly_suffix)
     else
-      getString(R.string.poll_daily_suffix)
+      getString(R.string.daily_suffix)
     val price = "${newApp.priceForWorker}$suffix"
-    val people = getString(R.string.poll_people, newApp.workerTotal)
+    val people = getString(R.string.people, newApp.workerTotal)
     val text = "$word ${newApp.time}, $price, $people"
 
     return createNotification ( NEW_APP_NOTIFICATION_CHANNEL_ID,

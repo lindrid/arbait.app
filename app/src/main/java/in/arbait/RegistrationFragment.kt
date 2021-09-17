@@ -223,7 +223,7 @@ class RegistrationFragment : Fragment() {
         putSerializable(USER_ARG, user)
       }
       val mainActivity = context as MainActivity
-      mainActivity.replaceOnFragment("PhoneConfirmationFragment", args)
+      mainActivity.replaceOnFragment("PhoneConfirmation", args)
     }
 
     override fun doOnServerFieldValidationError(response: Response) {

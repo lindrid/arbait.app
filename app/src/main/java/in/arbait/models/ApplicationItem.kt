@@ -1,9 +1,10 @@
-package `in`.arbait.http
+package `in`.arbait.models
 
 import com.google.gson.JsonDeserializationContext
 import com.google.gson.JsonDeserializer
 import com.google.gson.JsonElement
 import com.google.gson.annotations.SerializedName
+import java.io.Serializable
 import java.lang.reflect.Type
 import java.util.*
 
@@ -22,9 +23,10 @@ data class ApplicationItem (
   @SerializedName("price_for_worker") val priceForWorker: Int,
   val state: Int,
   @SerializedName("dispatcher_id") val dispatcherId: Int,
-  var expanded: Boolean = true
-) {
-}
+  var expanded: Boolean = true,
+
+  @SerializedName("porters") val porters: List<PorterItem>
+): Serializable {}
 
 
 /*

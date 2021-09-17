@@ -1,0 +1,10 @@
+package `in`.arbait.models
+
+import com.google.gson.annotations.SerializedName
+import java.io.Serializable
+
+data class UserItem (
+  val id: Int,
+  @SerializedName("phones") val phones: List<PhoneItem>,
+  @SerializedName("debit_cards") val debitCards: List<DebitCardItem>
+): Serializable {}
