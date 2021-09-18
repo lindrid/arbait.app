@@ -199,7 +199,7 @@ class PollService : LifecycleService() {
       word = if (isItToday(it))
         getString(R.string.`in`).uppercase()
       else
-        getString(R.string.tomorrow_in)
+        getString(R.string.tomorrow)
     }
     val suffix = if (newApp.hourlyJob)
       getString(R.string.hourly_suffix)

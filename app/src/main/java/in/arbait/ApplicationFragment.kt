@@ -1,18 +1,28 @@
 package `in`.arbait
 
 import `in`.arbait.models.ApplicationItem
+import `in`.arbait.models.PhoneItem
+import `in`.arbait.models.PorterItem
 import android.os.Bundle
 import android.text.Html
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ImageView
+import android.widget.TextView
+import android.widget.Toast
 import androidx.appcompat.widget.AppCompatButton
 import androidx.appcompat.widget.AppCompatTextView
 import androidx.fragment.app.Fragment
+import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 
 private const val TAG = "ApplicationFragment"
+
+const val PHONE_CALL = 1
+const val PHONE_WHATSAPP = 2
+const val PHONE_CALL_AND_WHATSAPP = 3
 
 const val PM_CARD = 1
 const val PM_CASH = 2
@@ -35,8 +45,12 @@ class ApplicationFragment (private val appItem: ApplicationItem): Fragment() {
     val view = inflater.inflate(R.layout.fragment_application, container, false)
 
     Log.i (TAG, "OnCreate()")
+    Log.i (TAG, "app.porters = ${appItem.porters}")
     setViews(view)
     setViewsTexts()
+
+    rvWorkers.layoutManager = LinearLayoutManager(context)
+    rvWorkers.adapter = PorterAdapter(appItem.porters)
 
     return view
   }
@@ -61,14 +75,14 @@ class ApplicationFragment (private val appItem: ApplicationItem): Fragment() {
     val date = strToDate(appItem.date, DATE_FORMAT)
     date?.let {
       val time = if (isItToday(it))
-        "${getString(R.string.`in`).uppercase()} ${appItem.time}"
+        "${appItem.time}"
       else
-        "${getString(R.string.tomorrow_in).uppercase()} ${appItem.time}"
+        "${getString(R.string.tomorrow)} ${appItem.time}"
       tvTime.text = Html.fromHtml(getString(R.string.app_time, time))
     }
 
     val suffix = if (appItem.hourlyJob)
-      getString(R.string.hourly_suffix)
+      " " + getString(R.string.hourly_suffix)
     else
       getString(R.string.daily_suffix)
     val income = "${appItem.priceForWorker}$suffix"
@@ -87,5 +101,40 @@ class ApplicationFragment (private val appItem: ApplicationItem): Fragment() {
 
     btEnrollRefuse.text = getString(R.string.app_enroll)
     //btCallClient.visibility = View.INVISIBLE
+  }
+
+  private inner class PorterHolder (view: View) : RecyclerView.ViewHolder(view) {
+    private val tvName: TextView = view.findViewById(R.id.tv_porter_name)
+    private val ivCall: ImageView = view.findViewById(R.id.iv_porter_call)
+
+    fun bind(porterName: String, phones: List<PhoneItem>) {
+      tvName.text = porterName
+
+      var phoneCall = ""
+      for (i in phones.indices)
+        if (phones[i].type == PHONE_CALL || phones[i].type == PHONE_CALL_AND_WHATSAPP)
+          phoneCall = phones[i].number
+
+      ivCall.setOnClickListener {
+        Toast.makeText(context, "Call to client: $phoneCall", Toast.LENGTH_SHORT).show()
+      }
+    }
+  }
+
+  private inner class PorterAdapter (val porters: List<PorterItem>):
+    RecyclerView.Adapter<PorterHolder>()
+  {
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): PorterHolder {
+      val view = LayoutInflater.from(parent.context).inflate(
+        R.layout.list_item_porter, parent, false
+      )
+      return PorterHolder(view)
+    }
+
+    override fun getItemCount() = porters.size
+
+    override fun onBindViewHolder(holder: PorterHolder, position: Int) {
+      holder.bind(porters[position].user.name, porters[position].user.phones)
+    }
   }
 }

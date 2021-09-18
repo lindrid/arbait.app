@@ -13,7 +13,8 @@
         android:layout_marginBottom="10dp"
         app:layout_constraintBottom_toTopOf="@+id/bt_app_call_client"
         app:layout_constraintTop_toTopOf="parent"
-        tools:layout_editor_absoluteX="0dp">
+        app:layout_constraintVertical_bias="0.0"
+        tools:layout_editor_absoluteX="-141dp">
 
         <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
@@ -68,8 +69,9 @@
                 android:textColor="@color/black"
                 android:textSize="18sp"
                 app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintHorizontal_bias="0.0"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/tv_app_worker_income" />
+                app:layout_constraintTop_toBottomOf="@+id/rv_app_workers" />
 
             <androidx.appcompat.widget.AppCompatTextView
                 android:id="@+id/tv_app_pay_method"
@@ -81,14 +83,14 @@
                 android:textColor="@color/black"
                 android:textSize="18sp"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/tv_app_description" />
+                app:layout_constraintTop_toBottomOf="@+id/tv_app_worker_income" />
 
             <androidx.appcompat.widget.AppCompatTextView
                 android:id="@+id/tv_app_workers"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="20dp"
-                android:layout_marginTop="20dp"
+                android:layout_marginTop="10dp"
                 android:text="TextView"
                 android:textColor="@color/black"
                 android:textSize="18sp"
@@ -104,6 +106,7 @@
                 android:layout_marginEnd="20dp"
                 android:textColor="@color/black"
                 app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintHorizontal_bias="0.0"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@+id/tv_app_workers" />
 

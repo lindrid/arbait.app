@@ -8,7 +8,7 @@
 
     <string name="people">$1%d чел</string>
     <string name="in">в</string>
-    <string name="tomorrow_in">Завтра в</string>
+    <string name="tomorrow">Завтра</string>
     <string name="hourly_suffix"> р/ч</string>
     <string name="daily_suffix">/8ч</string>
 
@@ -71,11 +71,11 @@
     <string name="app_address"><![CDATA[<u>Адрес:</u> %s]]></string>
     <string name="app_time"><![CDATA[<u>Время:</u> %s]]></string>
     <string name="app_worker_income"><![CDATA[<u>Ставка:</u> %s]]></string>
-    <string name="app_description"><![CDATA[<u>Описание</u> %s]]></string>
-    <string name="app_pay_method"><![CDATA[<u>Оплата</u> %s]]></string>
+    <string name="app_description"><![CDATA[<u>Описание:</u> %s]]></string>
+    <string name="app_pay_method"><![CDATA[<u>Оплата:</u> %s]]></string>
     <string name="app_on_card">на карту</string>
-    <string name="app_cash">налчика</string>
-    <string name="app_worker_count"><![CDATA[<u>Кол-во работников</u> %s]]></string>
+    <string name="app_cash">наличные</string>
+    <string name="app_worker_count"><![CDATA[<u>Кол-во работников:</u> %s]]></string>
     <string name="app_enroll">Записаться</string>
     <string name="app_call_client">Позвонить заказчику</string>
     <string name="app_back">Назад</string>
