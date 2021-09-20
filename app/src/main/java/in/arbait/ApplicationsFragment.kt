@@ -35,16 +35,16 @@ const val DATE_FORMAT = "yyyy-MM-dd"
 const val APP_ARG = "application_id"
 
 private const val TAG = "ApplicationsFragment"
-private val OPEN_HEADER_COLOR = Color.parseColor("#2E8B57")
+val OPEN_HEADER_COLOR = Color.parseColor("#2E8B57")
 
 /* Headers and messages (those that are instead of applications) */
 private const val MAIN_HEADER = 0
 private const val DAY_HEADER = 1
 private const val TEXT = 2
 
-private const val MAIN_HEADER_TEXT_SIZE = 28f
-private const val HEADER_TEXT_SIZE = 24f
-private const val TEXT_SIZE = 18f
+const val MAIN_HEADER_TEXT_SIZE = 28f
+const val HEADER_TEXT_SIZE = 24f
+const val TEXT_SIZE = 18f
 
 class ApplicationsFragment: Fragment() {
 
@@ -324,7 +324,7 @@ class ApplicationsFragment: Fragment() {
   }
 
   private inner class HeaderHolder (view: View) : RecyclerView.ViewHolder(view) {
-    private val tvAppsHeader: TextView = view.findViewById(R.id.tv_apps_header)
+    private val tvAppsHeader: TextView = view.findViewById(R.id.tv_header)
 
     fun bind(headerText: String, textSize: Float, textColor: Int) {
       tvAppsHeader.text = headerText
@@ -338,7 +338,7 @@ class ApplicationsFragment: Fragment() {
     RecyclerView.Adapter<HeaderHolder>()
   {
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): HeaderHolder {
-      val view = LayoutInflater.from(parent.context).inflate(R.layout.list_header_app,
+      val view = LayoutInflater.from(parent.context).inflate(R.layout.list_item_header,
         parent, false)
       return HeaderHolder(view)
     }
