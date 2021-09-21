@@ -17,13 +17,13 @@ import androidx.appcompat.widget.AppCompatButton
 import androidx.appcompat.widget.AppCompatTextView
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.ConcatAdapter
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 
 private const val TAG = "ApplicationFragment"
-private const val MAX_NOT_EXPANDABLE_SIZE = 3
-private const val HEADER_MARGIN_START = 15
 
 const val PHONE_CALL = 1
 const val PHONE_WHATSAPP = 2
@@ -32,7 +32,7 @@ const val PHONE_CALL_AND_WHATSAPP = 3
 const val PM_CARD = 1
 const val PM_CASH = 2
 
-class ApplicationFragment (private val appItem: ApplicationItem): Fragment() {
+class ApplicationFragment (private val appItem: LiveData<ApplicationItem>): Fragment() {
   private lateinit var tvAddress: AppCompatTextView
   private lateinit var tvTime: AppCompatTextView
   private lateinit var tvIncome: AppCompatTextView
@@ -44,86 +44,44 @@ class ApplicationFragment (private val appItem: ApplicationItem): Fragment() {
   private lateinit var btEnrollRefuse: AppCompatButton
   private lateinit var btBack: AppCompatButton
 
-  private var rvPortersIsExpandable = false
-  private var rvPortersIsExpanded = false
-
   override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
                             savedInstanceState: Bundle?): View?
   {
     val view = inflater.inflate(R.layout.fragment_application, container, false)
 
     Log.i (TAG, "OnCreate()")
-    Log.i (TAG, "app.porters = ${appItem.porters}")
+    appItem.value?.let {
+      Log.i (TAG, "app.porters = ${it.porters}")
+    }
     setViews(view)
     setViewsTexts()
 
-    if (appItem.porters.size > MAX_NOT_EXPANDABLE_SIZE)
-      rvPortersIsExpandable = true
-
     rvPorters.layoutManager = LinearLayoutManager(context)
     updatePorters()
+    setAppObserver()
 
     return view
   }
 
 
-  private fun updatePorters() {
-    if (rvPortersIsExpandable) {
-      rvPorters.adapter = getConcatPortersAdapter()
-    }
-    else {
-      rvPorters.adapter = PortersAdapter(appItem.porters)
-    }
-  }
-
-  private fun getConcatPortersAdapter(): ConcatAdapter {
-    val str = if (rvPortersIsExpanded)
-      getString(R.string.collapse)
-    else
-      getString(R.string.show)
-
-    var concatAdapter = ConcatAdapter(HeaderAdapter(str))
-    if (rvPortersIsExpanded)
-      concatAdapter = ConcatAdapter(concatAdapter, PortersAdapter(appItem.porters))
-
-    return concatAdapter
-  }
-
-  private inner class HeaderHolder (view: View) : RecyclerView.ViewHolder(view) {
-    private val tvHeader: TextView = view.findViewById(R.id.tv_header)
-
-    fun bind(headerText: String) {
-      tvHeader.text = headerText
-      tvHeader.textSize = HEADER_TEXT_SIZE
-      tvHeader.setTextColor(Color.BLACK)
-
-      val params = tvHeader.layoutParams as ConstraintLayout.LayoutParams
-      params.endToEnd = ConstraintLayout.LayoutParams.UNSET
-      params.marginStart = HEADER_MARGIN_START
-    }
-  }
-
-  private inner class HeaderAdapter (val headerText: String):
-    RecyclerView.Adapter<HeaderHolder>()
-  {
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): HeaderHolder {
-      val view = LayoutInflater.from(parent.context).inflate(
-        R.layout.list_item_header,
-        parent, false
-      )
-      return HeaderHolder(view)
-    }
-
-    override fun getItemCount() = 1
-
-    override fun onBindViewHolder(holder: HeaderHolder, position: Int) {
-      holder.bind(headerText)
-      holder.itemView.setBackgroundColor(Color.GRAY)
-
-      holder.itemView.setOnClickListener {
-        rvPortersIsExpanded = !rvPortersIsExpanded
-        updatePorters()
+  private fun setAppObserver() {
+    appItem.observe(viewLifecycleOwner,
+      Observer { appItem ->
+        appItem?.let {
+          updateUI()
+        }
       }
+    )
+  }
+
+  private fun updateUI() {
+    setViewsTexts()
+    updatePorters()
+  }
+
+  private fun updatePorters() {
+    appItem.value?.let {
+      rvPorters.adapter = PortersAdapter(it.porters)
     }
   }
 
@@ -141,37 +99,41 @@ class ApplicationFragment (private val appItem: ApplicationItem): Fragment() {
   }
 
   private fun setViewsTexts() {
-    tvAddress.text = Html.fromHtml(getString(R.string.app_address, appItem.address))
+    val appItem = this.appItem.value
 
-    val date = strToDate(appItem.date, DATE_FORMAT)
-    date?.let {
-      val time = if (isItToday(it))
-        "${appItem.time}"
+    appItem?.let {
+      tvAddress.text = Html.fromHtml(getString(R.string.app_address, appItem.address))
+
+      val date = strToDate(appItem.date, DATE_FORMAT)
+      date?.let {
+        val time = if (isItToday(it))
+          "${appItem.time}"
+        else
+          "${getString(R.string.tomorrow)} ${appItem.time}"
+        tvTime.text = Html.fromHtml(getString(R.string.app_time, time))
+      }
+
+      val suffix = if (appItem.hourlyJob)
+        " " + getString(R.string.hourly_suffix)
       else
-        "${getString(R.string.tomorrow)} ${appItem.time}"
-      tvTime.text = Html.fromHtml(getString(R.string.app_time, time))
+        getString(R.string.daily_suffix)
+      val income = "${appItem.priceForWorker}$suffix"
+      tvIncome.text = Html.fromHtml(getString(R.string.app_worker_income, income))
+
+      tvDescription.text = Html.fromHtml(getString(R.string.app_description, appItem.whatToDo))
+
+      val payMethod = if (appItem.payMethod == PM_CARD)
+        getString(R.string.app_on_card)
+      else
+        getString(R.string.app_cash)
+      tvPayMethod.text = Html.fromHtml(getString(R.string.app_pay_method, payMethod))
+
+      val workers = "${appItem.workerCount} / ${appItem.workerTotal}"
+      tvPorters.text = Html.fromHtml(getString(R.string.app_worker_count, workers))
+
+      btEnrollRefuse.text = getString(R.string.app_enroll)
+      //btCallClient.visibility = View.INVISIBLE
     }
-
-    val suffix = if (appItem.hourlyJob)
-      " " + getString(R.string.hourly_suffix)
-    else
-      getString(R.string.daily_suffix)
-    val income = "${appItem.priceForWorker}$suffix"
-    tvIncome.text = Html.fromHtml(getString(R.string.app_worker_income, income))
-
-    tvDescription.text = Html.fromHtml(getString(R.string.app_description, appItem.whatToDo))
-
-    val payMethod = if (appItem.payMethod == PM_CARD)
-      getString(R.string.app_on_card)
-    else
-      getString(R.string.app_cash)
-    tvPayMethod.text = Html.fromHtml(getString(R.string.app_pay_method, payMethod))
-
-    val workers = "${appItem.workerCount} / ${appItem.workerTotal}"
-    tvPorters.text = Html.fromHtml(getString(R.string.app_worker_count, workers))
-
-    btEnrollRefuse.text = getString(R.string.app_enroll)
-    //btCallClient.visibility = View.INVISIBLE
   }
 
   private inner class PorterHolder (view: View) : RecyclerView.ViewHolder(view) {

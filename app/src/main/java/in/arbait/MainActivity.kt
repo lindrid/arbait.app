@@ -3,10 +3,12 @@ package `in`.arbait
 import `in`.arbait.database.User
 import `in`.arbait.models.ApplicationItem
 import `in`.arbait.http.sessionIsAlive
+import `in`.arbait.models.LiveDataAppItem
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.LiveData
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 
@@ -57,8 +59,10 @@ class MainActivity : AppCompatActivity() {
         PhoneConfirmationFragment(user)
       }
       "Application" -> {
-        val appItem = args.getSerializable(APP_ARG) as ApplicationItem
-        ApplicationFragment(appItem)
+        val liveDataAppItem = args.getSerializable(APP_ARG) as LiveDataAppItem
+        Log.i (TAG, "MainActivity: LIVE_DATA, liveData = ${liveDataAppItem.lvdAppItem}, " +
+            "value = ${liveDataAppItem.lvdAppItem.value}")
+        ApplicationFragment(liveDataAppItem.lvdAppItem)
       }
       "Applications" -> ApplicationsFragment()
       else -> RegistrationFragment()

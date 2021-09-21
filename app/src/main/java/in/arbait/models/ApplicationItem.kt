@@ -1,5 +1,6 @@
 package `in`.arbait.models
 
+import androidx.lifecycle.LiveData
 import com.google.gson.JsonDeserializationContext
 import com.google.gson.JsonDeserializer
 import com.google.gson.JsonElement
@@ -28,6 +29,7 @@ data class ApplicationItem (
   @SerializedName("porters") val porters: List<PorterItem>
 ): Serializable {}
 
+data class LiveDataAppItem (val lvdAppItem: LiveData<ApplicationItem>): Serializable{}
 
 /*
   id: 4444

@@ -4,6 +4,7 @@ import `in`.arbait.database.User
 import `in`.arbait.http.*
 import `in`.arbait.http.polling_service.*
 import `in`.arbait.models.ApplicationItem
+import `in`.arbait.models.LiveDataAppItem
 import android.annotation.SuppressLint
 import android.content.ComponentName
 import android.content.Context
@@ -57,6 +58,7 @@ class ApplicationsFragment: Fragment() {
   private lateinit var mainActivity: MainActivity
 
   private val openApps: MutableLiveData<List<ApplicationItem>> = MutableLiveData()
+  private val lvdOpenApps = mutableMapOf<Int, MutableLiveData<ApplicationItem>>()
   private var todayApps = mutableListOf<ApplicationItem>()
   private var tomorrowApps = mutableListOf<ApplicationItem>()
   private var showTomorrowApps = false
@@ -134,11 +136,29 @@ class ApplicationsFragment: Fragment() {
   private fun setObservers() {
     appsResponse.observe(viewLifecycleOwner,
       Observer { appsResponse ->
+        Log.i (TAG, "response")
         appsResponse?.let {
           val response = it.response
+          Log.i (TAG, "CODE: ${response.code}")
           if (response.code == SERVER_OK) {
             if ((openApps.value == null) || openAppsDifferFrom(it.openApps)) {
               openApps.value = it.openApps
+            }
+            for (i in it.openApps.indices) {
+              val appId = it.openApps[i].id
+              if (lvdOpenApps.containsKey(appId)) {
+                lvdOpenApps[appId]?.let { lvdApp ->
+                  Log.i(TAG, "LIVE_DATA, appId = $appId, liveData = $lvdApp, " +
+                      "value = ${lvdApp.value}")
+                  lvdApp.value = it.openApps[i]
+                  Log.i (TAG, "NEW_LIVE_DATA, appId = $appId, liveData = $lvdApp, " +
+                      "value = ${lvdApp.value}")
+                }
+              }
+              else {
+                val lvdValue = MutableLiveData<ApplicationItem>(it.openApps[i])
+                lvdOpenApps[appId] = lvdValue
+              }
             }
           }
           else {
@@ -274,11 +294,13 @@ class ApplicationsFragment: Fragment() {
       Log.i ("AppHolder", "onClick()")
       app?.let { app ->
         Log.i ("AppHolder", "app is not null")
-        val args = Bundle().apply {
-          putSerializable(APP_ARG, app)
+        lvdOpenApps[app.id]?.let {  lvdAppItem ->
+          val args = Bundle().apply {
+            putSerializable(APP_ARG, LiveDataAppItem(lvdAppItem))
+          }
+          val mainActivity = context as MainActivity
+          mainActivity.replaceOnFragment("Application", args)
         }
-        val mainActivity = context as MainActivity
-        mainActivity.replaceOnFragment("Application", args)
       }
     }
   }
