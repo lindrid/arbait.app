@@ -1,5 +1,7 @@
 package `in`.arbait
 
+import `in`.arbait.http.ReactionOnResponse
+import `in`.arbait.http.Response
 import `in`.arbait.models.ApplicationItem
 import `in`.arbait.models.PhoneItem
 import `in`.arbait.models.PorterItem
@@ -32,7 +34,9 @@ const val PHONE_CALL_AND_WHATSAPP = 3
 const val PM_CARD = 1
 const val PM_CASH = 2
 
-class ApplicationFragment (private val appItem: LiveData<ApplicationItem>): Fragment() {
+class ApplicationFragment ( private val appItem: LiveData<ApplicationItem>,
+                            private val vm: ApplicationsViewModel): Fragment()
+{
   private lateinit var tvAddress: AppCompatTextView
   private lateinit var tvTime: AppCompatTextView
   private lateinit var tvIncome: AppCompatTextView
@@ -59,6 +63,12 @@ class ApplicationFragment (private val appItem: LiveData<ApplicationItem>): Frag
     rvPorters.layoutManager = LinearLayoutManager(context)
     updatePorters()
     setAppObserver()
+
+    vm.viewLifecycleOwner = viewLifecycleOwner
+    vm.doOnFailure = {  response: Response ->
+      ReactionOnResponse.doOnFailure(response, requireContext(), view)
+    }
+    vm.setObservers()
 
     return view
   }

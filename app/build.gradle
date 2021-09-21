@@ -35,6 +35,7 @@ android {
 
 dependencies {
     implementation "androidx.recyclerview:recyclerview:1.2.1"
+    implementation "androidx.lifecycle:lifecycle-extensions:2.2.0"
 
     implementation 'androidx.room:room-runtime:2.3.0'
     implementation 'androidx.lifecycle:lifecycle-service:2.3.1'

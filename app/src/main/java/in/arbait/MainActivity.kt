@@ -1,6 +1,8 @@
 package `in`.arbait
 
 import `in`.arbait.database.User
+import `in`.arbait.http.ReactionOnResponse
+import `in`.arbait.http.Response
 import `in`.arbait.models.ApplicationItem
 import `in`.arbait.http.sessionIsAlive
 import `in`.arbait.models.LiveDataAppItem
@@ -60,9 +62,10 @@ class MainActivity : AppCompatActivity() {
       }
       "Application" -> {
         val liveDataAppItem = args.getSerializable(APP_ARG) as LiveDataAppItem
+        val viewModel = args.getSerializable(VIEW_MODEL_ARG) as ApplicationsViewModel
         Log.i (TAG, "MainActivity: LIVE_DATA, liveData = ${liveDataAppItem.lvdAppItem}, " +
             "value = ${liveDataAppItem.lvdAppItem.value}")
-        ApplicationFragment(liveDataAppItem.lvdAppItem)
+        ApplicationFragment(liveDataAppItem.lvdAppItem, viewModel)
       }
       "Applications" -> ApplicationsFragment()
       else -> RegistrationFragment()

@@ -1,5 +1,6 @@
 package `in`.arbait
 
+import androidx.lifecycle.ViewModelProvider
 import `in`.arbait.database.User
 import `in`.arbait.http.*
 import `in`.arbait.http.polling_service.*
@@ -33,7 +34,8 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 
 const val DATE_FORMAT = "yyyy-MM-dd"
-const val APP_ARG = "application_id"
+const val APP_ARG = "application_live_data"
+const val VIEW_MODEL_ARG = "applications_view_model"
 
 private const val TAG = "ApplicationsFragment"
 val OPEN_HEADER_COLOR = Color.parseColor("#2E8B57")
@@ -48,44 +50,16 @@ const val HEADER_TEXT_SIZE = 24f
 const val TEXT_SIZE = 18f
 
 class ApplicationsFragment: Fragment() {
-
-  private lateinit var server: Server
-  private lateinit var appsResponse: LiveData<ApplicationsResponse>
-  private var adapter: AppAdapter = AppAdapter(emptyList())
-
-  private var user: User? = null
-  private lateinit var repository: UserRepository
-  private lateinit var mainActivity: MainActivity
-
-  private val openApps: MutableLiveData<List<ApplicationItem>> = MutableLiveData()
-  private val lvdOpenApps = mutableMapOf<Int, MutableLiveData<ApplicationItem>>()
   private var todayApps = mutableListOf<ApplicationItem>()
   private var tomorrowApps = mutableListOf<ApplicationItem>()
   private var showTomorrowApps = false
 
   private lateinit var rootView: View
   private lateinit var rvApps: RecyclerView
+  private var adapter: AppAdapter = AppAdapter(emptyList())
 
-  private var pollService: PollService? = null
-  private var serviceIsBound: Boolean? = null
-
-  private val serviceConnection = object : ServiceConnection {
-    override fun onServiceConnected(className: ComponentName, iBinder: IBinder) {
-      Log.i(TAG, "ServiceConnection: connected to service.")
-      // We've bound to MyService, cast the IBinder and get MyBinder instance
-      val binder = iBinder as PollService.PollBinder
-      pollService = binder.service
-      serviceIsBound = true
-      pollService?.let {
-        appsResponse = it.appsResponse
-      }
-      setObservers()
-    }
-
-    override fun onServiceDisconnected(arg0: ComponentName) {
-      Log.d(TAG, "ServiceConnection: disconnected from service.")
-      serviceIsBound = false
-    }
+  val vm: ApplicationsViewModel by lazy {
+    ViewModelProvider(this).get(ApplicationsViewModel::class.java)
   }
 
   override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
@@ -93,8 +67,6 @@ class ApplicationsFragment: Fragment() {
   {
     val view = inflater.inflate(R.layout.fragment_applications, container, false)
     rootView = view
-
-    mainActivity = requireActivity() as MainActivity
 
     rvApps = view.findViewById(R.id.rv_app_list)
     rvApps.layoutManager = LinearLayoutManager(context)
@@ -105,70 +77,17 @@ class ApplicationsFragment: Fragment() {
     rvApps.addItemDecoration(DividerItemDecoration(context, DividerItemDecoration.VERTICAL))
     rvApps.addItemDecoration(divider)
 
-    // заявки считываются с сервера нашим бесконечным PollService'ом
-    serviceDoAction(Actions.START)
-    bindService()
-
-    return view
-  }
-
-  override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-    super.onViewCreated(view, savedInstanceState)
-
-    val actionBar = (requireActivity() as AppCompatActivity).supportActionBar
-    val title = actionBar?.title
-    val apps = getString(R.string.apps_action_bar_title)
-    actionBar?.title = "$title - $apps"
-
-    repository = UserRepository.get()
-    GlobalScope.launch {
-      user = repository.getUserLastByDate()
+    vm.mainActivity = requireActivity() as MainActivity
+    vm.viewLifecycleOwner = viewLifecycleOwner
+    vm.doOnFailure = {  response: Response ->
+      ReactionOnResponse.doOnFailure(response, requireContext(), rootView)
     }
-  }
 
-  override fun onDestroy() {
-    super.onDestroy()
-    unbindService()
-    serviceDoAction(Actions.STOP)
-  }
+    // заявки считываются с сервера нашим бесконечным PollService'ом
+    vm.serviceDoAction(Actions.START)
+    vm.bindService()
 
-
-  private fun setObservers() {
-    appsResponse.observe(viewLifecycleOwner,
-      Observer { appsResponse ->
-        Log.i (TAG, "response")
-        appsResponse?.let {
-          val response = it.response
-          Log.i (TAG, "CODE: ${response.code}")
-          if (response.code == SERVER_OK) {
-            if ((openApps.value == null) || openAppsDifferFrom(it.openApps)) {
-              openApps.value = it.openApps
-            }
-            for (i in it.openApps.indices) {
-              val appId = it.openApps[i].id
-              if (lvdOpenApps.containsKey(appId)) {
-                lvdOpenApps[appId]?.let { lvdApp ->
-                  Log.i(TAG, "LIVE_DATA, appId = $appId, liveData = $lvdApp, " +
-                      "value = ${lvdApp.value}")
-                  lvdApp.value = it.openApps[i]
-                  Log.i (TAG, "NEW_LIVE_DATA, appId = $appId, liveData = $lvdApp, " +
-                      "value = ${lvdApp.value}")
-                }
-              }
-              else {
-                val lvdValue = MutableLiveData<ApplicationItem>(it.openApps[i])
-                lvdOpenApps[appId] = lvdValue
-              }
-            }
-          }
-          else {
-            ReactionOnResponse.doOnFailure(response, requireContext(), rootView)
-          }
-        }
-      }
-    )
-
-    openApps.observe(viewLifecycleOwner,
+    vm.openApps.observe(viewLifecycleOwner,
       Observer { openApps ->
         openApps?.let {
           Log.i(TAG, "Open apps size is ${it.size}")
@@ -179,28 +98,41 @@ class ApplicationsFragment: Fragment() {
         }
       }
     )
+
+    return view
   }
 
-  private fun openAppsDifferFrom (openApps: List<ApplicationItem>): Boolean {
-    return listsAreDifferent(this.openApps.value!!, openApps)
+  override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+    super.onViewCreated(view, savedInstanceState)
+
+    val actionBar = (requireActivity() as AppCompatActivity).supportActionBar
+    val title = getString(R.string.app_name)
+    val apps = getString(R.string.apps_action_bar_title)
+    actionBar?.title = "$title - $apps"
   }
 
-  private fun updateUI(openApps: List<ApplicationItem>) {
-      rvApps.adapter = getConcatOpenAdapter(openApps.isNotEmpty(), this.showTomorrowApps)
+  override fun onDestroy() {
+    super.onDestroy()
+    vm.unbindService()
+    vm.serviceDoAction(Actions.STOP)
   }
 
-  private fun getConcatOpenAdapter(appsIsNotEmpty: Boolean, showTomorrowApps: Boolean):
+  fun updateUI(openApps: List<ApplicationItem>) {
+    rvApps.adapter = getConcatOpenAdapter(openApps)
+  }
+
+  private fun getConcatOpenAdapter(openApps: List<ApplicationItem>):
       ConcatAdapter
   {
     var concatAdapter = ConcatAdapter()
     var headerIsSet = false
 
-    if (appsIsNotEmpty) {
+    if (openApps.isNotEmpty()) {
       concatAdapter = ConcatAdapter()
 
       if (tomorrowApps.isNotEmpty()) {
         val appsCount = tomorrowApps.size
-        val tomorrowHeaderText = when (user?.headerWasPressed) {
+        val tomorrowHeaderText = when (vm.user?.headerWasPressed) {
           true -> getString(R.string.apps_tomorrow_no_press, appsCount)
           false -> getString(R.string.apps_tomorrow, appsCount)
           null -> ""
@@ -294,9 +226,10 @@ class ApplicationsFragment: Fragment() {
       Log.i ("AppHolder", "onClick()")
       app?.let { app ->
         Log.i ("AppHolder", "app is not null")
-        lvdOpenApps[app.id]?.let {  lvdAppItem ->
+        vm.lvdOpenApps[app.id]?.let {  lvdAppItem ->
           val args = Bundle().apply {
             putSerializable(APP_ARG, LiveDataAppItem(lvdAppItem))
+            putSerializable(VIEW_MODEL_ARG, vm)
           }
           val mainActivity = context as MainActivity
           mainActivity.replaceOnFragment("Application", args)
@@ -378,12 +311,12 @@ class ApplicationsFragment: Fragment() {
       if (dayIsTomorrow) {
         holder.itemView.setOnClickListener {
           showTomorrowApps = !showTomorrowApps
-          openApps.value?.let {
+          vm.openApps.value?.let {
             updateUI(it)
-            user?.let { user ->
+            vm.user?.let { user ->
               if (!user.headerWasPressed) {
                 user.headerWasPressed = true
-                repository.updateUser(user)
+                vm.repository.updateUser(user)
               }
             }
           }
@@ -396,39 +329,4 @@ class ApplicationsFragment: Fragment() {
     }
   }
 
-  private fun serviceDoAction (action: Actions) {
-    if (getServiceState(mainActivity) == ServiceState.STOPPED && action == Actions.STOP) return
-
-    Intent(mainActivity, PollService::class.java).also {
-      it.action = action.name
-
-      //val contextJson = Gson().toJson(requireContext())
-      //val viewJson = Gson().toJson(rootView)
-
-      //it.putExtra(CONTEXT_ARG, contextJson)
-      //it.putExtra(VIEW_ARG, viewJson)
-
-      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-        log("Starting the service in >=26 Mode")
-        mainActivity.startForegroundService(it)
-        return
-      }
-      log("Starting the service in < 26 Mode")
-      mainActivity.startService(it)
-    }
-  }
-
-  private fun bindService() {
-    val intent = Intent(mainActivity, PollService::class.java)
-    mainActivity.bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE)
-    serviceIsBound = true
-  }
-
-  private fun unbindService() {
-    serviceIsBound?.let {
-      if (it) {
-        mainActivity.unbindService(serviceConnection)
-      }
-    }
-  }
 }
