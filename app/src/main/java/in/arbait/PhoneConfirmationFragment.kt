@@ -81,7 +81,7 @@ class PhoneConfirmationFragment (private val user: User): Fragment(), View.OnCli
 
     server.verifyUser(code) { response ->
       val verifyUser = VerifyUser(response)
-      when (response.code) {
+      when (response.type) {
         SERVER_OK     -> verifyUser.doOnServerOkResult()
         SYSTEM_ERROR  -> verifyUser.doOnSystemError()
         SERVER_ERROR  -> verifyUser.doOnServerError()
@@ -108,12 +108,14 @@ class PhoneConfirmationFragment (private val user: User): Fragment(), View.OnCli
       )
       showErrorBalloon(requireContext(), etCode, errorStr)
     }
+
+    override fun doOnEndSessionError() {}
   }
 
   private fun onClickRequestCallButton() {
     server.getIncomingCall { response ->
       val requestCall = RequestCall(response)
-      when (response.code) {
+      when (response.type) {
         SERVER_OK     -> requestCall.doOnServerOkResult()
         SYSTEM_ERROR  -> requestCall.doOnSystemError()
         SERVER_ERROR  -> requestCall.doOnServerError()
@@ -129,9 +131,8 @@ class PhoneConfirmationFragment (private val user: User): Fragment(), View.OnCli
       repository.updateUser(user)
     }
 
-    override fun doOnServerFieldValidationError(response: Response) {
-
-    }
+    override fun doOnServerFieldValidationError(response: Response) {}
+    override fun doOnEndSessionError() {}
   }
 
 }

@@ -1,20 +1,11 @@
 package `in`.arbait
 
-import androidx.lifecycle.ViewModelProvider
-import `in`.arbait.database.User
-import `in`.arbait.http.*
-import `in`.arbait.http.polling_service.*
+import `in`.arbait.http.poll_service.*
 import `in`.arbait.models.ApplicationItem
 import `in`.arbait.models.LiveDataAppItem
 import android.annotation.SuppressLint
-import android.content.ComponentName
-import android.content.Context
-import android.content.Intent
-import android.content.ServiceConnection
 import android.graphics.Color
-import android.os.Build
 import android.os.Bundle
-import android.os.IBinder
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
@@ -22,16 +13,12 @@ import android.view.ViewGroup
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.LiveData
 import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.core.content.ContextCompat
-import androidx.lifecycle.MutableLiveData
 import androidx.recyclerview.widget.ConcatAdapter
 import androidx.recyclerview.widget.DividerItemDecoration
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
 
 const val DATE_FORMAT = "yyyy-MM-dd"
 const val APP_ARG = "application_live_data"
@@ -58,8 +45,9 @@ class ApplicationsFragment: Fragment() {
   private lateinit var rvApps: RecyclerView
   private var adapter: AppAdapter = AppAdapter(emptyList())
 
-  val vm: ApplicationsViewModel by lazy {
-    ViewModelProvider(this).get(ApplicationsViewModel::class.java)
+  private val vm: PollServerViewModel by lazy {
+    val mainActivity = requireActivity() as MainActivity
+    mainActivity.pollServerViewModel
   }
 
   override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
@@ -77,11 +65,7 @@ class ApplicationsFragment: Fragment() {
     rvApps.addItemDecoration(DividerItemDecoration(context, DividerItemDecoration.VERTICAL))
     rvApps.addItemDecoration(divider)
 
-    vm.mainActivity = requireActivity() as MainActivity
-    vm.viewLifecycleOwner = viewLifecycleOwner
-    vm.doOnFailure = {  response: Response ->
-      ReactionOnResponse.doOnFailure(response, requireContext(), rootView)
-    }
+    vm.setContextValues(requireContext(), rootView, viewLifecycleOwner)
 
     // заявки считываются с сервера нашим бесконечным PollService'ом
     vm.serviceDoAction(Actions.START)
@@ -106,9 +90,9 @@ class ApplicationsFragment: Fragment() {
     super.onViewCreated(view, savedInstanceState)
 
     val actionBar = (requireActivity() as AppCompatActivity).supportActionBar
-    val title = getString(R.string.app_name)
+    val appName = getString(R.string.app_name)
     val apps = getString(R.string.apps_action_bar_title)
-    actionBar?.title = "$title - $apps"
+    actionBar?.title = "$appName - $apps"
   }
 
   override fun onDestroy() {

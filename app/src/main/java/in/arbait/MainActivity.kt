@@ -1,16 +1,13 @@
 package `in`.arbait
 
 import `in`.arbait.database.User
-import `in`.arbait.http.ReactionOnResponse
-import `in`.arbait.http.Response
-import `in`.arbait.models.ApplicationItem
 import `in`.arbait.http.sessionIsAlive
 import `in`.arbait.models.LiveDataAppItem
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.LiveData
+import androidx.lifecycle.ViewModelProvider
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 
@@ -20,16 +17,19 @@ private const val TAG = "MainActivity"
 
 class MainActivity : AppCompatActivity() {
 
-  private lateinit var repository: UserRepository
+  val pollServerViewModel: PollServerViewModel by lazy {
+    ViewModelProvider(this).get(PollServerViewModel::class.java)
+  }
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     setContentView(R.layout.activity_main)
 
-    repository = UserRepository.get()
+    pollServerViewModel.mainActivity = this
 
     GlobalScope.launch {
-      val lastUser: User? = repository.getUserLastByDate()
+      pollServerViewModel.user = pollServerViewModel.repository.getUserLastByDate()
+      val lastUser: User? = pollServerViewModel.user
       Log.i (TAG, "Repository.getUserLastByDate(): $lastUser")
 
       val currentFragment = supportFragmentManager.findFragmentById(R.id.fragment_container)
@@ -62,10 +62,10 @@ class MainActivity : AppCompatActivity() {
       }
       "Application" -> {
         val liveDataAppItem = args.getSerializable(APP_ARG) as LiveDataAppItem
-        val viewModel = args.getSerializable(VIEW_MODEL_ARG) as ApplicationsViewModel
+        val viewModel = args.getSerializable(VIEW_MODEL_ARG) as PollServerViewModel
         Log.i (TAG, "MainActivity: LIVE_DATA, liveData = ${liveDataAppItem.lvdAppItem}, " +
             "value = ${liveDataAppItem.lvdAppItem.value}")
-        ApplicationFragment(liveDataAppItem.lvdAppItem, viewModel)
+        ApplicationFragment(liveDataAppItem.lvdAppItem)
       }
       "Applications" -> ApplicationsFragment()
       else -> RegistrationFragment()

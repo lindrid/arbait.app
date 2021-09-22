@@ -1,12 +1,11 @@
 package `in`.arbait.http
 
-import `in`.arbait.App
-import `in`.arbait.R
-import `in`.arbait.internetIsAvailable
-import `in`.arbait.showErrorBalloon
+import `in`.arbait.*
 import android.content.Context
 import android.util.Log
 import android.view.View
+
+const val END_SESSION_ERROR_CODE = 100
 
 abstract class ReactionOnResponse (
   private val TAG: String,
@@ -17,6 +16,7 @@ abstract class ReactionOnResponse (
 
   abstract fun doOnServerOkResult()
   abstract fun doOnServerFieldValidationError(response: Response)
+  abstract fun doOnEndSessionError()
 
   fun doOnServerError() {
     if (response.isItValidationError) {
@@ -26,10 +26,17 @@ abstract class ReactionOnResponse (
     }
 
     if (response.isItErrorWithCode) {
-      Log.i (TAG, "Error_with_code: ${response.message}")
-      response.message?.let {
-        showErrorBalloon(context, view, it)
+      Log.i (TAG, "Response type ${response.type}, message: ${response.message}")
+
+      if (response.code == END_SESSION_ERROR_CODE) {
+        doOnEndSessionError()
         return
+      }
+      else {
+        response.message?.let {
+          showErrorBalloon(context, view, it)
+          return
+        }
       }
     }
 
@@ -65,7 +72,7 @@ abstract class ReactionOnResponse (
 
   companion object {
     fun doOnFailure (response: Response, context: Context, view: View) {
-      when (response.code) {
+      when (response.type) {
         SYSTEM_ERROR -> {
           if (!internetIsAvailable()) {
             showErrorBalloon(context, view, R.string.internet_is_not_available)

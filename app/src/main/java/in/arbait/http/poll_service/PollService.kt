@@ -1,4 +1,4 @@
-package `in`.arbait.http.polling_service
+package `in`.arbait.http.poll_service
 
 import `in`.arbait.*
 import `in`.arbait.models.ApplicationItem
@@ -75,7 +75,7 @@ class PollService : LifecycleService() {
         appsResponse?.let {
           log("OBSERVER , firstTime = $firstTime")
           val response = it.response
-          if (response.code == SERVER_OK) {
+          if (response.type == SERVER_OK) {
             val openAppsFromServer = it.openApps
             log("openAppsFromServer = $openAppsFromServer")
             if (openAppsFromServer.isNotEmpty()) {

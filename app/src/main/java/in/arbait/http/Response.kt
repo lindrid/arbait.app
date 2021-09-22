@@ -4,14 +4,12 @@ import android.util.Log
 import okhttp3.ResponseBody
 import org.json.JSONObject
 import retrofit2.Response
-import java.lang.reflect.InvocationTargetException
-import android.R.string
-import java.net.URLDecoder
 
 
 private const val TAG = "http.Response"
 private const val ROOT_VALIDATION_ERROR_JSON_STR = "errors"
-private const val ROOT_ERROR_WITH_CODE_MSG = "error_msg"
+private const val ROOT_ERROR_MSG = "error_msg"
+private const val ROOT_ERROR_CODE = "error_code"
 
 const val SYSTEM_ERROR = 0
 const val SERVER_OK = 1
@@ -19,10 +17,13 @@ const val SERVER_ERROR = 2
 
 class Response {
 
-  var code: Int? = null
+  var type: Int? = null
     private set
 
   var message: String? = null
+    private set
+
+  var code: Int? = null
     private set
 
   var isItValidationError = false
@@ -34,18 +35,21 @@ class Response {
   var errorValidationField = ""
     private set
 
+  var noResult = false
+    private set
 
   constructor() {
-    code = SERVER_OK
+    type = SERVER_OK
+    noResult = true
   }
 
   constructor (response: Response<String>) {
-    code = SERVER_OK
+    type = SERVER_OK
     message = response.body()
   }
 
   constructor (errorBody: ResponseBody, errorCode: Int) {
-    code = SERVER_ERROR
+    type = SERVER_ERROR
     // после первого обращения к errorBody.string(), далее
     // эта команда будет возвращать всегда пустую строку (или null)
     val errorBodyStr = errorBody.string()
@@ -65,9 +69,10 @@ class Response {
         return
       }
 
-      isItErrorWithCode = obj.has(ROOT_ERROR_WITH_CODE_MSG)
+      isItErrorWithCode = obj.has(ROOT_ERROR_MSG)
       if (isItErrorWithCode) {
-        message = obj.getString(ROOT_ERROR_WITH_CODE_MSG)
+        message = obj.getString(ROOT_ERROR_MSG)
+        code = obj.getInt(ROOT_ERROR_CODE)
         return
       }
     }
@@ -77,7 +82,7 @@ class Response {
   }
 
   constructor (t: Throwable) {
-    code = SYSTEM_ERROR
+    type = SYSTEM_ERROR
     message = t.message
   }
 

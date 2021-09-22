@@ -10,6 +10,7 @@ import android.view.ViewGroup
 import android.widget.Button
 import android.widget.EditText
 import android.widget.TextView
+import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
 import java.util.*
@@ -157,6 +158,14 @@ class RegistrationFragment : Fragment() {
     return view
   }
 
+  override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+    super.onViewCreated(view, savedInstanceState)
+
+    val actionBar = (requireActivity() as AppCompatActivity).supportActionBar
+    val appName = getString(R.string.app_name)
+    actionBar?.title = "$appName"
+  }
+
 
   private fun setRegistrationFieldsListeners (withoutBirthDate: Boolean = false) {
     registrationFields.forEach { field ->
@@ -200,7 +209,7 @@ class RegistrationFragment : Fragment() {
   }
 
   private fun onResult (response: Response) {
-    when (response.code) {
+    when (response.type) {
       SERVER_OK     -> RegisterReaction(response).doOnServerOkResult()
       SYSTEM_ERROR  -> RegisterReaction(response).doOnSystemError()
       SERVER_ERROR  -> RegisterReaction(response).doOnServerError()
@@ -250,6 +259,8 @@ class RegistrationFragment : Fragment() {
         }
       }
     }
+
+    override fun doOnEndSessionError() {}
   }
 
   private fun inputFieldsAreValid(user: User): Boolean {

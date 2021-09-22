@@ -1,4 +1,4 @@
-package `in`.arbait.http.polling_service
+package `in`.arbait.http.poll_service
 
 import android.content.BroadcastReceiver
 import android.content.Context

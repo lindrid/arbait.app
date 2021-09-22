@@ -2,7 +2,7 @@ package `in`.arbait
 
 import `in`.arbait.database.User
 import `in`.arbait.http.*
-import `in`.arbait.http.polling_service.*
+import `in`.arbait.http.poll_service.*
 import `in`.arbait.models.ApplicationItem
 import android.content.ComponentName
 import android.content.Context
@@ -11,21 +11,31 @@ import android.content.ServiceConnection
 import android.os.Build
 import android.os.IBinder
 import android.util.Log
+import android.view.View
 import androidx.lifecycle.*
+import androidx.lifecycle.Observer
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import java.io.Serializable
 
 private const val TAG = "ApplicationsViewModel"
 
-class ApplicationsViewModel: ViewModel(), Serializable {
+class PollServerViewModel: ViewModel(), Serializable {
+
+  val repository = UserRepository.get()
+
+  /* инициализируются в MainActivity */
 
   lateinit var mainActivity: MainActivity
-  lateinit var viewLifecycleOwner: LifecycleOwner
-  lateinit var doOnFailure: (Response) -> Unit
-
   var user: User? = null
-  val repository = UserRepository.get()
+
+  /* инициализируются в текущем фрагменте */
+
+  lateinit var context: Context
+  lateinit var rootView: View
+  lateinit var viewLifecycleOwner: LifecycleOwner
+
+  /* ******************************* */
 
   var pollService: PollService? = null
   var serviceIsBound: Boolean? = null
@@ -45,7 +55,7 @@ class ApplicationsViewModel: ViewModel(), Serializable {
       pollService?.let {
         appsResponse = it.appsResponse
       }
-      setObservers()
+      setAppsResponseObserver()
     }
 
     override fun onServiceDisconnected(arg0: ComponentName) {
@@ -54,10 +64,11 @@ class ApplicationsViewModel: ViewModel(), Serializable {
     }
   }
 
-  init {
-    GlobalScope.launch {
-      user = repository.getUserLastByDate()
-    }
+  // вызывать в текущем фрагменте в onCreate
+  fun setContextValues (context: Context, rootView: View, viewLifecycleOwner: LifecycleOwner) {
+    this.context = context
+    this.rootView = rootView
+    this.viewLifecycleOwner = viewLifecycleOwner
   }
 
   fun serviceDoAction (action: Actions) {
@@ -90,36 +101,18 @@ class ApplicationsViewModel: ViewModel(), Serializable {
     }
   }
 
-  fun setObservers() {
+  fun setAppsResponseObserver() {
     appsResponse.observe(viewLifecycleOwner,
       Observer { appsResponse ->
         Log.i (TAG, "response")
         appsResponse?.let {
           val response = it.response
-          Log.i (TAG, "CODE: ${response.code}")
-          if (response.code == SERVER_OK) {
-            if ((openApps.value == null) || openAppsDifferFrom(it.openApps)) {
-              openApps.value = it.openApps
-            }
-            for (i in it.openApps.indices) {
-              val appId = it.openApps[i].id
-              if (lvdOpenApps.containsKey(appId)) {
-                lvdOpenApps[appId]?.let { lvdApp ->
-                  Log.i(TAG, "LIVE_DATA, appId = $appId, liveData = $lvdApp, " +
-                      "value = ${lvdApp.value}")
-                  lvdApp.value = it.openApps[i]
-                  Log.i (TAG, "NEW_LIVE_DATA, appId = $appId, liveData = $lvdApp, " +
-                      "value = ${lvdApp.value}")
-                }
-              }
-              else {
-                val lvdValue = MutableLiveData<ApplicationItem>(it.openApps[i])
-                lvdOpenApps[appId] = lvdValue
-              }
-            }
-          }
-          else {
-            doOnFailure(response)
+          Log.i (TAG, "CODE: ${response.type}")
+
+          when (response.type) {
+            SERVER_OK     -> PollServerReaction(response).doOnServerOkResult(it)
+            SYSTEM_ERROR  -> PollServerReaction(response).doOnSystemError()
+            SERVER_ERROR  -> PollServerReaction(response).doOnServerError()
           }
         }
       }
@@ -129,4 +122,55 @@ class ApplicationsViewModel: ViewModel(), Serializable {
   private fun openAppsDifferFrom (openApps: List<ApplicationItem>): Boolean {
     return listsAreDifferent(this.openApps.value!!, openApps)
   }
+
+  private inner class PollServerReaction (response: Response):
+    ReactionOnResponse (TAG, context, rootView, response) {
+
+    fun doOnServerOkResult(appsResponse: ApplicationsResponse) {
+      var openAppsIsEmpty = false
+      openApps.value?.let { value ->
+        openAppsIsEmpty = value.isEmpty()
+      }
+      if ((openApps.value == null) || openAppsIsEmpty || openAppsDifferFrom(appsResponse.openApps)) {
+        openApps.value = appsResponse.openApps
+      }
+      for (i in appsResponse.openApps.indices) {
+        val appId = appsResponse.openApps[i].id
+        if (lvdOpenApps.containsKey(appId)) {
+          lvdOpenApps[appId]?.let { lvdApp ->
+            Log.i(TAG, "LIVE_DATA, appId = $appId, liveData = $lvdApp, " +
+                "value = ${lvdApp.value}")
+
+            lvdApp.value = appsResponse.openApps[i]
+
+            Log.i (TAG, "NEW_LIVE_DATA, appId = $appId, liveData = $lvdApp, " +
+                "value = ${lvdApp.value}")
+          }
+        }
+        else {
+          val lvdValue = MutableLiveData<ApplicationItem>(appsResponse.openApps[i])
+          lvdOpenApps[appId] = lvdValue
+        }
+      }
+    }
+
+    override fun doOnServerOkResult() {}
+
+    override fun doOnServerFieldValidationError(response: Response) {}
+
+    override fun doOnEndSessionError() {
+      Log.i (TAG, "doOnEndSessionError()")
+
+      user?.let {
+        it.login = false
+        repository.updateUser(it)
+      }
+
+      unbindService()
+      serviceDoAction(Actions.STOP)
+
+      mainActivity.replaceOnFragment("RegistrationFragment")
+    }
+  }
+
 }

@@ -82,5 +82,6 @@
     <string name="app_enroll">Записаться</string>
     <string name="app_call_client">Позвонить заказчику</string>
     <string name="app_back">Назад</string>
+    <string name="app_action_bar_title">Заявка</string>
 
 </resources>

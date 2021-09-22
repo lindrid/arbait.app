@@ -17,7 +17,7 @@
         android:name=".App"
     >
         <service
-            android:name=".http.polling_service.PollService"
+            android:name=".http.poll_service.PollService"
             android:enabled="true"
             android:exported="false">
         </service>
@@ -32,7 +32,7 @@
             </intent-filter>
         </activity>
 
-        <receiver android:enabled="true" android:name=".http.polling_service.StartReceiver">
+        <receiver android:enabled="true" android:name=".http.poll_service.StartReceiver">
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED"/>
             </intent-filter>
