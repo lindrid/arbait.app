@@ -65,7 +65,7 @@ class ApplicationsFragment: Fragment() {
     rvApps.addItemDecoration(DividerItemDecoration(context, DividerItemDecoration.VERTICAL))
     rvApps.addItemDecoration(divider)
 
-    vm.setContextValues(requireContext(), rootView, viewLifecycleOwner)
+    vm.rootView = rootView
 
     // заявки считываются с сервера нашим бесконечным PollService'ом
     vm.serviceDoAction(Actions.START)
@@ -116,7 +116,7 @@ class ApplicationsFragment: Fragment() {
 
       if (tomorrowApps.isNotEmpty()) {
         val appsCount = tomorrowApps.size
-        val tomorrowHeaderText = when (vm.user?.headerWasPressed) {
+        val tomorrowHeaderText = when (App.user?.headerWasPressed) {
           true -> getString(R.string.apps_tomorrow_no_press, appsCount)
           false -> getString(R.string.apps_tomorrow, appsCount)
           null -> ""
@@ -210,14 +210,15 @@ class ApplicationsFragment: Fragment() {
       Log.i ("AppHolder", "onClick()")
       app?.let { app ->
         Log.i ("AppHolder", "app is not null")
-        vm.lvdOpenApps[app.id]?.let {  lvdAppItem ->
+        //vm.lvdOpenApps[app.id]?.let {  lvdAppItem ->
           val args = Bundle().apply {
-            putSerializable(APP_ARG, LiveDataAppItem(lvdAppItem))
-            putSerializable(VIEW_MODEL_ARG, vm)
+            putInt(APP_ARG, app.id)
+            //putSerializable(APP_ARG, LiveDataAppItem(lvdAppItem))
+            //putSerializable(VIEW_MODEL_ARG, vm)
           }
           val mainActivity = context as MainActivity
           mainActivity.replaceOnFragment("Application", args)
-        }
+        //}
       }
     }
   }
@@ -297,10 +298,10 @@ class ApplicationsFragment: Fragment() {
           showTomorrowApps = !showTomorrowApps
           vm.openApps.value?.let {
             updateUI(it)
-            vm.user?.let { user ->
+            App.user?.let { user ->
               if (!user.headerWasPressed) {
                 user.headerWasPressed = true
-                vm.repository.updateUser(user)
+                App.repository.updateUser(user)
               }
             }
           }

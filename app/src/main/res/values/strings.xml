@@ -15,6 +15,8 @@
     <string name="show">Показать</string>
     <string name="collapse">Свернуть</string>
 
+    <string name="done">Готово</string>
+
     <!-- Фрагмент регистрации -->
     <string name="reg_registration">Регистрация</string>
     <string name="reg_first_name">Имя</string>
@@ -23,7 +25,6 @@
     <string name="reg_b_same">Тот же</string>
     <string name="reg_birth_date">Дата рождения</string>
     <string name="reg_age">Возраст (полных лет)</string>
-    <string name="reg_done">Готово</string>
     <string name="reg_debit_card">Карта/телефон</string>
     <string name="reg_wrong_debit_card">Введите правильный номер карты или телефона, привязанного к карте</string>
     <string name="reg_dialog_cancel">Отмена</string>
@@ -80,8 +81,14 @@
     <string name="app_cash">наличные</string>
     <string name="app_worker_count"><![CDATA[<u>Кол-во работников:</u> %s]]></string>
     <string name="app_enroll">Записаться</string>
+    <string name="app_refuse">Отказаться</string>
     <string name="app_call_client">Позвонить заказчику</string>
     <string name="app_back">Назад</string>
     <string name="app_action_bar_title">Заявка</string>
+    <string name="app_you_are_enrolled">Вы записаны</string>
+
+    <!-- LoginFragment -->
+    <string name="log_login">Войти</string>
+    <string name="log_phone">Номер телефона</string>
 
 </resources>

@@ -26,10 +26,13 @@ class MainActivity : AppCompatActivity() {
     setContentView(R.layout.activity_main)
 
     pollServerViewModel.mainActivity = this
+    pollServerViewModel.context = this
+    pollServerViewModel.viewLifecycleOwner = this
 
     GlobalScope.launch {
-      pollServerViewModel.user = pollServerViewModel.repository.getUserLastByDate()
-      val lastUser: User? = pollServerViewModel.user
+      App.user = App.repository.getUserLastByDate()
+      val lastUser: User? = App.user
+
       Log.i (TAG, "Repository.getUserLastByDate(): $lastUser")
 
       val currentFragment = supportFragmentManager.findFragmentById(R.id.fragment_container)
@@ -61,11 +64,11 @@ class MainActivity : AppCompatActivity() {
         PhoneConfirmationFragment(user)
       }
       "Application" -> {
-        val liveDataAppItem = args.getSerializable(APP_ARG) as LiveDataAppItem
-        val viewModel = args.getSerializable(VIEW_MODEL_ARG) as PollServerViewModel
-        Log.i (TAG, "MainActivity: LIVE_DATA, liveData = ${liveDataAppItem.lvdAppItem}, " +
-            "value = ${liveDataAppItem.lvdAppItem.value}")
-        ApplicationFragment(liveDataAppItem.lvdAppItem)
+        val appId = args.getInt(APP_ARG)
+        //val viewModel = args.getSerializable(VIEW_MODEL_ARG) as PollServerViewModel
+        //Log.i (TAG, "MainActivity: LIVE_DATA, liveData = ${appId.lvdAppItem}, " +
+         //   "value = ${appId.lvdAppItem.value}")
+        ApplicationFragment(appId)
       }
       "Applications" -> ApplicationsFragment()
       else -> RegistrationFragment()

@@ -22,18 +22,15 @@ private const val TAG = "ApplicationsViewModel"
 
 class PollServerViewModel: ViewModel(), Serializable {
 
-  val repository = UserRepository.get()
-
   /* инициализируются в MainActivity */
 
   lateinit var mainActivity: MainActivity
-  var user: User? = null
+  lateinit var context: Context
+  lateinit var viewLifecycleOwner: LifecycleOwner
 
   /* инициализируются в текущем фрагменте */
 
-  lateinit var context: Context
   lateinit var rootView: View
-  lateinit var viewLifecycleOwner: LifecycleOwner
 
   /* ******************************* */
 
@@ -62,13 +59,6 @@ class PollServerViewModel: ViewModel(), Serializable {
       Log.d(TAG, "ServiceConnection: disconnected from service.")
       serviceIsBound = false
     }
-  }
-
-  // вызывать в текущем фрагменте в onCreate
-  fun setContextValues (context: Context, rootView: View, viewLifecycleOwner: LifecycleOwner) {
-    this.context = context
-    this.rootView = rootView
-    this.viewLifecycleOwner = viewLifecycleOwner
   }
 
   fun serviceDoAction (action: Actions) {
@@ -130,8 +120,10 @@ class PollServerViewModel: ViewModel(), Serializable {
       var openAppsIsEmpty = false
       openApps.value?.let { value ->
         openAppsIsEmpty = value.isEmpty()
+        Log.i (TAG, "openApps.size = ${value.size}")
+        Log.i (TAG, "appsResponse.openApps.size = ${appsResponse.openApps.size}")
       }
-      if ((openApps.value == null) || openAppsIsEmpty || openAppsDifferFrom(appsResponse.openApps)) {
+      if ((openApps.value == null) || openAppsDifferFrom(appsResponse.openApps)) {
         openApps.value = appsResponse.openApps
       }
       for (i in appsResponse.openApps.indices) {
@@ -161,15 +153,15 @@ class PollServerViewModel: ViewModel(), Serializable {
     override fun doOnEndSessionError() {
       Log.i (TAG, "doOnEndSessionError()")
 
-      user?.let {
+      App.user?.let {
         it.login = false
-        repository.updateUser(it)
+        App.repository.updateUser(it)
       }
 
       unbindService()
       serviceDoAction(Actions.STOP)
 
-      mainActivity.replaceOnFragment("RegistrationFragment")
+      mainActivity.replaceOnFragment("LoginFragment")
     }
   }
 

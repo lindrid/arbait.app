@@ -35,7 +35,7 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:srcCompat="@drawable/baseline_call_24" />
+        app:srcCompat="@drawable/baseline_call_black_24" />
 
     <ImageView
         android:id="@+id/iv_porter_whatsapp"
@@ -45,6 +45,6 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toEndOf="@id/iv_porter_call"
         app:layout_constraintTop_toTopOf="parent"
-        app:srcCompat="@drawable/baseline_whatsapp_24" />
+        app:srcCompat="@drawable/baseline_whatsapp_green_24" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
