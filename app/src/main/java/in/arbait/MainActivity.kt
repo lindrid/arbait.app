@@ -2,7 +2,6 @@ package `in`.arbait
 
 import `in`.arbait.database.User
 import `in`.arbait.http.sessionIsAlive
-import `in`.arbait.models.LiveDataAppItem
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
@@ -64,10 +63,7 @@ class MainActivity : AppCompatActivity() {
         PhoneConfirmationFragment(user)
       }
       "Application" -> {
-        val appId = args.getInt(APP_ARG)
-        //val viewModel = args.getSerializable(VIEW_MODEL_ARG) as PollServerViewModel
-        //Log.i (TAG, "MainActivity: LIVE_DATA, liveData = ${appId.lvdAppItem}, " +
-         //   "value = ${appId.lvdAppItem.value}")
+        val appId = args.getInt(APP_ID_ARG)
         ApplicationFragment(appId)
       }
       "Applications" -> ApplicationsFragment()

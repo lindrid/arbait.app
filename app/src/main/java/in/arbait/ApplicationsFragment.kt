@@ -2,7 +2,6 @@ package `in`.arbait
 
 import `in`.arbait.http.poll_service.*
 import `in`.arbait.models.ApplicationItem
-import `in`.arbait.models.LiveDataAppItem
 import android.annotation.SuppressLint
 import android.graphics.Color
 import android.os.Bundle
@@ -21,7 +20,7 @@ import androidx.recyclerview.widget.ConcatAdapter
 import androidx.recyclerview.widget.DividerItemDecoration
 
 const val DATE_FORMAT = "yyyy-MM-dd"
-const val APP_ARG = "application_live_data"
+const val APP_ID_ARG = "application_id"
 const val VIEW_MODEL_ARG = "applications_view_model"
 
 private const val TAG = "ApplicationsFragment"
@@ -210,15 +209,11 @@ class ApplicationsFragment: Fragment() {
       Log.i ("AppHolder", "onClick()")
       app?.let { app ->
         Log.i ("AppHolder", "app is not null")
-        //vm.lvdOpenApps[app.id]?.let {  lvdAppItem ->
-          val args = Bundle().apply {
-            putInt(APP_ARG, app.id)
-            //putSerializable(APP_ARG, LiveDataAppItem(lvdAppItem))
-            //putSerializable(VIEW_MODEL_ARG, vm)
-          }
-          val mainActivity = context as MainActivity
-          mainActivity.replaceOnFragment("Application", args)
-        //}
+        val args = Bundle().apply {
+          putInt(APP_ID_ARG, app.id)
+        }
+        val mainActivity = context as MainActivity
+        mainActivity.replaceOnFragment("Application", args)
       }
     }
   }
