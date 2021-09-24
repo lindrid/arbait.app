@@ -1,6 +1,7 @@
 package `in`.arbait
 
 import `in`.arbait.models.ApplicationItem
+import `in`.arbait.models.DebitCardItem
 import `in`.arbait.models.PhoneItem
 import `in`.arbait.models.PorterItem
 import android.os.Bundle
@@ -35,6 +36,7 @@ const val PM_CASH = 2
 
 class ApplicationFragment (private val appId: Int): Fragment() {
 
+  private var porter: PorterItem? = null
   private var enroll = false
   private lateinit var lvdAppItem: MutableLiveData<ApplicationItem>
 
@@ -63,17 +65,21 @@ class ApplicationFragment (private val appId: Int): Fragment() {
 
     Log.i (TAG, "OnCreate()")
 
+    setViews(view)
+
     vm.rootView = view
     vm.lvdOpenApps[appId]?.let {
       lvdAppItem = it
+      it.value?.let { appItem ->
+        Log.i (TAG, "set:lvdAppItem")
+        porter = getThisUserPorter(appItem)
+        updateUI()
+      }
     }
 
-    setViews(view)
-    setViewsTexts()
+    Log.i (TAG, "Porter= $porter")
 
     rvPorters.layoutManager = LinearLayoutManager(context)
-
-    updatePorters()
     setAppObserver()
     setVisibility(enroll, view)
 
@@ -150,10 +156,33 @@ class ApplicationFragment (private val appId: Int): Fragment() {
       Observer { appItem ->
         Log.i ("appItem", "updateUI()")
         appItem?.let {
+          porter = getThisUserPorter(it)
           updateUI()
         }
       }
     )
+  }
+
+  private fun getThisUserPorter(app: ApplicationItem): PorterItem? {
+    var porter: PorterItem? = null
+    App.user?.let { user ->
+      for (i in app.porters.indices) {
+        val phones = app.porters[i].user.phones
+        var mainPhone = phones[0]
+        for (j in phones.indices) {
+          if (phones[j].usedInRegistration) {
+            mainPhone = phones[j]
+            break
+          }
+        }
+        Log.i (TAG, "user.phone=${user.phone}, mainPhone=$mainPhone")
+        if (user.phone == mainPhone.number) {
+          porter = app.porters[i]
+          break
+        }
+      }
+    }
+    return porter
   }
 
   private fun updateUI() {
@@ -206,8 +235,9 @@ class ApplicationFragment (private val appId: Int): Fragment() {
 
       tvDescription.text = Html.fromHtml(getString(R.string.app_description, appItem.whatToDo))
 
+      val debitCardNumber = getDebitCardNumber()
       val payMethod = if (appItem.payMethod == PM_CARD)
-        getString(R.string.app_on_card)
+        "${getString(R.string.app_on_card)} $debitCardNumber"
       else
         getString(R.string.app_cash)
       tvPayMethod.text = Html.fromHtml(getString(R.string.app_pay_method, payMethod))
@@ -215,9 +245,35 @@ class ApplicationFragment (private val appId: Int): Fragment() {
       val workers = "${appItem.workerCount} / ${appItem.workerTotal}"
       tvPortersCount.text = Html.fromHtml(getString(R.string.app_worker_count, workers))
 
-      btEnrollRefuse.text = getString(R.string.app_enroll)
+      btEnrollRefuse.text = if (enroll)
+        getString(R.string.app_refuse)
+      else
+        getString(R.string.app_enroll)
       //btCallClient.visibility = View.INVISIBLE
     }
+  }
+
+  private fun getDebitCardNumber(): String {
+    val dc = getMainDebitCard()
+    var dcStr = getString(R.string.app_no_card)
+    dc?.let {
+      dcStr = it.number
+    }
+    return dcStr
+  }
+
+  private fun getMainDebitCard(): DebitCardItem? {
+    var dc: DebitCardItem? = null
+    porter?.let {
+      val cards = it.user.debitCards
+      for (i in cards.indices) {
+        if (cards[i].main) {
+          dc = cards[i]
+          break
+        }
+      }
+    }
+    return dc
   }
 
   private inner class PorterHolder (view: View) : RecyclerView.ViewHolder(view) {
