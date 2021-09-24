@@ -7,6 +7,7 @@ import java.util.*
 
 @Entity
 data class User (
+  var id: Int,
   @PrimaryKey var phone: String,
   var callReceived: Boolean = false,
   var isConfirmed: Boolean = false,

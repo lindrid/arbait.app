@@ -32,6 +32,12 @@ class MainActivity : AppCompatActivity() {
       App.user = App.repository.getUserLastByDate()
       val lastUser: User? = App.user
 
+     /* App.user?.let {
+        it.id = 9
+        it.login = true
+        App.repository.updateUser(it)
+      }*/
+
       Log.i (TAG, "Repository.getUserLastByDate(): $lastUser")
 
       val currentFragment = supportFragmentManager.findFragmentById(R.id.fragment_container)
@@ -40,11 +46,16 @@ class MainActivity : AppCompatActivity() {
         var fragment: Fragment = RegistrationFragment()
 
         if (lastUser != null) {
-          if (lastUser.isConfirmed) {
-            fragment = ApplicationsFragment()
+          if (lastUser.login) {
+            if (lastUser.isConfirmed) {
+              fragment = ApplicationsFragment()
+            }
           }
           else if (sessionIsAlive(lastUser.createdAt)) {
             fragment = PhoneConfirmationFragment(lastUser)
+          }
+          else {
+            fragment = LoginFragment()
           }
         }
 

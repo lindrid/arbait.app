@@ -73,6 +73,9 @@ class ApplicationFragment (private val appId: Int): Fragment() {
       it.value?.let { appItem ->
         Log.i (TAG, "set:lvdAppItem")
         porter = getThisUserPorter(appItem)
+        porter?.let {
+          enroll = true
+        }
         updateUI()
       }
     }
@@ -85,6 +88,10 @@ class ApplicationFragment (private val appId: Int): Fragment() {
 
     btEnrollRefuse.setOnClickListener {
       onEnrollRefuseBtnClick(view)
+    }
+
+    btBack.setOnClickListener {
+      vm.mainActivity.replaceOnFragment("Applications")
     }
 
     return view
@@ -167,16 +174,8 @@ class ApplicationFragment (private val appId: Int): Fragment() {
     var porter: PorterItem? = null
     App.user?.let { user ->
       for (i in app.porters.indices) {
-        val phones = app.porters[i].user.phones
-        var mainPhone = phones[0]
-        for (j in phones.indices) {
-          if (phones[j].usedInRegistration) {
-            mainPhone = phones[j]
-            break
-          }
-        }
-        Log.i (TAG, "user.phone=${user.phone}, mainPhone=$mainPhone")
-        if (user.phone == mainPhone.number) {
+        if (user.id == app.porters[i].user.id) {
+          Log.i (TAG, "user.id=${user.id}")
           porter = app.porters[i]
           break
         }
@@ -236,10 +235,17 @@ class ApplicationFragment (private val appId: Int): Fragment() {
       tvDescription.text = Html.fromHtml(getString(R.string.app_description, appItem.whatToDo))
 
       val debitCardNumber = getDebitCardNumber()
-      val payMethod = if (appItem.payMethod == PM_CARD)
-        "${getString(R.string.app_on_card)} $debitCardNumber"
-      else
-        getString(R.string.app_cash)
+      val payMethod = when (appItem.payMethod) {
+        PM_CARD -> {
+          if (enroll)
+            "${getString(R.string.app_on_card)} $debitCardNumber"
+          else
+            getString(R.string.app_on_card)
+        }
+        PM_CASH -> getString(R.string.app_cash)
+        else -> ""
+      }
+
       tvPayMethod.text = Html.fromHtml(getString(R.string.app_pay_method, payMethod))
 
       val workers = "${appItem.workerCount} / ${appItem.workerTotal}"

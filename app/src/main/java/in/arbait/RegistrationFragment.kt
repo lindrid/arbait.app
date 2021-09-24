@@ -222,6 +222,7 @@ class RegistrationFragment : Fragment() {
     override fun doOnServerOkResult() {
       val now = Calendar.getInstance().time
       val user = `in`.arbait.database.User(
+        0,
         etPhone.text.toString(),
         isConfirmed = false,
         login = false,

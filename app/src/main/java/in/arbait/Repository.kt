@@ -13,7 +13,10 @@ class UserRepository private constructor(context: Context) {
     context.applicationContext,
     UserDatabase::class.java,
     DATABASE_NAME
-  ).addMigrations(migration_1_2, migration_2_3, migration_3_4).build()
+  ).addMigrations (
+    migration_1_2, migration_2_3, migration_3_4,
+    migration_4_5
+  ).build()
 
   private val userDao = database.userDao()
   private val executor = Executors.newSingleThreadExecutor()
