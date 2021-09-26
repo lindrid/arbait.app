@@ -26,6 +26,8 @@ private const val TAG = "Utils"
 
 val MANUFACTURER: String = Build.MANUFACTURER
 val VERSION: String = Build.VERSION.RELEASE
+val DEFAULT_EDITTEXT_EMERALD_COLOR = Color.parseColor("#02dac5")
+
 
 private const val CENTURY_21_YEAR_UP_TO = 21
 private const val CENTURY_20_YEAR_UP_TO = 99

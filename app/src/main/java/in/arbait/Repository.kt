@@ -3,6 +3,7 @@ package `in`.arbait
 import `in`.arbait.database.*
 import android.content.Context
 import androidx.room.Room
+import java.util.*
 import java.util.concurrent.Executors
 
 private const val DATABASE_NAME = "user-database"
@@ -15,7 +16,7 @@ class UserRepository private constructor(context: Context) {
     DATABASE_NAME
   ).addMigrations (
     migration_1_2, migration_2_3, migration_3_4,
-    migration_4_5
+    migration_4_5, migration_5_6, migration_6_7
   ).build()
 
   private val userDao = database.userDao()
@@ -30,6 +31,8 @@ class UserRepository private constructor(context: Context) {
   }
 
   fun updateUser (user: User) {
+    val now = Calendar.getInstance().time
+    user.updatedAt = now
     executor.execute {
       userDao.updateUser(user)
     }

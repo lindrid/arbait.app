@@ -37,9 +37,6 @@ private const val WORKER_AGE_UP_TO = 65
 private const val FIRST_NAME_MIN_LENGTH = 2
 private const val FIRST_NAME_MAX_LENGTH = 20
 
-private val DEFAULT_EDITTEXT_EMERALD_COLOR = Color.parseColor("#02dac5")
-
-
 class RegistrationFragment : Fragment() {
 
   private lateinit var server: Server
@@ -77,9 +74,10 @@ class RegistrationFragment : Fragment() {
   ): View? {
     val view = inflater.inflate(R.layout.fragment_registration, container, false)
     supportFragmentManager = requireActivity().supportFragmentManager
+    server = Server(requireContext())
+    this.rootView = view
 
     tvRegistration = view.findViewById(R.id.tv_reg_registration)
-
     etFirstName = view.findViewById(R.id.et_reg_first_name)
     etBirthDate = view.findViewById(R.id.et_reg_birth_date)
     etPhone = view.findViewById(R.id.et_reg_phone) as MonitoringEditText
@@ -153,8 +151,6 @@ class RegistrationFragment : Fragment() {
       setRegistrationFieldsListeners()
     }
 
-    server = Server(requireContext())
-    this.rootView = view
     return view
   }
 
@@ -226,11 +222,12 @@ class RegistrationFragment : Fragment() {
         etPhone.text.toString(),
         isConfirmed = false,
         login = false,
+        isItRegistration = true,
         createdAt = now
       )
       repository.addUser(user)
       val args = Bundle().apply {
-        putSerializable(USER_ARG, user)
+        putBoolean(VERIFY_FOR_LOGIN_ARG, false)
       }
       val mainActivity = context as MainActivity
       mainActivity.replaceOnFragment("PhoneConfirmation", args)
@@ -271,7 +268,7 @@ class RegistrationFragment : Fragment() {
     }
 
     if (user.phone.isNullOrEmpty()) {
-      return doWhenFieldEmptyOrWrong(etPhone, R.string.reg_empty_phone,
+      return doWhenFieldEmptyOrWrong(etPhone, R.string.empty_phone,
         "Укажите номер телефона!")
     }
 
@@ -340,7 +337,7 @@ class RegistrationFragment : Fragment() {
     }
 
     if (!phoneNumberIsValid(user.phone, "RU", TAG)) {
-      return doWhenFieldEmptyOrWrong(etPhone, R.string.reg_wrong_phone,
+      return doWhenFieldEmptyOrWrong(etPhone, R.string.wrong_phone,
         "Wrong phone ${user.phone}")
     }
 

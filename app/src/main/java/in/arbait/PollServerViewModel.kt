@@ -159,6 +159,9 @@ class PollServerViewModel: ViewModel(), Serializable {
 
       App.user?.let {
         it.login = false
+        it.isConfirmed = false
+        //it.callReceived = false //TODO: УБРАТЬ КОММЕНТ!
+        it.isItRegistration = false
         App.repository.updateUser(it)
       }
 

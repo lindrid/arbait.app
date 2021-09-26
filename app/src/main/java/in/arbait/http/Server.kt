@@ -91,6 +91,12 @@ class Server (private val context: Context) {
     )
   }
 
+  fun loginUser (phone: String, onResult: (`in`.arbait.http.Response) -> Unit) {
+    serverApi.login(headers, phone).enqueue (
+      getCallbackObjectShort("loginUser", onResult)
+    )
+  }
+
   fun getIncomingCall (onResult: (`in`.arbait.http.Response) -> Unit) {
     serverApi.sendVerRequest(headers).enqueue (
       getCallbackObjectShort("getIncomingCall", onResult)
@@ -100,6 +106,12 @@ class Server (private val context: Context) {
   fun verifyUser (code: String, onResult: (`in`.arbait.http.Response) -> Unit) {
     serverApi.verifyUser(headers, code).enqueue(
       getCallbackObjectShort("verifyUser", onResult)
+    )
+  }
+
+  fun verifyUserForLogin (code: String, onResult: (`in`.arbait.http.Response) -> Unit) {
+    serverApi.verifyUserForLogin(headers, code).enqueue(
+      getCallbackObjectShort("verifyUserForLogin", onResult)
     )
   }
 

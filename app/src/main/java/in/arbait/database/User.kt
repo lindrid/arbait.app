@@ -12,7 +12,9 @@ data class User (
   var callReceived: Boolean = false,
   var isConfirmed: Boolean = false,
   var login: Boolean = false,
+  var isItRegistration: Boolean = false,
   var headerWasPressed: Boolean = false,
-  var createdAt: Date = Date()
+  var createdAt: Date = Date(),
+  var updatedAt: Date = Date(),
 ): Serializable {}
 

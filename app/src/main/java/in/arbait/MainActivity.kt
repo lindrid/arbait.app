@@ -33,11 +33,6 @@ class MainActivity : AppCompatActivity() {
       App.user = App.repository.getUserLastByDate()
       val lastUser: User? = App.user
 
-     App.user?.let {
-        it.login = true
-        App.repository.updateUser(it)
-      }
-
       Log.i (TAG, "Repository.getUserLastByDate(): $lastUser")
 
       val currentFragment = supportFragmentManager.findFragmentById(R.id.fragment_container)
@@ -47,15 +42,20 @@ class MainActivity : AppCompatActivity() {
 
         if (lastUser != null) {
           if (lastUser.login) {
-            if (lastUser.isConfirmed) {
-              fragment = ApplicationsFragment()
-            }
-          }
-          else if (sessionIsAlive(lastUser.createdAt)) {
-            fragment = PhoneConfirmationFragment(lastUser)
+            fragment =
+              if (lastUser.isConfirmed)
+                ApplicationsFragment()
+              else
+                PhoneConfirmationFragment(true)
           }
           else {
-            fragment = LoginFragment()
+            App.user?.let { user ->
+              fragment =
+                if (user.isItRegistration)
+                  PhoneConfirmationFragment()
+                else
+                  LoginFragment()
+            }
           }
         }
 
@@ -70,20 +70,16 @@ class MainActivity : AppCompatActivity() {
   fun replaceOnFragment (fragmentName: String, args: Bundle = Bundle()) {
     val fragment: Fragment = when (fragmentName) {
       "PhoneConfirmation" -> {
-        val user = args.getSerializable(USER_ARG) as User
-        PhoneConfirmationFragment(user)
+        val verifyForLogin = args.getBoolean(VERIFY_FOR_LOGIN_ARG)
+        PhoneConfirmationFragment(verifyForLogin)
       }
       "Application" -> {
         val appId = args.getInt(APP_ID_ARG)
         ApplicationFragment(appId)
       }
       "Applications" -> ApplicationsFragment()
-      "Login" -> {
-        //pollServerViewModel.serviceDoAction(Actions.STOP)
-        LoginFragment()
-      }
-
-      else -> RegistrationFragment()
+      "Login" -> LoginFragment()
+       else -> RegistrationFragment()
     }
 
     supportFragmentManager
