@@ -17,6 +17,10 @@ import androidx.lifecycle.Observer
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import java.io.Serializable
+import android.R.attr.name
+
+
+
 
 private const val TAG = "ApplicationsViewModel"
 
@@ -85,7 +89,7 @@ class PollServerViewModel: ViewModel(), Serializable {
 
   fun unbindService() {
     serviceIsBound?.let {
-      if (it) {
+      if (it && getServiceState(context) == ServiceState.STARTED) {
         mainActivity.unbindService(serviceConnection)
       }
     }
@@ -161,7 +165,13 @@ class PollServerViewModel: ViewModel(), Serializable {
       unbindService()
       serviceDoAction(Actions.STOP)
 
-      mainActivity.replaceOnFragment("LoginFragment")
+      /* Выясняем запущен ли уже LoginFragment или нет
+      val myFragment: LoginFragment =
+        mainActivity.supportFragmentManager.findFragmentByTag("MY_FRAGMENT") as LoginFragment
+      if (myFragment != null && myFragment.isVisible()) {
+        // add your code here
+      }*/
+      mainActivity.replaceOnFragment("Login")
     }
   }
 

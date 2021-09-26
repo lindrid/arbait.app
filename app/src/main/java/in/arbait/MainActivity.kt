@@ -1,6 +1,7 @@
 package `in`.arbait
 
 import `in`.arbait.database.User
+import `in`.arbait.http.poll_service.Actions
 import `in`.arbait.http.sessionIsAlive
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
@@ -32,11 +33,10 @@ class MainActivity : AppCompatActivity() {
       App.user = App.repository.getUserLastByDate()
       val lastUser: User? = App.user
 
-     /* App.user?.let {
-        it.id = 9
+     App.user?.let {
         it.login = true
         App.repository.updateUser(it)
-      }*/
+      }
 
       Log.i (TAG, "Repository.getUserLastByDate(): $lastUser")
 
@@ -78,6 +78,11 @@ class MainActivity : AppCompatActivity() {
         ApplicationFragment(appId)
       }
       "Applications" -> ApplicationsFragment()
+      "Login" -> {
+        //pollServerViewModel.serviceDoAction(Actions.STOP)
+        LoginFragment()
+      }
+
       else -> RegistrationFragment()
     }
 

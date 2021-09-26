@@ -17,13 +17,13 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <EditText
+    <in.arbait.MonitoringEditText
         android:id="@+id/et_log_phone"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:ems="10"
         android:hint="@string/log_phone"
-        android:imeOptions="actionNext"
+        android:imeOptions="actionDone"
         android:inputType="phone"
         android:textSize="20sp"
         app:layout_constraintBottom_toBottomOf="parent"

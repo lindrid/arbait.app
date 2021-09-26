@@ -94,12 +94,6 @@ class ApplicationsFragment: Fragment() {
     actionBar?.title = "$appName - $apps"
   }
 
-  override fun onDestroy() {
-    super.onDestroy()
-    vm.unbindService()
-    vm.serviceDoAction(Actions.STOP)
-  }
-
   fun updateUI(openApps: List<ApplicationItem>) {
     rvApps.adapter = getConcatOpenAdapter(openApps)
   }
