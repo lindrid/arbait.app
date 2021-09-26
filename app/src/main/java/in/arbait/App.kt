@@ -19,6 +19,8 @@ class App : Application() {
 
     var user: User? = null
 
+    var httpUser: `in`.arbait.http.User? = null
+
     var instance: App? = null
       private set
 

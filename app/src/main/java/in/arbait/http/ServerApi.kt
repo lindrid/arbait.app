@@ -19,11 +19,11 @@ interface ServerApi {
 
   @POST("/api/verify/user")
   fun verifyUser (@HeaderMap headers: Map<String, String>,
-                  @Query("user_ver_code") userVerCode: String): Call<String>
+                  @Query("user_ver_code") userVerCode: String): Call<UserResponse>
 
   @POST("/api/verify/login/user")
   fun verifyUserForLogin (@HeaderMap headers: Map<String, String>,
-                  @Query("user_ver_code") userVerCode: String): Call<String>
+                  @Query("user_ver_code") userVerCode: String): Call<UserResponse>
 
   @GET("/api/app/list")
   fun getAppList (@HeaderMap headers: Map<String, String>): Call<ApplicationsResponse>

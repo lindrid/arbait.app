@@ -81,14 +81,14 @@ class PhoneConfirmationFragment(private val confirmationForLogin: Boolean = fals
       return
     }
 
-    val func = { response: Response ->
+    val func = { ur: UserResponse ->
       val verify =
         if (confirmationForLogin)
-          VerifyUserForLogin(response)
+          VerifyUserForLogin(ur)
         else
-          VerifyUser(response)
+          VerifyUser(ur)
 
-      when (response.type) {
+      when (ur.response.type) {
         SERVER_OK     -> verify.doOnServerOkResult()
         SYSTEM_ERROR  -> verify.doOnSystemError()
         SERVER_ERROR  -> verify.doOnServerError()
@@ -101,8 +101,8 @@ class PhoneConfirmationFragment(private val confirmationForLogin: Boolean = fals
       server.verifyUser(code, func)
   }
 
-  private inner class VerifyUser (response: Response):
-    ReactionOnResponse (TAG, requireContext(), rootView, response)
+  private inner class VerifyUser (val userResponse: UserResponse):
+    ReactionOnResponse (TAG, requireContext(), rootView, userResponse.response)
   {
     override fun doOnServerOkResult() {
       Log.i(TAG, "все ок, пользователь зарегистрирован")
@@ -110,7 +110,9 @@ class PhoneConfirmationFragment(private val confirmationForLogin: Boolean = fals
         user.isItRegistration = false
         user.login = true
         user.isConfirmed = true
-        // TODO: ПОЛУЧИТЬ ID от сервера!
+        userResponse.user.id?.let {
+          user.id = it
+        }
         App.repository.updateUser(user)
       }
       val mainActivity = requireActivity() as MainActivity
@@ -129,14 +131,18 @@ class PhoneConfirmationFragment(private val confirmationForLogin: Boolean = fals
     override fun doOnEndSessionError() {}
   }
 
-  private inner class VerifyUserForLogin (response: Response):
-    ReactionOnResponse (TAG, requireContext(), rootView, response)
+  private inner class VerifyUserForLogin (val userResponse: UserResponse):
+    ReactionOnResponse (TAG, requireContext(), rootView, userResponse.response)
   {
     override fun doOnServerOkResult() {
       Log.i(TAG, "все ок, пользователь вошел")
       App.user?.let { user ->
+        user.isItRegistration = false
         user.isConfirmed = true
         user.login = true
+        userResponse.user.id?.let {
+          user.id = it
+        }
         App.repository.updateUser(user)
       }
       val mainActivity = requireActivity() as MainActivity

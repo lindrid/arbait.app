@@ -19,8 +19,8 @@ import java.lang.reflect.Type
 
 private const val TAG = "Server"
 
-class Server (private val context: Context) {
-
+class Server (private val context: Context)
+{
   val applicationsResponse: MutableLiveData<ApplicationsResponse> = MutableLiveData()
 
   private val gson = GsonBuilder()
@@ -84,7 +84,6 @@ class Server (private val context: Context) {
     )
   }
 
-
   fun registerUser (user: User, onResult: (`in`.arbait.http.Response) -> Unit) {
     serverApi.register(headers, user).enqueue (
       getCallbackObjectShort("registerUser", onResult)
@@ -103,18 +102,42 @@ class Server (private val context: Context) {
     )
   }
 
-  fun verifyUser (code: String, onResult: (`in`.arbait.http.Response) -> Unit) {
-    serverApi.verifyUser(headers, code).enqueue(
-      getCallbackObjectShort("verifyUser", onResult)
-    )
+  fun verifyUser (code: String, onResult: (UserResponse) -> Unit) {
+    userCallback.onResult = onResult
+    serverApi.verifyUser(headers, code).enqueue(userCallback)
   }
 
-  fun verifyUserForLogin (code: String, onResult: (`in`.arbait.http.Response) -> Unit) {
-    serverApi.verifyUserForLogin(headers, code).enqueue(
-      getCallbackObjectShort("verifyUserForLogin", onResult)
-    )
+  fun verifyUserForLogin (code: String, onResult: (UserResponse) -> Unit) {
+    userCallback.onResult = onResult
+    serverApi.verifyUserForLogin(headers, code).enqueue(userCallback)
   }
 
+
+  private val userCallback = object : Callback<UserResponse>
+  {
+    lateinit var onResult: (UserResponse) -> Unit
+
+    override fun onFailure (call: Call<UserResponse>, t: Throwable) {
+      Log.e (TAG, "verify user FAILED!", t)
+      onResult(UserResponse(Response(t)))
+    }
+
+    override fun onResponse (call: Call<UserResponse>,
+                             response: Response<UserResponse>)
+    {
+      if (response.code() == 200) {
+        Log.i(TAG, "UserResponse received, response.body() = ${response.body()}")
+        val userResponse: UserResponse? = response.body()
+        onResult(userResponse ?: UserResponse())
+      }
+      else {
+        Log.e (TAG, "Server error with code ${response.code()}")
+        response.errorBody()?.let {
+          onResult(UserResponse(Response(it, response.code())))
+        }
+      }
+    }
+  }
 
   private fun getCallbackObjectShort (
     funcName: String,
