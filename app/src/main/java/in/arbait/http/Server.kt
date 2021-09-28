@@ -21,7 +21,7 @@ private const val TAG = "Server"
 
 class Server (private val context: Context)
 {
-  val applicationsResponse: MutableLiveData<ApplicationsResponse> = MutableLiveData()
+  val serviceDataResponse: MutableLiveData<ServiceDataResponse> = MutableLiveData()
 
   private val gson = GsonBuilder()
     .setLenient()
@@ -56,26 +56,26 @@ class Server (private val context: Context)
   }
 
   fun updateApplicationsResponse () {
-    serverApi.getAppList(headers).enqueue (
-      object : Callback<ApplicationsResponse> {
+    serverApi.getData(headers).enqueue (
+      object : Callback<ServiceDataResponse> {
 
-        override fun onFailure (call: Call<ApplicationsResponse>, t: Throwable) {
+        override fun onFailure (call: Call<ServiceDataResponse>, t: Throwable) {
           Log.e (TAG, "getAppList FAILED!", t)
-          applicationsResponse.value = ApplicationsResponse(Response(t))
+          serviceDataResponse.value = ServiceDataResponse(Response(t))
         }
 
-        override fun onResponse (call: Call<ApplicationsResponse>,
-                                 response: Response<ApplicationsResponse>)
+        override fun onResponse (call: Call<ServiceDataResponse>,
+                                 response: Response<ServiceDataResponse>)
         {
           if (response.code() == 200) {
             Log.i(TAG, "Response received, response.body() = ${response.body()}")
-            val appsResponse: ApplicationsResponse? = response.body()
-            applicationsResponse.value = appsResponse ?: ApplicationsResponse()
+            val appsResponse: ServiceDataResponse? = response.body()
+            serviceDataResponse.value = appsResponse ?: ServiceDataResponse()
           }
           else {
             Log.e (TAG, "Server error with code ${response.code()}")
             response.errorBody()?.let {
-              applicationsResponse.value = ApplicationsResponse(Response(it, response.code()))
+              serviceDataResponse.value = ServiceDataResponse(Response(it, response.code()))
             }
           }
         }

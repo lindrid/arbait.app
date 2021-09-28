@@ -1,12 +1,16 @@
 package `in`.arbait.http
 
-import `in`.arbait.models.ApplicationItem
+import `in`.arbait.http.items.ApplicationItem
+import `in`.arbait.http.items.UserItem
 import com.google.gson.annotations.SerializedName
 
 
-class ApplicationsResponse (var response: Response = Response()) {
+class ServiceDataResponse (var response: Response = Response()) {
   @SerializedName("open_apps")
   lateinit var openApps: List<ApplicationItem>
+
+  @SerializedName("user")
+  var user: UserItem? = null
 
   init {
     if (response.noResult)

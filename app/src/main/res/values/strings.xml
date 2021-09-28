@@ -30,8 +30,8 @@
     <string name="reg_age">Возраст (полных лет)</string>
     <string name="reg_debit_card">Карта/телефон</string>
     <string name="reg_wrong_debit_card">Введите правильный номер карты или телефона, привязанного к карте</string>
-    <string name="reg_dialog_cancel">Отмена</string>
-    <string name="reg_dialog_ok">OK</string>
+    <string name="dialog_cancel">Отмена</string>
+    <string name="dialog_ok">OK</string>
     <string name="reg_empty_birth_date">Укажите дату рождения! Пример правильной даты: 15.06.1995</string>
     <string name="reg_wrong_birth_date">Неправильная дата рождения! Пример правильной даты: 15.06.1995</string>
     <string name="reg_wrong_age">Мы принимаем работников от %1$d до %2$d лет!</string>
@@ -87,10 +87,16 @@
     <string name="app_back">Назад</string>
     <string name="app_action_bar_title">Заявка</string>
     <string name="app_you_are_enrolled">Вы записаны</string>
+    <string name="app_no_card">, которой у вас нет</string>
 
     <!-- LoginFragment -->
     <string name="log_login">Войти</string>
     <string name="log_phone">Номер телефона</string>
-    <string name="app_no_card">, которой у вас нет</string>
+
+    <!-- Debit Card Dialog -->
+    <string name="dcd_another_debit_card">Другая карта/тел</string>
+    <string name="dcd_choose_debit_card">Выберите карту</string>
+    <string name="dcd_no_card">Без карты</string>
+    <string name="dcd_select_debit_card">Укажите карту для оплаты</string>
 
 </resources>

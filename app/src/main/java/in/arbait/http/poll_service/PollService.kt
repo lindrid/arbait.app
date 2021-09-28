@@ -1,8 +1,8 @@
 package `in`.arbait.http.poll_service
 
 import `in`.arbait.*
-import `in`.arbait.models.ApplicationItem
-import `in`.arbait.http.ApplicationsResponse
+import `in`.arbait.http.items.ApplicationItem
+import `in`.arbait.http.ServiceDataResponse
 import `in`.arbait.http.SERVER_OK
 import `in`.arbait.http.Server
 import android.app.*
@@ -34,7 +34,7 @@ private val NEW_APP_NOTIFICATION_CHANNEL_ID = App.res!!.getString(R.string.poll_
 // https://robertohuertas.com/2019/06/29/android_foreground_services/
 // poll the server for applications
 class PollService : LifecycleService() {
-  lateinit var appsResponse: LiveData<ApplicationsResponse>
+  lateinit var dataResponse: LiveData<ServiceDataResponse>
     private set
 
   private var openApps: List<ApplicationItem> = emptyList()
@@ -67,10 +67,10 @@ class PollService : LifecycleService() {
 
     server = Server(this)
     server.updateApplicationsResponse()
-    appsResponse = server.applicationsResponse
+    dataResponse = server.serviceDataResponse
 
     var firstTime = true
-    appsResponse.observe(this,
+    dataResponse.observe(this,
       Observer { appsResponse ->
         appsResponse?.let {
           log("OBSERVER , firstTime = $firstTime")
@@ -78,6 +78,12 @@ class PollService : LifecycleService() {
           if (response.type == SERVER_OK) {
             val openAppsFromServer = it.openApps
             log("openAppsFromServer = $openAppsFromServer")
+
+            it.user?.let {  user ->
+              App.userItem = user
+              log("App.userItem = $user")
+            }
+
             if (openAppsFromServer.isNotEmpty()) {
               val newApps = elementsFromANotInB(openAppsFromServer, openApps)
               val closedApps = elementsFromANotInB(openApps, openAppsFromServer)

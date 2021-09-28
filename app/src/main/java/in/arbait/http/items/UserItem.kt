@@ -1,4 +1,4 @@
-package `in`.arbait.models
+package `in`.arbait.http.items
 
 import com.google.gson.annotations.SerializedName
 import java.io.Serializable

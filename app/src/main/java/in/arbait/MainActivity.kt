@@ -1,8 +1,6 @@
 package `in`.arbait
 
 import `in`.arbait.database.User
-import `in`.arbait.http.poll_service.Actions
-import `in`.arbait.http.sessionIsAlive
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
@@ -30,10 +28,16 @@ class MainActivity : AppCompatActivity() {
     pollServerViewModel.viewLifecycleOwner = this
 
     GlobalScope.launch {
-      App.user = App.repository.getUserLastByDate()
-      val lastUser: User? = App.user
+      App.dbUser = App.repository.getUserLastByDate()
+      val lastUser: User? = App.dbUser
 
       Log.i (TAG, "Repository.getUserLastByDate(): $lastUser")
+
+      /*App.dbUser?.let {
+        it.isConfirmed = false
+        it.login = false
+        App.repository.updateUser(it)
+      }*/
 
       val currentFragment = supportFragmentManager.findFragmentById(R.id.fragment_container)
 
@@ -49,7 +53,7 @@ class MainActivity : AppCompatActivity() {
                 PhoneConfirmationFragment(true)
           }
           else {
-            App.user?.let { user ->
+            App.dbUser?.let { user ->
               fragment =
                 if (user.isItRegistration)
                   PhoneConfirmationFragment()

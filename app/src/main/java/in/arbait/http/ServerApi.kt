@@ -25,6 +25,6 @@ interface ServerApi {
   fun verifyUserForLogin (@HeaderMap headers: Map<String, String>,
                   @Query("user_ver_code") userVerCode: String): Call<UserResponse>
 
-  @GET("/api/app/list")
-  fun getAppList (@HeaderMap headers: Map<String, String>): Call<ApplicationsResponse>
+  @GET("/api/service/data")
+  fun getData (@HeaderMap headers: Map<String, String>): Call<ServiceDataResponse>
 }

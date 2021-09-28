@@ -1,7 +1,7 @@
 package `in`.arbait
 
 import `in`.arbait.http.poll_service.*
-import `in`.arbait.models.ApplicationItem
+import `in`.arbait.http.items.ApplicationItem
 import android.annotation.SuppressLint
 import android.graphics.Color
 import android.os.Bundle
@@ -21,7 +21,6 @@ import androidx.recyclerview.widget.DividerItemDecoration
 
 const val DATE_FORMAT = "yyyy-MM-dd"
 const val APP_ID_ARG = "application_id"
-const val VIEW_MODEL_ARG = "applications_view_model"
 
 private const val TAG = "ApplicationsFragment"
 val OPEN_HEADER_COLOR = Color.parseColor("#2E8B57")
@@ -109,7 +108,7 @@ class ApplicationsFragment: Fragment() {
 
       if (tomorrowApps.isNotEmpty()) {
         val appsCount = tomorrowApps.size
-        val tomorrowHeaderText = when (App.user?.headerWasPressed) {
+        val tomorrowHeaderText = when (App.dbUser?.headerWasPressed) {
           true -> getString(R.string.apps_tomorrow_no_press, appsCount)
           false -> getString(R.string.apps_tomorrow, appsCount)
           null -> ""
@@ -287,7 +286,7 @@ class ApplicationsFragment: Fragment() {
           showTomorrowApps = !showTomorrowApps
           vm.openApps.value?.let {
             updateUI(it)
-            App.user?.let { user ->
+            App.dbUser?.let { user ->
               if (!user.headerWasPressed) {
                 user.headerWasPressed = true
                 App.repository.updateUser(user)

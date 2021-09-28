@@ -1,6 +1,7 @@
 package `in`.arbait
 
 import `in`.arbait.database.User
+import `in`.arbait.http.items.UserItem
 import android.app.Application
 import android.content.res.Resources
 
@@ -17,9 +18,9 @@ class App : Application() {
     lateinit var repository: UserRepository
       private set
 
-    var user: User? = null
+    var dbUser: User? = null
 
-    var httpUser: `in`.arbait.http.User? = null
+    var userItem: UserItem? = null
 
     var instance: App? = null
       private set

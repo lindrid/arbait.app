@@ -61,7 +61,7 @@ class PhoneConfirmationFragment(private val confirmationForLogin: Boolean = fals
 
 
   private fun onClickDoneButton() {
-    App.user?.let { user ->
+    App.dbUser?.let { user ->
       if (!user.callReceived) {
         showErrorBalloon(requireContext(), rootView, R.string.phone_conf_not_requested_call)
         return
@@ -106,7 +106,7 @@ class PhoneConfirmationFragment(private val confirmationForLogin: Boolean = fals
   {
     override fun doOnServerOkResult() {
       Log.i(TAG, "все ок, пользователь зарегистрирован")
-      App.user?.let { user ->
+      App.dbUser?.let { user ->
         user.isItRegistration = false
         user.login = true
         user.isConfirmed = true
@@ -136,7 +136,7 @@ class PhoneConfirmationFragment(private val confirmationForLogin: Boolean = fals
   {
     override fun doOnServerOkResult() {
       Log.i(TAG, "все ок, пользователь вошел")
-      App.user?.let { user ->
+      App.dbUser?.let { user ->
         user.isItRegistration = false
         user.isConfirmed = true
         user.login = true
@@ -176,7 +176,7 @@ class PhoneConfirmationFragment(private val confirmationForLogin: Boolean = fals
     ReactionOnResponse (TAG, requireContext(), rootView, response)
   {
     override fun doOnServerOkResult() {
-      App.user?.let { user ->
+      App.dbUser?.let { user ->
         user.callReceived = true
         App.repository.updateUser(user)
       }

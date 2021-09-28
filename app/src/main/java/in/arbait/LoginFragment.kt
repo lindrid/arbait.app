@@ -12,7 +12,6 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.AppCompatButton
 import androidx.appcompat.widget.AppCompatTextView
 import androidx.fragment.app.Fragment
-import java.util.*
 
 private const val TAG = "LoginFragment"
 
@@ -116,7 +115,7 @@ class LoginFragment: Fragment()
     ReactionOnResponse(TAG, requireContext(), rootView, response)
   {
     override fun doOnServerOkResult() {
-      val user = App.user
+      val user = App.dbUser
       user?.let {
         // чтобы отличать от того случая, когда пользователь хочет не залогиниться,
         // а зарегистрироваться: it.login = true

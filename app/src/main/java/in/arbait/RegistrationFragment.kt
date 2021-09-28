@@ -19,7 +19,6 @@ import androidx.appcompat.widget.AppCompatButton
 
 
 const val BIRTH_DATE_KEY = "birthDate"
-const val USER_ARG = "user"
 
 private const val TAG = "RegistrationFragment"
 private const val BIRTH_DATE_DIALOG_TAG = "BirthDateFragmentDialog"

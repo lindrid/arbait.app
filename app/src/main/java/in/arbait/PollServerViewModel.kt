@@ -1,9 +1,8 @@
 package `in`.arbait
 
-import `in`.arbait.database.User
 import `in`.arbait.http.*
 import `in`.arbait.http.poll_service.*
-import `in`.arbait.models.ApplicationItem
+import `in`.arbait.http.items.ApplicationItem
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
@@ -14,12 +13,7 @@ import android.util.Log
 import android.view.View
 import androidx.lifecycle.*
 import androidx.lifecycle.Observer
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
 import java.io.Serializable
-import android.R.attr.name
-
-
 
 
 private const val TAG = "ApplicationsViewModel"
@@ -44,7 +38,7 @@ class PollServerViewModel: ViewModel(), Serializable {
   val openApps: MutableLiveData<List<ApplicationItem>> = MutableLiveData()
   val lvdOpenApps = mutableMapOf<Int, MutableLiveData<ApplicationItem>>()
 
-  private lateinit var appsResponse: LiveData<ApplicationsResponse>
+  private lateinit var appsResponse: LiveData<ServiceDataResponse>
 
   private val serviceConnection = object : ServiceConnection {
     override fun onServiceConnected(className: ComponentName, iBinder: IBinder) {
@@ -54,7 +48,7 @@ class PollServerViewModel: ViewModel(), Serializable {
       pollService = binder.service
       serviceIsBound = true
       pollService?.let {
-        appsResponse = it.appsResponse
+        appsResponse = it.dataResponse
       }
       setAppsResponseObserver()
     }
@@ -120,7 +114,7 @@ class PollServerViewModel: ViewModel(), Serializable {
   private inner class PollServerReaction (response: Response):
     ReactionOnResponse (TAG, context, rootView, response) {
 
-    fun doOnServerOkResult(appsResponse: ApplicationsResponse) {
+    fun doOnServerOkResult(appsResponse: ServiceDataResponse) {
       var openAppsIsEmpty = false
       openApps.value?.let { value ->
         openAppsIsEmpty = value.isEmpty()
@@ -157,7 +151,7 @@ class PollServerViewModel: ViewModel(), Serializable {
     override fun doOnEndSessionError() {
       Log.i (TAG, "doOnEndSessionError()")
 
-      App.user?.let {
+      App.dbUser?.let {
         it.login = false
         it.isConfirmed = false
         //it.callReceived = false //TODO: УБРАТЬ КОММЕНТ!

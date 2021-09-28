@@ -14,8 +14,8 @@ private const val MAX_LENGTH_OF_CARD_NUMBER_WITHOUT_SPACE = 18
 private const val LENGTH_OF_PHONE_NUMBER_WITHOUT_PLUS = 11
 
 class DebitCardFormatWatcher (private val editText: MonitoringEditText,
-  private val viewLifecycleOwner: LifecycleOwner) : TextWatcher {
-
+  private val viewLifecycleOwner: LifecycleOwner) : TextWatcher
+{
   private var newString = "" //: MutableLiveData<String> = MutableLiveData()
 
   private var onTextChangedString = ""

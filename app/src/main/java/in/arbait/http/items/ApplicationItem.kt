@@ -1,13 +1,8 @@
-package `in`.arbait.models
+package `in`.arbait.http.items
 
 import androidx.lifecycle.LiveData
-import com.google.gson.JsonDeserializationContext
-import com.google.gson.JsonDeserializer
-import com.google.gson.JsonElement
 import com.google.gson.annotations.SerializedName
 import java.io.Serializable
-import java.lang.reflect.Type
-import java.util.*
 
 data class ApplicationItem (
   val id: Int,

@@ -1,9 +1,9 @@
 package `in`.arbait
 
-import `in`.arbait.models.ApplicationItem
-import `in`.arbait.models.DebitCardItem
-import `in`.arbait.models.PhoneItem
-import `in`.arbait.models.PorterItem
+import `in`.arbait.http.items.ApplicationItem
+import `in`.arbait.http.items.DebitCardItem
+import `in`.arbait.http.items.PhoneItem
+import `in`.arbait.http.items.PorterItem
 import android.os.Bundle
 import android.text.Html
 import android.util.Log
@@ -19,13 +19,15 @@ import androidx.appcompat.widget.AppCompatTextView
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.widget.NestedScrollView
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.LiveData
+import androidx.fragment.app.FragmentManager
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 
 private const val TAG = "ApplicationFragment"
+
+const val DEBIT_CARD_DIALOG_TAG = "DebitCardDialog"
 
 const val PHONE_CALL = 1
 const val PHONE_WHATSAPP = 2
@@ -40,6 +42,7 @@ class ApplicationFragment (private val appId: Int): Fragment() {
   private var enroll = false
   private lateinit var lvdAppItem: MutableLiveData<ApplicationItem>
 
+  private lateinit var supportFragmentManager: FragmentManager
   private lateinit var tvEnrolled: AppCompatTextView
   private lateinit var tvAddress: AppCompatTextView
   private lateinit var tvTime: AppCompatTextView
@@ -62,6 +65,7 @@ class ApplicationFragment (private val appId: Int): Fragment() {
                             savedInstanceState: Bundle?): View?
   {
     val view = inflater.inflate(R.layout.fragment_application, container, false)
+    supportFragmentManager = requireActivity().supportFragmentManager
 
     Log.i (TAG, "OnCreate()")
 
@@ -108,12 +112,18 @@ class ApplicationFragment (private val appId: Int): Fragment() {
 
 
   private fun onEnrollRefuseBtnClick(view: View) {
-    enroll = !enroll
+    porter?.let {
+      val dcd = DebitCardDialog.newInstance(it.user)
+      dcd.show(supportFragmentManager, DEBIT_CARD_DIALOG_TAG)
+    }
+
+
+    /*enroll = !enroll
     setVisibility(enroll, view)
     btEnrollRefuse.text = if (enroll)
        getString(R.string.app_refuse)
     else
-      getString(R.string.app_enroll)
+      getString(R.string.app_enroll)*/
   }
 
   private fun setVisibility(enroll: Boolean, view: View) {
@@ -172,7 +182,7 @@ class ApplicationFragment (private val appId: Int): Fragment() {
 
   private fun getThisUserPorter(app: ApplicationItem): PorterItem? {
     var porter: PorterItem? = null
-    App.user?.let { user ->
+    App.dbUser?.let { user ->
       for (i in app.porters.indices) {
         if (user.id == app.porters[i].user.id) {
           Log.i (TAG, "user.id=${user.id}")
