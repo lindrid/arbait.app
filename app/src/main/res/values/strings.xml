@@ -97,6 +97,6 @@
     <string name="dcd_another_debit_card">Другая карта/тел</string>
     <string name="dcd_choose_debit_card">Выберите карту</string>
     <string name="dcd_no_card">Без карты</string>
-    <string name="dcd_select_debit_card">Укажите карту для оплаты</string>
+    <string name="dcd_select_debit_card">Укажите карту</string>
 
 </resources>

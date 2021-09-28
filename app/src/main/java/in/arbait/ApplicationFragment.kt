@@ -112,8 +112,8 @@ class ApplicationFragment (private val appId: Int): Fragment() {
 
 
   private fun onEnrollRefuseBtnClick(view: View) {
-    porter?.let {
-      val dcd = DebitCardDialog.newInstance(it.user)
+    App.userItem?.let { user ->
+      val dcd = DebitCardDialog.newInstance(user)
       dcd.show(supportFragmentManager, DEBIT_CARD_DIALOG_TAG)
     }
 

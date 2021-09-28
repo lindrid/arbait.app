@@ -19,6 +19,8 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:textSize="20sp"
+        android:focusable="true"
+        android:focusableInTouchMode="true"
         android:visibility="visible" />
 
     <in.arbait.MonitoringEditText
@@ -26,10 +28,12 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:ems="10"
+        android:maxLength="19"
         android:hint="@string/dcd_another_debit_card"
         android:inputType="phone"
         android:textSize="20sp"
         android:focusable="true"
+        android:focusableInTouchMode="true"
         android:cursorVisible="true"
         android:imeOptions="actionDone"/>
 
