@@ -98,5 +98,7 @@
     <string name="dcd_choose_debit_card">Выберите карту</string>
     <string name="dcd_no_card">Без карты</string>
     <string name="dcd_select_debit_card">Укажите карту</string>
+    <string name="dcd_choose_or_set">Введите номер карты или выберите ее из списка</string>
+    <string name="dcd_set_valid_dc">Введите правильный номер карты или телефона</string>
 
 </resources>

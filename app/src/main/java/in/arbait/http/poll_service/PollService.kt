@@ -2,8 +2,8 @@ package `in`.arbait.http.poll_service
 
 import `in`.arbait.*
 import `in`.arbait.http.items.ApplicationItem
-import `in`.arbait.http.ServiceDataResponse
-import `in`.arbait.http.SERVER_OK
+import `in`.arbait.http.response.ServiceDataResponse
+import `in`.arbait.http.response.SERVER_OK
 import `in`.arbait.http.Server
 import android.app.*
 import android.app.NotificationManager.*

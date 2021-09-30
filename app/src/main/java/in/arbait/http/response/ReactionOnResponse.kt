@@ -1,6 +1,9 @@
 package `in`.arbait.http
 
 import `in`.arbait.*
+import `in`.arbait.http.response.Response
+import `in`.arbait.http.response.SERVER_ERROR
+import `in`.arbait.http.response.SYSTEM_ERROR
 import android.content.Context
 import android.util.Log
 import android.view.View

@@ -1,5 +1,8 @@
 package `in`.arbait.http
 
+import `in`.arbait.http.response.ApplicationResponse
+import `in`.arbait.http.response.ServiceDataResponse
+import `in`.arbait.http.response.UserResponse
 import retrofit2.Call
 import retrofit2.http.*
 
@@ -23,7 +26,17 @@ interface ServerApi {
 
   @POST("/api/verify/login/user")
   fun verifyUserForLogin (@HeaderMap headers: Map<String, String>,
-                  @Query("user_ver_code") userVerCode: String): Call<UserResponse>
+                          @Query("user_ver_code") userVerCode: String): Call<UserResponse>
+
+  @POST("/api/porter/enroll")
+  fun enrollPorter (@HeaderMap headers: Map<String, String>,
+                    @Query("app_id") appId: Int,
+                    @Query("debit_card_id") debitCardId: Int?,
+                    @Query("debit_card") debitCard: String?): Call<ApplicationResponse>
+
+  @POST("/api/porter/refuse")
+  fun refuseApp ( @HeaderMap headers: Map<String, String>,
+                  @Query("app_id") appId: Int): Call<String>
 
   @GET("/api/service/data")
   fun getData (@HeaderMap headers: Map<String, String>): Call<ServiceDataResponse>

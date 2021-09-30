@@ -1,5 +1,8 @@
 package `in`.arbait.http
 
+import `in`.arbait.http.response.ApplicationResponse
+import `in`.arbait.http.response.ServiceDataResponse
+import `in`.arbait.http.response.UserResponse
 import android.content.Context
 import android.util.Log
 import androidx.lifecycle.MutableLiveData
@@ -17,7 +20,7 @@ import retrofit2.converter.gson.GsonConverterFactory
 import retrofit2.converter.scalars.ScalarsConverterFactory
 import java.lang.reflect.Type
 
-private const val TAG = "Server"
+const val TAG = "Server"
 
 class Server (private val context: Context)
 {
@@ -61,7 +64,7 @@ class Server (private val context: Context)
 
         override fun onFailure (call: Call<ServiceDataResponse>, t: Throwable) {
           Log.e (TAG, "getAppList FAILED!", t)
-          serviceDataResponse.value = ServiceDataResponse(Response(t))
+          serviceDataResponse.value = ServiceDataResponse(`in`.arbait.http.response.Response(t))
         }
 
         override fun onResponse (call: Call<ServiceDataResponse>,
@@ -75,7 +78,7 @@ class Server (private val context: Context)
           else {
             Log.e (TAG, "Server error with code ${response.code()}")
             response.errorBody()?.let {
-              serviceDataResponse.value = ServiceDataResponse(Response(it, response.code()))
+              serviceDataResponse.value = ServiceDataResponse(`in`.arbait.http.response.Response(it, response.code()))
             }
           }
         }
@@ -84,19 +87,32 @@ class Server (private val context: Context)
     )
   }
 
-  fun registerUser (user: User, onResult: (`in`.arbait.http.Response) -> Unit) {
+  fun enrollPorter (appId: Int, debitCardId: Int?, debitCard: String?,
+                    onResult: (ApplicationResponse) -> Unit)
+  {
+    appCallback.onResult = onResult
+    serverApi.enrollPorter(headers, appId, debitCardId, debitCard).enqueue(appCallback)
+  }
+
+  fun refuseApp (appId: Int, onResult: (`in`.arbait.http.response.Response) -> Unit) {
+    serverApi.refuseApp(headers, appId).enqueue (
+      getCallbackObjectShort("enrollPorter", onResult)
+    )
+  }
+
+  fun registerUser (user: User, onResult: (`in`.arbait.http.response.Response) -> Unit) {
     serverApi.register(headers, user).enqueue (
       getCallbackObjectShort("registerUser", onResult)
     )
   }
 
-  fun loginUser (phone: String, onResult: (`in`.arbait.http.Response) -> Unit) {
+  fun loginUser (phone: String, onResult: (`in`.arbait.http.response.Response) -> Unit) {
     serverApi.login(headers, phone).enqueue (
       getCallbackObjectShort("loginUser", onResult)
     )
   }
 
-  fun getIncomingCall (onResult: (`in`.arbait.http.Response) -> Unit) {
+  fun getIncomingCall (onResult: (`in`.arbait.http.response.Response) -> Unit) {
     serverApi.sendVerRequest(headers).enqueue (
       getCallbackObjectShort("getIncomingCall", onResult)
     )
@@ -112,36 +128,9 @@ class Server (private val context: Context)
     serverApi.verifyUserForLogin(headers, code).enqueue(userCallback)
   }
 
-
-  private val userCallback = object : Callback<UserResponse>
-  {
-    lateinit var onResult: (UserResponse) -> Unit
-
-    override fun onFailure (call: Call<UserResponse>, t: Throwable) {
-      Log.e (TAG, "verify user FAILED!", t)
-      onResult(UserResponse(Response(t)))
-    }
-
-    override fun onResponse (call: Call<UserResponse>,
-                             response: Response<UserResponse>)
-    {
-      if (response.code() == 200) {
-        Log.i(TAG, "UserResponse received, response.body() = ${response.body()}")
-        val userResponse: UserResponse? = response.body()
-        onResult(userResponse ?: UserResponse())
-      }
-      else {
-        Log.e (TAG, "Server error with code ${response.code()}")
-        response.errorBody()?.let {
-          onResult(UserResponse(Response(it, response.code())))
-        }
-      }
-    }
-  }
-
   private fun getCallbackObjectShort (
     funcName: String,
-    onResult: (`in`.arbait.http.Response) -> Unit): Callback<String>
+    onResult: (`in`.arbait.http.response.Response) -> Unit): Callback<String>
   {
     return getCallbackObject(
       "$funcName.onFailure",
@@ -155,25 +144,25 @@ class Server (private val context: Context)
     msgOnFailure: String,
     msgOnSuccessful: String,
     msgOnServerError: String,
-    onResult: (`in`.arbait.http.Response) -> Unit): Callback<String>
+    onResult: (`in`.arbait.http.response.Response) -> Unit): Callback<String>
   {
     return object : Callback<String> {
-      private lateinit var response: `in`.arbait.http.Response
+      private lateinit var response: `in`.arbait.http.response.Response
 
       override fun onFailure(call: Call<String>, t: Throwable) {
         Log.d (TAG, "$msgOnFailure: ${t.message}, $t")
-        response = Response(t)
+        response = `in`.arbait.http.response.Response(t)
         onResult(response)
       }
       override fun onResponse(call: Call<String>, response: Response<String>) {
         if (response.isSuccessful) {
           Log.d (TAG, "$msgOnSuccessful: $response")
-          this.response = Response(response)
+          this.response = `in`.arbait.http.response.Response(response)
         }
         else {
           response.errorBody()?.let {
             Log.d (TAG, "$msgOnServerError: $it")
-            this.response = Response(it, response.code())
+            this.response = `in`.arbait.http.response.Response(it, response.code())
           }
         }
         onResult(this.response)
@@ -181,7 +170,60 @@ class Server (private val context: Context)
     }
   }
 
+  private val userCallback = object : Callback<UserResponse>
+  {
+    lateinit var onResult: (UserResponse) -> Unit
+
+    override fun onFailure (call: Call<UserResponse>, t: Throwable) {
+      Log.e (TAG, "verify user FAILED!", t)
+      onResult(UserResponse(`in`.arbait.http.response.Response(t)))
+    }
+
+    override fun onResponse (call: Call<UserResponse>,
+                             response: Response<UserResponse>)
+    {
+      if (response.code() == 200) {
+        Log.i(TAG, "UserResponse received, response.body() = ${response.body()}")
+        val userResponse: UserResponse? = response.body()
+        onResult(userResponse ?: UserResponse())
+      }
+      else {
+        Log.e (TAG, "Server error with code ${response.code()}")
+        response.errorBody()?.let {
+          onResult(UserResponse(`in`.arbait.http.response.Response(it, response.code())))
+        }
+      }
+    }
+  }
+
+  private val appCallback = object : Callback<ApplicationResponse>
+  {
+    lateinit var onResult: (ApplicationResponse) -> Unit
+
+    override fun onFailure (call: Call<ApplicationResponse>, t: Throwable) {
+      Log.e (TAG, "Enroll porter FAILED!", t)
+      onResult(ApplicationResponse(`in`.arbait.http.response.Response(t)))
+    }
+
+    override fun onResponse (call: Call<ApplicationResponse>,
+                             response: Response<ApplicationResponse>)
+    {
+      if (response.code() == 200) {
+        Log.i(TAG, "ApplicationResponse received, response.body() = ${response.body()}")
+        val appResponse: ApplicationResponse? = response.body()
+        onResult(appResponse ?: ApplicationResponse())
+      }
+      else {
+        Log.e (TAG, "Server error with code ${response.code()}")
+        response.errorBody()?.let {
+          onResult(ApplicationResponse(`in`.arbait.http.response.Response(it, response.code())))
+        }
+      }
+    }
+  }
 }
+
+
 
 // преобразуем, например, hourly_job = 1 в hourlyJob = true в нашем ApplicationItem
 class IntBooleanDeserializer : JsonDeserializer<Boolean> {

@@ -1,7 +1,9 @@
 package `in`.arbait
 
+import `in`.arbait.http.*
 import `in`.arbait.http.items.DebitCardItem
 import `in`.arbait.http.items.UserItem
+import `in`.arbait.http.response.*
 import android.graphics.Color
 import android.os.Bundle
 import android.util.Log
@@ -16,30 +18,41 @@ import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 
-
 private const val TAG = "DebitCardDialog"
 private const val USER_ARG = "user"
+
+private const val NOT_INDEX = -1
+private const val BALLOON_WIDTH = 200
 
 class DebitCardDialog: DialogFragment(), View.OnClickListener
 {
   private lateinit var rvDebitCards: RecyclerView
   private lateinit var metAnotherDc: MonitoringEditText
+
+  private lateinit var server: Server
+  private var appId: Int? = null
   private val ldAnotherDC: MutableLiveData<Boolean> = MutableLiveData(false)
+  private var debitCards: List<DebitCardItem> = emptyList()
+  private var debitCardIndex: Int = NOT_INDEX
 
   override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
                             savedInstanceState: Bundle?): View?
   {
     dialog?.setTitle(R.string.dcd_choose_debit_card)
     val view = inflater.inflate(R.layout.fragment_dialog_debit_card, container, false)
+    server = Server(requireContext())
 
     rvDebitCards = view.findViewById(R.id.rv_dcd_debit_cards)
+
     metAnotherDc = view.findViewById(R.id.met_dcd_another_debit_card)
+    metAnotherDc.addTextChangedListener(DebitCardFormatWatcher(metAnotherDc, viewLifecycleOwner))
+
     view.findViewById<Button>(R.id.bt_dcd_dialog_ok).setOnClickListener(this)
     view.findViewById<Button>(R.id.bt_dcd_dialog_cancel).setOnClickListener(this)
 
-    var debitCards = emptyList<DebitCardItem>()
     arguments?.let {
       val user = it.getSerializable(USER_ARG) as UserItem
+      appId = it.getInt(APP_ID_ARG) as Int
       debitCards = user.debitCards
     }
 
@@ -56,13 +69,60 @@ class DebitCardDialog: DialogFragment(), View.OnClickListener
 
   override fun onClick(v: View?) {
     if (v?.id == R.id.bt_dcd_dialog_ok) {
-      /*val bundle = Bundle().apply {
-        putString(BIRTH_DATE_KEY, str)
+      var debitCardId: Int? = debitCardIndex
+      var debitCard: String? = null
+
+      if (debitCardIndex == NOT_INDEX) {
+        val anotherDC = metAnotherDc.text.toString()
+        if (anotherDC.isEmpty()) {
+          showErrorBalloon(requireContext(), metAnotherDc,
+            getString(R.string.dcd_choose_or_set), BALLOON_WIDTH
+          )
+          return
+        }
+        else if (!debitCardIsValid(anotherDC, TAG)) {
+          showErrorBalloon(requireContext(), metAnotherDc,
+            getString(R.string.dcd_set_valid_dc), BALLOON_WIDTH
+          )
+          return
+        }
+        debitCard = anotherDC
+        debitCardId = null
       }
-      requireActivity().supportFragmentManager.setFragmentResult(BIRTH_DATE_KEY, bundle)*/
+
+      appId?.let { appId ->
+        server.enrollPorter(appId, debitCardId, debitCard) { appResponse: ApplicationResponse ->
+          onResult(appResponse)
+        }
+      }
     }
 
-    dismiss()
+    if (v?.id == R.id.bt_dcd_dialog_cancel) {
+      dismiss()
+    }
+  }
+
+  private fun onResult(appResponse: ApplicationResponse) {
+    when (appResponse.response.type) {
+      SERVER_OK     -> EnrollReaction(appResponse).doOnServerOkResult()
+      SYSTEM_ERROR  -> EnrollReaction(appResponse).doOnSystemError()
+      SERVER_ERROR  -> EnrollReaction(appResponse).doOnServerError()
+    }
+  }
+
+  private inner class EnrollReaction (val appResponse: ApplicationResponse):
+    ReactionOnResponse (TAG, requireContext(), metAnotherDc, appResponse.response)
+  {
+    override fun doOnServerOkResult() {
+      val bundle = Bundle().apply {
+        putSerializable(APPLICATION_KEY, appResponse.app)
+      }
+      requireActivity().supportFragmentManager.setFragmentResult(APPLICATION_KEY, bundle)
+      dismiss()
+    }
+
+    override fun doOnServerFieldValidationError(response: Response) {}
+    override fun doOnEndSessionError() {}
   }
 
   private inner class DebitCardAdapter (debitCards: List<DebitCardItem>):
@@ -81,6 +141,7 @@ class DebitCardDialog: DialogFragment(), View.OnClickListener
         this.dcs.add(debitCards[i])
 
       this.dcs.add(null)
+      debitCardIndex = 0
 
       ldAnotherDC.observe(viewLifecycleOwner,
         Observer { anotherDC ->
@@ -89,9 +150,8 @@ class DebitCardDialog: DialogFragment(), View.OnClickListener
             holders[selectedPosition].view.setBackgroundColor(Color.TRANSPARENT)
             notifyItemChanged(selectedPosition)
             selectedPosition = RecyclerView.NO_POSITION
+            debitCardIndex = NOT_INDEX
             notifyItemChanged(selectedPosition)
-            //selectedPosition = RecyclerView.NO_POSITION
-            //notifyItemChanged(selectedPosition)
           }
         }
       )
@@ -123,9 +183,9 @@ class DebitCardDialog: DialogFragment(), View.OnClickListener
         clearFocusFromAnotherDCEditText()
 
         Log.i ("DebitCardHolder", "old selectedPosition = $selectedPosition")
-        //if (selectedPosition != RecyclerView.NO_POSITION)
-          notifyItemChanged(selectedPosition)
+        notifyItemChanged(selectedPosition)
         selectedPosition = adapterPosition
+        debitCardIndex = selectedPosition
         notifyItemChanged(selectedPosition)
         Log.i ("DebitCardHolder", "new selectedPosition = $selectedPosition")
       }
@@ -156,16 +216,19 @@ class DebitCardDialog: DialogFragment(), View.OnClickListener
       Log.i (TAG, "dcs[position] = ${dcs[position]}")
       holder.bind(dcs[position])
       holder.itemView.setBackgroundColor (
-        if (selectedPosition == position) Color.GREEN
-        else Color.TRANSPARENT
+        if (selectedPosition == position)
+          Color.GREEN
+        else
+          Color.TRANSPARENT
       )
       holders.add(holder)
     }
   }
 
   companion object {
-    fun newInstance (user: UserItem): DebitCardDialog {
+    fun newInstance (appId: Int, user: UserItem): DebitCardDialog {
       val args = Bundle().apply {
+        putInt(APP_ID_ARG, appId)
         putSerializable(USER_ARG, user)
       }
 

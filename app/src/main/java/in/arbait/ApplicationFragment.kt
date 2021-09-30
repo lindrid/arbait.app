@@ -1,9 +1,11 @@
 package `in`.arbait
 
+import `in`.arbait.http.Server
 import `in`.arbait.http.items.ApplicationItem
 import `in`.arbait.http.items.DebitCardItem
 import `in`.arbait.http.items.PhoneItem
 import `in`.arbait.http.items.PorterItem
+import `in`.arbait.http.response.SERVER_OK
 import android.os.Bundle
 import android.text.Html
 import android.util.Log
@@ -28,6 +30,7 @@ import androidx.recyclerview.widget.RecyclerView
 private const val TAG = "ApplicationFragment"
 
 const val DEBIT_CARD_DIALOG_TAG = "DebitCardDialog"
+const val APPLICATION_KEY = "application"
 
 const val PHONE_CALL = 1
 const val PHONE_WHATSAPP = 2
@@ -39,9 +42,10 @@ const val PM_CASH = 2
 class ApplicationFragment (private val appId: Int): Fragment() {
 
   private var porter: PorterItem? = null
-  private var enroll = false
+  private var userIsEnrolled = false
   private lateinit var lvdAppItem: MutableLiveData<ApplicationItem>
 
+  private lateinit var server: Server
   private lateinit var supportFragmentManager: FragmentManager
   private lateinit var tvEnrolled: AppCompatTextView
   private lateinit var tvAddress: AppCompatTextView
@@ -66,6 +70,7 @@ class ApplicationFragment (private val appId: Int): Fragment() {
   {
     val view = inflater.inflate(R.layout.fragment_application, container, false)
     supportFragmentManager = requireActivity().supportFragmentManager
+    server = Server(requireContext())
 
     Log.i (TAG, "OnCreate()")
 
@@ -78,7 +83,7 @@ class ApplicationFragment (private val appId: Int): Fragment() {
         Log.i (TAG, "set:lvdAppItem")
         porter = getThisUserPorter(appItem)
         porter?.let {
-          enroll = true
+          userIsEnrolled = true
         }
         updateUI()
       }
@@ -88,7 +93,7 @@ class ApplicationFragment (private val appId: Int): Fragment() {
 
     rvPorters.layoutManager = LinearLayoutManager(context)
     setAppObserver()
-    setVisibility(enroll, view)
+    setVisibilityToViews(userIsEnrolled, view)
 
     btEnrollRefuse.setOnClickListener {
       onEnrollRefuseBtnClick(view)
@@ -112,22 +117,35 @@ class ApplicationFragment (private val appId: Int): Fragment() {
 
 
   private fun onEnrollRefuseBtnClick(view: View) {
-    App.userItem?.let { user ->
-      val dcd = DebitCardDialog.newInstance(user)
-      dcd.show(supportFragmentManager, DEBIT_CARD_DIALOG_TAG)
+    userIsEnrolled = !userIsEnrolled
+
+    if (userIsEnrolled) {
+      App.userItem?.let { user ->
+        val dcd = DebitCardDialog.newInstance(appId, user)
+        dcd.show(supportFragmentManager, DEBIT_CARD_DIALOG_TAG)
+        userIsEnrolled = false
+
+        supportFragmentManager.setFragmentResultListener(APPLICATION_KEY, viewLifecycleOwner)
+        { _, bundle ->
+          userIsEnrolled = true
+          val app = bundle.getSerializable(APPLICATION_KEY) as ApplicationItem
+          Log.i (TAG, "app from dialog = $app")
+          lvdAppItem.value = app
+          setVisibilityToViews(true, view)
+        }
+      }
     }
-
-
-    /*enroll = !enroll
-    setVisibility(enroll, view)
-    btEnrollRefuse.text = if (enroll)
-       getString(R.string.app_refuse)
     else
-      getString(R.string.app_enroll)*/
+      server.refuseApp(appId) { response ->
+        if (response.type == SERVER_OK) {
+          setVisibilityToViews(false, view)
+          btEnrollRefuse.text = getString(R.string.app_enroll)
+        }
+      }
   }
 
-  private fun setVisibility(enroll: Boolean, view: View) {
-    if (enroll) {
+  private fun setVisibilityToViews(userIsEnrolled: Boolean, view: View) {
+    if (userIsEnrolled) {
       tvEnrolled.visibility = View.VISIBLE
       rvPorters.visibility = View.VISIBLE
       btCallClient.visibility = View.VISIBLE
@@ -171,9 +189,10 @@ class ApplicationFragment (private val appId: Int): Fragment() {
   private fun setAppObserver() {
     lvdAppItem.observe(viewLifecycleOwner,
       Observer { appItem ->
-        Log.i ("appItem", "updateUI()")
+        Log.i (TAG, "observer appItem is $appItem")
         appItem?.let {
           porter = getThisUserPorter(it)
+          Log.i (TAG, "porter is $porter")
           updateUI()
         }
       }
@@ -223,7 +242,7 @@ class ApplicationFragment (private val appId: Int): Fragment() {
   private fun setViewsTexts() {
     val appItem = this.lvdAppItem.value
 
-    appItem?.let {
+    appItem?.let { appItem ->
       tvAddress.text = Html.fromHtml(getString(R.string.app_address, appItem.address))
 
       val date = strToDate(appItem.date, DATE_FORMAT)
@@ -247,7 +266,7 @@ class ApplicationFragment (private val appId: Int): Fragment() {
       val debitCardNumber = getDebitCardNumber()
       val payMethod = when (appItem.payMethod) {
         PM_CARD -> {
-          if (enroll)
+          if (userIsEnrolled)
             "${getString(R.string.app_on_card)} $debitCardNumber"
           else
             getString(R.string.app_on_card)
@@ -261,7 +280,7 @@ class ApplicationFragment (private val appId: Int): Fragment() {
       val workers = "${appItem.workerCount} / ${appItem.workerTotal}"
       tvPortersCount.text = Html.fromHtml(getString(R.string.app_worker_count, workers))
 
-      btEnrollRefuse.text = if (enroll)
+      btEnrollRefuse.text = if (userIsEnrolled)
         getString(R.string.app_refuse)
       else
         getString(R.string.app_enroll)
@@ -271,6 +290,7 @@ class ApplicationFragment (private val appId: Int): Fragment() {
 
   private fun getDebitCardNumber(): String {
     val dc = getMainDebitCard()
+    Log.i (TAG, "getMainDebitCard() = $dc")
     var dcStr = getString(R.string.app_no_card)
     dc?.let {
       dcStr = it.number

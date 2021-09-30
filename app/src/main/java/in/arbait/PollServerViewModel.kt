@@ -3,6 +3,7 @@ package `in`.arbait
 import `in`.arbait.http.*
 import `in`.arbait.http.poll_service.*
 import `in`.arbait.http.items.ApplicationItem
+import `in`.arbait.http.response.*
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent

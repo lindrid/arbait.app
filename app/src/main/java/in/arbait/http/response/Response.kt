@@ -1,4 +1,4 @@
-package `in`.arbait.http
+package `in`.arbait.http.response
 
 import android.util.Log
 import okhttp3.ResponseBody

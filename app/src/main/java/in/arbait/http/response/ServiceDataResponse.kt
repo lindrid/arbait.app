@@ -1,4 +1,4 @@
-package `in`.arbait.http
+package `in`.arbait.http.response
 
 import `in`.arbait.http.items.ApplicationItem
 import `in`.arbait.http.items.UserItem

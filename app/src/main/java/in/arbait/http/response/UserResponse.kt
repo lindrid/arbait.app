@@ -1,5 +1,6 @@
-package `in`.arbait.http
+package `in`.arbait.http.response
 
+import `in`.arbait.http.User
 import com.google.gson.annotations.SerializedName
 
 class UserResponse (var response: Response = Response()) {

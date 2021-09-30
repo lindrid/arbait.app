@@ -1,6 +1,10 @@
 package `in`.arbait
 
 import `in`.arbait.http.*
+import `in`.arbait.http.response.Response
+import `in`.arbait.http.response.SERVER_ERROR
+import `in`.arbait.http.response.SERVER_OK
+import `in`.arbait.http.response.SYSTEM_ERROR
 import android.graphics.Color
 import android.os.Bundle
 import android.util.Log

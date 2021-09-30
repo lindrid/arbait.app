@@ -1,6 +1,7 @@
 package `in`.arbait
 
 import `in`.arbait.http.*
+import `in`.arbait.http.response.*
 import android.os.Bundle
 import androidx.fragment.app.Fragment
 import android.text.method.PasswordTransformationMethod

@@ -28,7 +28,7 @@ val MANUFACTURER: String = Build.MANUFACTURER
 val VERSION: String = Build.VERSION.RELEASE
 val DEFAULT_EDITTEXT_EMERALD_COLOR = Color.parseColor("#02dac5")
 
-
+private const val DEBIT_CARD_MIN_LENGTH = 19
 private const val CENTURY_21_YEAR_UP_TO = 21
 private const val CENTURY_20_YEAR_UP_TO = 99
 
@@ -88,6 +88,16 @@ fun versionIsNineOrGreater(): Boolean {
   }
 
   return false
+}
+
+fun debitCardIsValid (debitCard: String, logTag: String): Boolean {
+  if (debitCard.contains('+'))
+    return phoneNumberIsValid(debitCard, "ru", logTag)
+
+  if (debitCard.length < DEBIT_CARD_MIN_LENGTH)
+    return false
+
+  return true
 }
 
 fun phoneNumberIsValid (phoneNumber: String?, countryCode: String?, logTag: String): Boolean {
@@ -164,10 +174,11 @@ fun showErrorBalloon (context: Context, whereToShow: View, textResource: Int) {
   }
 }
 
-fun showErrorBalloon(context: Context, whereToShow: View, text: String) {
+fun showErrorBalloon(context: Context, whereToShow: View, text: String,
+                     width: Int = BalloonSizeSpec.WRAP) {
   val balloon = createBalloon(context) {
     setArrowSize(10)
-    setWidth(BalloonSizeSpec.WRAP)
+    setWidth(width)
     setHeight(BalloonSizeSpec.WRAP)
     setArrowPosition(0.7f)
     setCornerRadius(4f)
