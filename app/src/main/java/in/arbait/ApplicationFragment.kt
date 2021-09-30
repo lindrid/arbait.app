@@ -330,9 +330,20 @@ class ApplicationFragment (private val appId: Int): Fragment() {
     }
   }
 
-  private inner class PortersAdapter (val porters: List<PorterItem>):
+  private inner class PortersAdapter (porters: List<PorterItem>):
     RecyclerView.Adapter<PorterHolder>()
   {
+    private val porters = mutableListOf<PorterItem>()
+
+    init {
+      App.userItem?.let { user ->
+        for (i in porters.indices) {
+          if (porters[i].user.id != user.id)
+            this.porters.add(porters[i])
+        }
+      }
+    }
+
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): PorterHolder {
       val view = LayoutInflater.from(parent.context).inflate(
         R.layout.list_item_porter, parent, false
