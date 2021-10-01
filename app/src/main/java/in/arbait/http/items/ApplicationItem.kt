@@ -21,7 +21,7 @@ data class ApplicationItem (
   @SerializedName("dispatcher_id") val dispatcherId: Int,
   var expanded: Boolean = true,
 
-  @SerializedName("porters") val porters: List<PorterItem>
+  @SerializedName("porters") val porters: List<PorterItem>?
 ): Serializable {}
 
 data class LiveDataAppItem (val lvdAppItem: LiveData<ApplicationItem>): Serializable{}

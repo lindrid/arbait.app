@@ -6,6 +6,7 @@ import `in`.arbait.http.items.DebitCardItem
 import `in`.arbait.http.items.PhoneItem
 import `in`.arbait.http.items.PorterItem
 import `in`.arbait.http.response.SERVER_OK
+import android.opengl.Visibility
 import android.os.Bundle
 import android.text.Html
 import android.util.Log
@@ -58,6 +59,7 @@ class ApplicationFragment (private val appId: Int): Fragment() {
   private lateinit var btCallClient: AppCompatButton
   private lateinit var btEnrollRefuse: AppCompatButton
   private lateinit var btBack: AppCompatButton
+  private lateinit var btChangeDebitCard: AppCompatButton
   private lateinit var nsvApp: NestedScrollView
 
   private val vm: PollServerViewModel by lazy {
@@ -99,6 +101,10 @@ class ApplicationFragment (private val appId: Int): Fragment() {
       onEnrollRefuseBtnClick(view)
     }
 
+    btChangeDebitCard.setOnClickListener {
+      onChangeDebitCardClick()
+    }
+
     btBack.setOnClickListener {
       vm.mainActivity.replaceOnFragment("Applications")
     }
@@ -115,6 +121,20 @@ class ApplicationFragment (private val appId: Int): Fragment() {
     actionBar?.title = "$appName - $app"
   }
 
+
+  private fun onChangeDebitCardClick() {
+    App.userItem?.let { user ->
+      val dcd = DebitCardDialog.newInstance(appId, user, itIsChangingCard = true)
+      dcd.show(supportFragmentManager, DEBIT_CARD_DIALOG_TAG)
+
+      supportFragmentManager.setFragmentResultListener(APPLICATION_KEY, viewLifecycleOwner)
+      { _, bundle ->
+        val app = bundle.getSerializable(APPLICATION_KEY) as ApplicationItem
+        Log.i (TAG, "when change card, app from dialog = $app")
+        lvdAppItem.value = app
+      }
+    }
+  }
 
   private fun onEnrollRefuseBtnClick(view: View) {
     userIsEnrolled = !userIsEnrolled
@@ -136,10 +156,11 @@ class ApplicationFragment (private val appId: Int): Fragment() {
       }
     }
     else
-      server.refuseApp(appId) { response ->
-        if (response.type == SERVER_OK) {
+      server.refuseApp(appId) { appUserResponse ->
+        if (appUserResponse.response.type == SERVER_OK) {
           setVisibilityToViews(false, view)
           btEnrollRefuse.text = getString(R.string.app_enroll)
+          lvdAppItem.value = appUserResponse.app
         }
       }
   }
@@ -191,7 +212,8 @@ class ApplicationFragment (private val appId: Int): Fragment() {
       Observer { appItem ->
         Log.i (TAG, "observer appItem is $appItem")
         appItem?.let {
-          porter = getThisUserPorter(it)
+          if (appItem.porters != null)
+            porter = getThisUserPorter(it)
           Log.i (TAG, "porter is $porter")
           updateUI()
         }
@@ -202,11 +224,14 @@ class ApplicationFragment (private val appId: Int): Fragment() {
   private fun getThisUserPorter(app: ApplicationItem): PorterItem? {
     var porter: PorterItem? = null
     App.dbUser?.let { user ->
-      for (i in app.porters.indices) {
-        if (user.id == app.porters[i].user.id) {
-          Log.i (TAG, "user.id=${user.id}")
-          porter = app.porters[i]
-          break
+      Log.i (TAG, "getThisUserPorter: app = $app, porters = ${app.porters}")
+      app.porters?.let {
+        for (i in app.porters.indices) {
+          if (user.id == app.porters[i].user.id) {
+            Log.i (TAG, "user.id=${user.id}")
+            porter = app.porters[i]
+            break
+          }
         }
       }
     }
@@ -220,7 +245,9 @@ class ApplicationFragment (private val appId: Int): Fragment() {
 
   private fun updatePorters() {
     lvdAppItem.value?.let {
-      rvPorters.adapter = PortersAdapter(it.porters)
+      it.porters?.let { porters ->
+        rvPorters.adapter = PortersAdapter(porters)
+      }
     }
   }
 
@@ -236,6 +263,7 @@ class ApplicationFragment (private val appId: Int): Fragment() {
     btCallClient = view.findViewById(R.id.bt_app_call_client)
     btEnrollRefuse = view.findViewById(R.id.bt_app_enroll_refuse)
     btBack = view.findViewById(R.id.bt_app_back)
+    btChangeDebitCard = view.findViewById(R.id.bt_app_change_debit_card)
     nsvApp = view.findViewById(R.id.nsv_app)
   }
 
@@ -263,16 +291,19 @@ class ApplicationFragment (private val appId: Int): Fragment() {
 
       tvDescription.text = Html.fromHtml(getString(R.string.app_description, appItem.whatToDo))
 
-      val debitCardNumber = getDebitCardNumber()
       val payMethod = when (appItem.payMethod) {
-        PM_CARD -> {
-          if (userIsEnrolled)
-            "${getString(R.string.app_on_card)} $debitCardNumber"
-          else
-            getString(R.string.app_on_card)
-        }
+        PM_CARD -> getString(R.string.app_on_card)
         PM_CASH -> getString(R.string.app_cash)
         else -> ""
+      }
+
+      if (userIsEnrolled) {
+        val debitCardNumber = getDebitCardNumber()
+        btChangeDebitCard.text = debitCardNumber
+        btChangeDebitCard.visibility = View.VISIBLE
+      }
+      else {
+        btChangeDebitCard.visibility = View.INVISIBLE
       }
 
       tvPayMethod.text = Html.fromHtml(getString(R.string.app_pay_method, payMethod))
@@ -289,13 +320,24 @@ class ApplicationFragment (private val appId: Int): Fragment() {
   }
 
   private fun getDebitCardNumber(): String {
-    val dc = getMainDebitCard()
-    Log.i (TAG, "getMainDebitCard() = $dc")
-    var dcStr = getString(R.string.app_no_card)
-    dc?.let {
-      dcStr = it.number
+    porter?.let { porter ->
+      val dcId = porter.pivot.appDebitCardId
+      Log.i (TAG, "debitCardId = $dcId")
+      var dcStr = getString(R.string.app_no_card)
+
+      if (dcId != 0) {
+        val debitCards = porter.user.debitCards
+        for (i in debitCards.indices)
+          if (debitCards[i].id == dcId) {
+            dcStr = debitCards[i].number
+            break
+          }
+      }
+
+      return dcStr
     }
-    return dcStr
+
+    return ""
   }
 
   private fun getMainDebitCard(): DebitCardItem? {

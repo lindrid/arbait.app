@@ -3,10 +3,10 @@ package `in`.arbait.http.items
 import com.google.gson.annotations.SerializedName
 import java.io.Serializable
 
-data class PorterItem (
-  val id: Int,
-  @SerializedName("user") val user: UserItem,
-  @SerializedName("pivot") val pivot: PorterPivotItem
+data class PorterPivotItem (
+  @SerializedName("application_id") val appId: Int,
+  @SerializedName("app_porter_id") val appPorterId: Int,
+  @SerializedName("app_debit_card_id") val appDebitCardId: Int
 ): Serializable {}
 
 /*

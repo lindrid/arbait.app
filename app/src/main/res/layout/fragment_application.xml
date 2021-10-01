@@ -125,6 +125,16 @@
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@+id/tv_app_porters" />
 
+            <androidx.appcompat.widget.AppCompatButton
+                android:id="@+id/bt_app_change_debit_card"
+                android:layout_width="wrap_content"
+                android:layout_height="45dp"
+                android:layout_marginTop="1dp"
+                android:textSize="18sp"
+                android:visibility="invisible"
+                app:layout_constraintStart_toEndOf="@+id/tv_app_pay_method"
+                app:layout_constraintTop_toBottomOf="@+id/tv_app_worker_income" />
+
         </androidx.constraintlayout.widget.ConstraintLayout>
         >
 

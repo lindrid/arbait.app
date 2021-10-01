@@ -87,7 +87,7 @@
     <string name="app_back">Назад</string>
     <string name="app_action_bar_title">Заявка</string>
     <string name="app_you_are_enrolled">Вы записаны</string>
-    <string name="app_no_card">, которой у вас нет</string>
+    <string name="app_no_card">без карты</string>
 
     <!-- LoginFragment -->
     <string name="log_login">Войти</string>

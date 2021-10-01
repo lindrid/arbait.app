@@ -1,6 +1,6 @@
 package `in`.arbait.http
 
-import `in`.arbait.http.response.ApplicationResponse
+import `in`.arbait.http.response.ApplicationUserResponse
 import `in`.arbait.http.response.ServiceDataResponse
 import `in`.arbait.http.response.UserResponse
 import android.content.Context
@@ -87,17 +87,23 @@ class Server (private val context: Context)
     )
   }
 
-  fun enrollPorter (appId: Int, debitCardId: Int?, debitCard: String?,
-                    onResult: (ApplicationResponse) -> Unit)
+  fun changeDebitCard ( appId: Int, debitCardId: Int?, debitCard: String?,
+                        onResult: (ApplicationUserResponse) -> Unit)
   {
-    appCallback.onResult = onResult
-    serverApi.enrollPorter(headers, appId, debitCardId, debitCard).enqueue(appCallback)
+    appUserCallback.onResult = onResult
+    serverApi.changeDebitCard(headers, appId, debitCardId, debitCard).enqueue(appUserCallback)
   }
 
-  fun refuseApp (appId: Int, onResult: (`in`.arbait.http.response.Response) -> Unit) {
-    serverApi.refuseApp(headers, appId).enqueue (
-      getCallbackObjectShort("enrollPorter", onResult)
-    )
+  fun enrollPorter (appId: Int, debitCardId: Int?, debitCard: String?,
+                    onResult: (ApplicationUserResponse) -> Unit)
+  {
+    appUserCallback.onResult = onResult
+    serverApi.enrollPorter(headers, appId, debitCardId, debitCard).enqueue(appUserCallback)
+  }
+
+  fun refuseApp (appId: Int, onResult: (ApplicationUserResponse) -> Unit) {
+    appUserCallback.onResult = onResult
+    serverApi.refuseApp(headers, appId).enqueue (appUserCallback)
   }
 
   fun registerUser (user: User, onResult: (`in`.arbait.http.response.Response) -> Unit) {
@@ -196,27 +202,27 @@ class Server (private val context: Context)
     }
   }
 
-  private val appCallback = object : Callback<ApplicationResponse>
+  private val appUserCallback = object : Callback<ApplicationUserResponse>
   {
-    lateinit var onResult: (ApplicationResponse) -> Unit
+    lateinit var onResult: (ApplicationUserResponse) -> Unit
 
-    override fun onFailure (call: Call<ApplicationResponse>, t: Throwable) {
+    override fun onFailure (call: Call<ApplicationUserResponse>, t: Throwable) {
       Log.e (TAG, "Enroll porter FAILED!", t)
-      onResult(ApplicationResponse(`in`.arbait.http.response.Response(t)))
+      onResult(ApplicationUserResponse(`in`.arbait.http.response.Response(t)))
     }
 
-    override fun onResponse (call: Call<ApplicationResponse>,
-                             response: Response<ApplicationResponse>)
+    override fun onResponse (call: Call<ApplicationUserResponse>,
+                             response: Response<ApplicationUserResponse>)
     {
       if (response.code() == 200) {
         Log.i(TAG, "ApplicationResponse received, response.body() = ${response.body()}")
-        val appResponse: ApplicationResponse? = response.body()
-        onResult(appResponse ?: ApplicationResponse())
+        val appUserResponse: ApplicationUserResponse? = response.body()
+        onResult(appUserResponse ?: ApplicationUserResponse())
       }
       else {
         Log.e (TAG, "Server error with code ${response.code()}")
         response.errorBody()?.let {
-          onResult(ApplicationResponse(`in`.arbait.http.response.Response(it, response.code())))
+          onResult(ApplicationUserResponse(`in`.arbait.http.response.Response(it, response.code())))
         }
       }
     }

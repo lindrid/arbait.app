@@ -20,6 +20,7 @@ import androidx.recyclerview.widget.RecyclerView
 
 private const val TAG = "DebitCardDialog"
 private const val USER_ARG = "user"
+private const val IT_IS_CHANGING_CARD_ARG = "itIsChangingCard"
 
 private const val NOT_INDEX = -1
 private const val BALLOON_WIDTH = 200
@@ -34,6 +35,7 @@ class DebitCardDialog: DialogFragment(), View.OnClickListener
   private val ldAnotherDC: MutableLiveData<Boolean> = MutableLiveData(false)
   private var debitCards: List<DebitCardItem> = emptyList()
   private var debitCardIndex: Int = NOT_INDEX
+  private var itIsChangingCard = false
 
   override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
                             savedInstanceState: Bundle?): View?
@@ -52,7 +54,8 @@ class DebitCardDialog: DialogFragment(), View.OnClickListener
 
     arguments?.let {
       val user = it.getSerializable(USER_ARG) as UserItem
-      appId = it.getInt(APP_ID_ARG) as Int
+      appId = it.getInt(APP_ID_ARG)
+      itIsChangingCard = it.getBoolean(IT_IS_CHANGING_CARD_ARG)
       debitCards = user.debitCards
     }
 
@@ -69,7 +72,7 @@ class DebitCardDialog: DialogFragment(), View.OnClickListener
 
   override fun onClick(v: View?) {
     if (v?.id == R.id.bt_dcd_dialog_ok) {
-      var debitCardId: Int? = debitCardIndex
+      var debitCardId: Int? = null
       var debitCard: String? = null
 
       if (debitCardIndex == NOT_INDEX) {
@@ -89,10 +92,21 @@ class DebitCardDialog: DialogFragment(), View.OnClickListener
         debitCard = anotherDC
         debitCardId = null
       }
+      else {
+        debitCardId = if (debitCardIndex == debitCards.size) 0
+        else debitCards[debitCardIndex].id
+      }
 
       appId?.let { appId ->
-        server.enrollPorter(appId, debitCardId, debitCard) { appResponse: ApplicationResponse ->
-          onResult(appResponse)
+        if (itIsChangingCard)
+          server.changeDebitCard(appId, debitCardId, debitCard) { appUserResponse: ApplicationUserResponse ->
+            onResult(appUserResponse)
+          }
+        else {
+          Log.i (TAG, "debitCard = $debitCard, debitCardId = $debitCardId")
+          server.enrollPorter(appId, debitCardId, debitCard) { appUserResponse: ApplicationUserResponse ->
+            onResult(appUserResponse)
+          }
         }
       }
     }
@@ -102,20 +116,21 @@ class DebitCardDialog: DialogFragment(), View.OnClickListener
     }
   }
 
-  private fun onResult(appResponse: ApplicationResponse) {
-    when (appResponse.response.type) {
-      SERVER_OK     -> EnrollReaction(appResponse).doOnServerOkResult()
-      SYSTEM_ERROR  -> EnrollReaction(appResponse).doOnSystemError()
-      SERVER_ERROR  -> EnrollReaction(appResponse).doOnServerError()
+  private fun onResult(appUserResponse: ApplicationUserResponse) {
+    when (appUserResponse.response.type) {
+      SERVER_OK     -> EnrollReaction(appUserResponse).doOnServerOkResult()
+      SYSTEM_ERROR  -> EnrollReaction(appUserResponse).doOnSystemError()
+      SERVER_ERROR  -> EnrollReaction(appUserResponse).doOnServerError()
     }
   }
 
-  private inner class EnrollReaction (val appResponse: ApplicationResponse):
-    ReactionOnResponse (TAG, requireContext(), metAnotherDc, appResponse.response)
+  private inner class EnrollReaction (val appUserResponse: ApplicationUserResponse):
+    ReactionOnResponse (TAG, requireContext(), metAnotherDc, appUserResponse.response)
   {
     override fun doOnServerOkResult() {
+      App.userItem = appUserResponse.user
       val bundle = Bundle().apply {
-        putSerializable(APPLICATION_KEY, appResponse.app)
+        putSerializable(APPLICATION_KEY, appUserResponse.app)
       }
       requireActivity().supportFragmentManager.setFragmentResult(APPLICATION_KEY, bundle)
       dismiss()
@@ -226,9 +241,10 @@ class DebitCardDialog: DialogFragment(), View.OnClickListener
   }
 
   companion object {
-    fun newInstance (appId: Int, user: UserItem): DebitCardDialog {
+    fun newInstance (appId: Int, user: UserItem, itIsChangingCard: Boolean = false): DebitCardDialog {
       val args = Bundle().apply {
         putInt(APP_ID_ARG, appId)
+        putBoolean(IT_IS_CHANGING_CARD_ARG, itIsChangingCard)
         putSerializable(USER_ARG, user)
       }
 
