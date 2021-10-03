@@ -40,8 +40,8 @@ class ApplicationsFragment: Fragment() {
   private var showTomorrowApps = false
 
   private lateinit var rootView: View
-  private lateinit var rvApps: RecyclerView
-  private var adapter: AppAdapter = AppAdapter(emptyList())
+  private lateinit var rvOpenApps: RecyclerView
+  private lateinit var rvTakenApps: RecyclerView
 
   private val vm: PollServerViewModel by lazy {
     val mainActivity = requireActivity() as MainActivity
@@ -54,14 +54,18 @@ class ApplicationsFragment: Fragment() {
     val view = inflater.inflate(R.layout.fragment_applications, container, false)
     rootView = view
 
-    rvApps = view.findViewById(R.id.rv_app_list)
-    rvApps.layoutManager = LinearLayoutManager(context)
-    rvApps.adapter = adapter
+    rvOpenApps = view.findViewById(R.id.rv_app_list)
+    rvOpenApps.layoutManager = LinearLayoutManager(context)
+    rvOpenApps.adapter = OpenAppAdapter(emptyList())
+
+    rvTakenApps = view.findViewById(R.id.rv_app_taken_apps)
+    rvTakenApps.layoutManager = LinearLayoutManager(context)
+    rvTakenApps.adapter = TakenAppAdapter(emptyList())
 
     val divider = DividerItemDecoration(context, DividerItemDecoration.VERTICAL)
     divider.setDrawable(ContextCompat.getDrawable(requireContext(), R.drawable.divider)!!)
-    rvApps.addItemDecoration(DividerItemDecoration(context, DividerItemDecoration.VERTICAL))
-    rvApps.addItemDecoration(divider)
+    rvOpenApps.addItemDecoration(DividerItemDecoration(context, DividerItemDecoration.VERTICAL))
+    rvOpenApps.addItemDecoration(divider)
 
     vm.rootView = rootView
 
@@ -76,7 +80,17 @@ class ApplicationsFragment: Fragment() {
           Log.i(TAG, "openApps is $it")
           setTodayAndTomorrowApps(it)
           showTomorrowApps = todayApps.isEmpty()
-          updateUI(it)
+          updateOpenAppsUI(it)
+        }
+      }
+    )
+
+    vm.takenApps.observe(viewLifecycleOwner,
+      Observer { takenApps ->
+        takenApps?.let {
+          Log.i(TAG, "Taken apps size is ${it.size}")
+          Log.i(TAG, "takenApps is $it")
+          updateTakenAppsUI(it)
         }
       }
     )
@@ -93,8 +107,12 @@ class ApplicationsFragment: Fragment() {
     actionBar?.title = "$appName - $apps"
   }
 
-  fun updateUI(openApps: List<ApplicationItem>) {
-    rvApps.adapter = getConcatOpenAdapter(openApps)
+  fun updateOpenAppsUI(openApps: List<ApplicationItem>) {
+    rvOpenApps.adapter = getConcatOpenAdapter(openApps)
+  }
+
+  private fun updateTakenAppsUI(takenApps: List<ApplicationItem>) {
+    rvTakenApps.adapter = TakenAppAdapter(takenApps)
   }
 
   private fun getConcatOpenAdapter(openApps: List<ApplicationItem>):
@@ -119,7 +137,7 @@ class ApplicationsFragment: Fragment() {
         concatAdapter = when (showTomorrowApps) {
           true  -> {
             headerIsSet = true
-            ConcatAdapter(intermediateAdapter, AppAdapter(tomorrowApps, true))
+            ConcatAdapter(intermediateAdapter, OpenAppAdapter(tomorrowApps, true))
           }
           false -> intermediateAdapter
         }
@@ -129,7 +147,7 @@ class ApplicationsFragment: Fragment() {
       val todayHeaderAdapter = HeaderAdapter(todayHeaderText, DAY_HEADER)
 
       val addAdapter = when (todayApps.isNotEmpty()) {
-        true -> ConcatAdapter(todayHeaderAdapter, AppAdapter(todayApps, !headerIsSet))
+        true -> ConcatAdapter(todayHeaderAdapter, OpenAppAdapter(todayApps, !headerIsSet))
         false ->  ConcatAdapter(todayHeaderAdapter, HeaderAdapter(
                     getString(R.string.apps_no_open_apps), TEXT))
       }
@@ -160,7 +178,9 @@ class ApplicationsFragment: Fragment() {
     }
   }
 
-  private inner class AppHolder (view: View): RecyclerView.ViewHolder(view), View.OnClickListener {
+  private inner class OpenAppHolder (view: View): RecyclerView.ViewHolder(view),
+    View.OnClickListener
+  {
     private val tvTime: TextView = view.findViewById(R.id.tv_apps_time)
     private val tvAddress: TextView = view.findViewById(R.id.tv_apps_address)
     private val tvIncome: TextView = view.findViewById(R.id.tv_apps_worker_income)
@@ -211,8 +231,8 @@ class ApplicationsFragment: Fragment() {
     }
   }
 
-  private inner class AppAdapter (apps: List<ApplicationItem?>, val hasHeader: Boolean = false):
-    RecyclerView.Adapter<AppHolder> ()
+  private inner class OpenAppAdapter (apps: List<ApplicationItem?>, val hasHeader: Boolean = false):
+    RecyclerView.Adapter<OpenAppHolder> ()
   {
     private val headerType = 0
     private val itemType = 1
@@ -226,13 +246,13 @@ class ApplicationsFragment: Fragment() {
         this.apps.add(apps[i])
     }
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): AppHolder {
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): OpenAppHolder {
       val view = if (viewType == headerType)
         layoutInflater.inflate(R.layout.list_item_app_header, parent, false)
       else
         layoutInflater.inflate(R.layout.list_item_app, parent, false)
 
-      return AppHolder(view)
+      return OpenAppHolder(view)
     }
 
     override fun getItemCount() = apps.size
@@ -244,12 +264,57 @@ class ApplicationsFragment: Fragment() {
       return itemType
     }
 
-    override fun onBindViewHolder(holder: AppHolder, position: Int) {
+    override fun onBindViewHolder(holder: OpenAppHolder, position: Int) {
       Log.i (TAG, "apps[position] = ${apps[position]}")
       holder.bind(apps[position])
       holder.itemView.setOnClickListener(holder)
     }
   }
+
+
+  private inner class TakenAppHolder (view: View): RecyclerView.ViewHolder(view),
+    View.OnClickListener
+  {
+    private val tvTime: TextView = view.findViewById(R.id.tv_apps_time)
+    private val tvAddress: TextView = view.findViewById(R.id.tv_apps_address)
+    private lateinit var app: ApplicationItem
+
+    fun bind (app: ApplicationItem) {
+      this.app = app
+      Log.i (TAG, "taken app is $app")
+
+      tvTime.text = app.time
+      tvAddress.text = app.address
+    }
+
+    override fun onClick(v: View?) {
+      Log.i ("TakenAppHolder", "onClick()")
+      val args = Bundle().apply {
+        putInt(APP_ID_ARG, app.id)
+      }
+      val mainActivity = context as MainActivity
+      mainActivity.replaceOnFragment("Application", args)
+    }
+  }
+
+  private inner class TakenAppAdapter (val apps: List<ApplicationItem>):
+    RecyclerView.Adapter<TakenAppHolder> ()
+  {
+
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): TakenAppHolder {
+      val view = layoutInflater.inflate(R.layout.list_item_taken_app, parent, false)
+      return TakenAppHolder(view)
+    }
+
+    override fun getItemCount() = apps.size
+
+    override fun onBindViewHolder(holder: TakenAppHolder, position: Int) {
+      Log.i (TAG, "takenApps[position] = ${apps[position]}")
+      holder.bind(apps[position])
+      holder.itemView.setOnClickListener(holder)
+    }
+  }
+
 
   private inner class HeaderHolder (view: View) : RecyclerView.ViewHolder(view) {
     private val tvAppsHeader: TextView = view.findViewById(R.id.tv_header)
@@ -285,7 +350,7 @@ class ApplicationsFragment: Fragment() {
         holder.itemView.setOnClickListener {
           showTomorrowApps = !showTomorrowApps
           vm.openApps.value?.let {
-            updateUI(it)
+            updateOpenAppsUI(it)
             App.dbUser?.let { user ->
               if (!user.headerWasPressed) {
                 user.headerWasPressed = true

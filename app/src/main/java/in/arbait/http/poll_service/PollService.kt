@@ -38,6 +38,7 @@ class PollService : LifecycleService() {
     private set
 
   private var openApps: List<ApplicationItem> = emptyList()
+  private var takenApps: List<ApplicationItem> = emptyList()
 
   private var wakeLock: PowerManager.WakeLock? = null
   private var serviceIsStarted = false
@@ -82,6 +83,13 @@ class PollService : LifecycleService() {
             it.user?.let {  user ->
               App.userItem = user
               log("App.userItem = $user")
+            }
+
+            if (it.takenApps == null)
+              this.takenApps = emptyList()
+
+            it.takenApps?.let { takenApps ->
+              this.takenApps = takenApps
             }
 
             if (openAppsFromServer.isNotEmpty()) {

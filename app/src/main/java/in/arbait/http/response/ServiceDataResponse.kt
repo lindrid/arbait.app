@@ -12,6 +12,9 @@ class ServiceDataResponse (var response: Response = Response()) {
   @SerializedName("user")
   var user: UserItem? = null
 
+  @SerializedName("taken_apps")
+  var takenApps: List<ApplicationItem>? = null
+
   init {
     if (response.noResult)
       openApps = emptyList()

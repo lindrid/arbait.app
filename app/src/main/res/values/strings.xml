@@ -68,6 +68,8 @@
     <string name="apps_finished">Завершенные</string>
     <string name="apps_action_bar_title">Заявки</string>
 
+    <string name="panel_title">Взятые заявки</string>
+
     <!-- Poll service -->
     <string name="poll_service_channel_id">Поиск заявок</string>
     <string name="poll_new_app_channel_id">Новая заявка</string>

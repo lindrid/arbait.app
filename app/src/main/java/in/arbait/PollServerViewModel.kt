@@ -39,6 +39,9 @@ class PollServerViewModel: ViewModel(), Serializable {
   val openApps: MutableLiveData<List<ApplicationItem>> = MutableLiveData()
   val lvdOpenApps = mutableMapOf<Int, MutableLiveData<ApplicationItem>>()
 
+  val takenApps: MutableLiveData<List<ApplicationItem>> = MutableLiveData()
+  val lvdTakenApps = mutableMapOf<Int, MutableLiveData<ApplicationItem>>()
+
   private lateinit var appsResponse: LiveData<ServiceDataResponse>
 
   private val serviceConnection = object : ServiceConnection {
@@ -108,41 +111,21 @@ class PollServerViewModel: ViewModel(), Serializable {
     )
   }
 
-  private fun openAppsDifferFrom (openApps: List<ApplicationItem>): Boolean {
-    return listsAreDifferent(this.openApps.value!!, openApps)
-  }
 
   private inner class PollServerReaction (response: Response):
     ReactionOnResponse (TAG, context, rootView, response) {
 
     fun doOnServerOkResult(appsResponse: ServiceDataResponse) {
-      var openAppsIsEmpty = false
-      openApps.value?.let { value ->
-        openAppsIsEmpty = value.isEmpty()
+      /*openApps.value?.let { value ->
         Log.i (TAG, "openApps.size = ${value.size}")
         Log.i (TAG, "appsResponse.openApps.size = ${appsResponse.openApps.size}")
-      }
-      if ((openApps.value == null) || openAppsDifferFrom(appsResponse.openApps)) {
-        openApps.value = appsResponse.openApps
-      }
-      for (i in appsResponse.openApps.indices) {
-        val appId = appsResponse.openApps[i].id
-        if (lvdOpenApps.containsKey(appId)) {
-          lvdOpenApps[appId]?.let { lvdApp ->
-            Log.i(TAG, "LIVE_DATA, appId = $appId, liveData = $lvdApp, " +
-                "value = ${lvdApp.value}")
+      }*/
 
-            lvdApp.value = appsResponse.openApps[i]
+      setOpenApps(appsResponse)
+      setLiveDataOpenApps(appsResponse)
 
-            Log.i (TAG, "NEW_LIVE_DATA, appId = $appId, liveData = $lvdApp, " +
-                "value = ${lvdApp.value}")
-          }
-        }
-        else {
-          val lvdValue = MutableLiveData<ApplicationItem>(appsResponse.openApps[i])
-          lvdOpenApps[appId] = lvdValue
-        }
-      }
+      setTakenApps(appsResponse)
+      setLiveDataTakenApps(appsResponse)
     }
 
     override fun doOnServerOkResult() {}
@@ -170,6 +153,63 @@ class PollServerViewModel: ViewModel(), Serializable {
         // add your code here
       }*/
       mainActivity.replaceOnFragment("Login")
+    }
+
+
+    private fun setOpenApps(appsResponse: ServiceDataResponse) {
+      if ((openApps.value == null) || openAppsDifferFrom(appsResponse.openApps)) {
+        openApps.value = appsResponse.openApps
+      }
+    }
+
+    private fun setLiveDataOpenApps(appsResponse: ServiceDataResponse) {
+      for (i in appsResponse.openApps.indices) {
+        val appId = appsResponse.openApps[i].id
+        if (lvdOpenApps.containsKey(appId)) {
+          lvdOpenApps[appId]?.let { lvdApp ->
+            lvdApp.value = appsResponse.openApps[i]
+          }
+        }
+        else {
+          val lvdValue = MutableLiveData<ApplicationItem>(appsResponse.openApps[i])
+          lvdOpenApps[appId] = lvdValue
+        }
+      }
+    }
+
+    private fun openAppsDifferFrom (openApps: List<ApplicationItem>): Boolean {
+      return listsAreDifferent(this@PollServerViewModel.openApps.value!!, openApps)
+    }
+
+
+    private fun setTakenApps(appsResponse: ServiceDataResponse) {
+      appsResponse.takenApps?.let { responseTakenApps ->
+        if ((takenApps.value == null) || takenAppsDifferFrom(responseTakenApps)) {
+          takenApps.value = responseTakenApps
+        }
+      }
+
+    }
+
+    private fun setLiveDataTakenApps(appsResponse: ServiceDataResponse) {
+      appsResponse.takenApps?.let { responseTakenApps ->
+        for (i in responseTakenApps.indices) {
+          val appId = responseTakenApps[i].id
+          if (lvdTakenApps.containsKey(appId)) {
+            lvdTakenApps[appId]?.let { lvdApp ->
+              lvdApp.value = responseTakenApps[i]
+            }
+          }
+          else {
+            val lvdValue = MutableLiveData<ApplicationItem>(responseTakenApps[i])
+            lvdTakenApps[appId] = lvdValue
+          }
+        }
+      }
+    }
+
+    private fun takenAppsDifferFrom (takenApps: List<ApplicationItem>): Boolean {
+      return listsAreDifferent(this@PollServerViewModel.takenApps.value!!, takenApps)
     }
   }
 
