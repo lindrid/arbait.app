@@ -21,6 +21,14 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.Observer
 import kotlinx.coroutines.*
 import android.app.NotificationManager
+import android.app.PendingIntent
+
+import `in`.arbait.MainActivity
+import android.app.PendingIntent.FLAG_UPDATE_CURRENT
+import android.content.BroadcastReceiver
+import androidx.lifecycle.MutableLiveData
+
+const val FRAGMENT_NAME_ARG = "fragmentName"
 
 private const val TAG = "PollingService"
 private const val SERVICE_DELAY_SECONDS: Long = 5
@@ -36,6 +44,8 @@ private val NEW_APP_NOTIFICATION_CHANNEL_ID = App.res!!.getString(R.string.poll_
 class PollService : LifecycleService() {
   lateinit var dataResponse: LiveData<ServiceDataResponse>
     private set
+
+  var clickedNotificationAppId: Int? = null
 
   private var openApps: List<ApplicationItem> = emptyList()
   private var takenApps: List<ApplicationItem> = emptyList()
@@ -208,12 +218,10 @@ class PollService : LifecycleService() {
   private fun createNewAppNotification (newApp: ApplicationItem): Notification {
     val title = newApp.address
 
-    var word: String = ""
+    var word = ""
     strToDate(newApp.date, DATE_FORMAT)?.let {
-      word = if (isItToday(it))
-        getString(R.string.`in`).uppercase()
-      else
-        getString(R.string.tomorrow)
+     if (!isItToday(it))
+       word = getString(R.string.tomorrow) + " "
     }
     val suffix = if (newApp.hourlyJob)
       getString(R.string.hourly_suffix)
@@ -221,13 +229,15 @@ class PollService : LifecycleService() {
       getString(R.string.daily_suffix)
     val price = "${newApp.priceForWorker}$suffix"
     val people = getString(R.string.people, newApp.workerTotal)
-    val text = "$word ${newApp.time}, $price, $people"
+    val text = "$word${newApp.time}, $price, $people"
 
     return createNotification ( NEW_APP_NOTIFICATION_CHANNEL_ID,
                                 IMPORTANCE_HIGH,
                                 true,
                                 title,
-                                text)
+                                text,
+                                NEW_APP_NOTIFICATION_CHANNEL_ID,
+                                newApp.id)
   }
 
   private fun createNotification (notificationChannelId: String,
@@ -235,7 +245,8 @@ class PollService : LifecycleService() {
                                   vibration: Boolean = false,
                                   title: String = notificationChannelId,
                                   text: String = "",
-                                  name: String = notificationChannelId): Notification
+                                  name: String = notificationChannelId,
+                                  appId: Int? = null ): Notification
   {
     // depending on the Android API that we're dealing with we will have
     // to use a specific method to create the notification
@@ -256,9 +267,28 @@ class PollService : LifecycleService() {
       notificationManager.createNotificationChannel(channel)
     }
 
+    // on notification click
+    // `in`.arbait
+    /*val intent = Intent(Intent.ACTION_MAIN).apply {
+      setClassName("`in`.arbait", "MainActivity")
+      putExtra(FRAGMENT_NAME_ARG, "Application")
+      appId?.let { appId ->
+        putExtra(APP_ID_ARG, appId)
+      }
+    }
+    this.startActivity(intent)*/
     val pendingIntent: PendingIntent =
-      Intent(this, MainActivity::class.java).let { notificationIntent ->
-        PendingIntent.getActivity(this, 0, notificationIntent, 0)
+      Intent(App.context, NotificationTapReceiver::class.java).let { notificationIntent ->
+        Log.i (TAG, "PendingIntent: appId = $appId")
+        notificationIntent.putExtra(FRAGMENT_NAME_ARG, "Application")
+          notificationIntent.putExtra(APP_ID_ARG, appId)
+        Log.i (TAG, "PendingIntent: extras = ${notificationIntent.extras}")
+        //notificationIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+
+        /*PendingIntent.getActivity(App.context, 0, notificationIntent,
+          PendingIntent.FLAG_UPDATE_CURRENT)*/
+        notificationIntent.action = "TAP_ON_NOTIFICATION"
+        PendingIntent.getBroadcast(App.context, 0, notificationIntent, FLAG_UPDATE_CURRENT)
       }
 
     val builder: Notification.Builder =

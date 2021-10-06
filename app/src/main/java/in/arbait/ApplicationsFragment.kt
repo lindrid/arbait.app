@@ -3,6 +3,10 @@ package `in`.arbait
 import `in`.arbait.http.poll_service.*
 import `in`.arbait.http.items.ApplicationItem
 import android.annotation.SuppressLint
+import android.content.BroadcastReceiver
+import android.content.Context
+import android.content.Intent
+import android.content.IntentFilter
 import android.graphics.Color
 import android.os.Bundle
 import android.util.Log
@@ -16,11 +20,14 @@ import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.MutableLiveData
+import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import androidx.recyclerview.widget.ConcatAdapter
 import androidx.recyclerview.widget.DividerItemDecoration
 
 const val DATE_FORMAT = "yyyy-MM-dd"
-const val APP_ID_ARG = "application_id"
+const val APP_ID_ARG = "applicationId"
+const val APPLICATION_FRAGMENT_NAME = "Application"
 
 private const val TAG = "ApplicationsFragment"
 val OPEN_HEADER_COLOR = Color.parseColor("#2E8B57")
@@ -34,7 +41,10 @@ const val MAIN_HEADER_TEXT_SIZE = 28f
 const val HEADER_TEXT_SIZE = 24f
 const val TEXT_SIZE = 18f
 
-class ApplicationsFragment: Fragment() {
+class ApplicationsFragment: Fragment()
+{
+  private lateinit var receiver: BroadcastReceiver
+
   private var todayApps = mutableListOf<ApplicationItem>()
   private var tomorrowApps = mutableListOf<ApplicationItem>()
   private var showTomorrowApps = false
@@ -47,6 +57,7 @@ class ApplicationsFragment: Fragment() {
     val mainActivity = requireActivity() as MainActivity
     mainActivity.pollServerViewModel
   }
+
 
   override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
                             savedInstanceState: Bundle?): View?
@@ -226,7 +237,7 @@ class ApplicationsFragment: Fragment() {
           putInt(APP_ID_ARG, app.id)
         }
         val mainActivity = context as MainActivity
-        mainActivity.replaceOnFragment("Application", args)
+        mainActivity.replaceOnFragment(APPLICATION_FRAGMENT_NAME, args)
       }
     }
   }

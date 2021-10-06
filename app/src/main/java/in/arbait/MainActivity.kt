@@ -1,6 +1,13 @@
 package `in`.arbait
 
+import `in`.arbait.App.Companion.context
 import `in`.arbait.database.User
+import `in`.arbait.http.poll_service.APP_NO_ID
+import `in`.arbait.http.poll_service.Actions
+import `in`.arbait.http.poll_service.FRAGMENT_NAME_ARG
+import android.content.*
+import android.content.ContentValues.TAG
+import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
@@ -8,16 +15,21 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
-import android.app.Activity
 import android.view.View
 import android.view.inputmethod.InputMethodManager
+import androidx.annotation.IdRes
+import androidx.fragment.app.FragmentManager
+import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.Observer
+import androidx.localbroadcastmanager.content.LocalBroadcastManager
+import androidx.recyclerview.widget.RecyclerView
 
 
 private const val TAG = "MainActivity"
 
 
-class MainActivity : AppCompatActivity() {
-
+class MainActivity : AppCompatActivity()
+{
   val pollServerViewModel: PollServerViewModel by lazy {
     ViewModelProvider(this).get(PollServerViewModel::class.java)
   }
@@ -66,6 +78,18 @@ class MainActivity : AppCompatActivity() {
           }
         }
 
+        if (intent != null) {
+          val appId = intent.getIntExtra(APP_ID_ARG, APP_NO_ID)
+          val notificationWasTapped = appId != APP_NO_ID
+
+          if (notificationWasTapped) {
+            fragment = ApplicationFragment(appId)
+            pollServerViewModel.rootView = View(context)
+            pollServerViewModel.serviceDoAction(Actions.START)
+            pollServerViewModel.bindService()
+          }
+        }
+
         supportFragmentManager
           .beginTransaction()
           .add(R.id.fragment_container, fragment)
@@ -75,6 +99,7 @@ class MainActivity : AppCompatActivity() {
   }
 
   fun replaceOnFragment (fragmentName: String, args: Bundle = Bundle()) {
+    Log.i (TAG, "replaceOnFragment")
     val fragment: Fragment = when (fragmentName) {
       "PhoneConfirmation" -> {
         val verifyForLogin = args.getBoolean(VERIFY_FOR_LOGIN_ARG)
@@ -106,4 +131,7 @@ class MainActivity : AppCompatActivity() {
       imm.hideSoftInputFromWindow(view.windowToken, 0)
     }
   }
+
+
+
 }

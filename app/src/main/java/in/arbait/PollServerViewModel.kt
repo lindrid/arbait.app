@@ -19,8 +19,8 @@ import java.io.Serializable
 
 private const val TAG = "ApplicationsViewModel"
 
-class PollServerViewModel: ViewModel(), Serializable {
-
+class PollServerViewModel: ViewModel(), Serializable
+{
   /* инициализируются в MainActivity */
 
   lateinit var mainActivity: MainActivity
@@ -42,6 +42,9 @@ class PollServerViewModel: ViewModel(), Serializable {
   val takenApps: MutableLiveData<List<ApplicationItem>> = MutableLiveData()
   val lvdTakenApps = mutableMapOf<Int, MutableLiveData<ApplicationItem>>()
 
+  var clickedNotificationAppId: Int? = null
+
+  private var lvdClickedNotificationAppId = MutableLiveData<Int?>(null)
   private lateinit var appsResponse: LiveData<ServiceDataResponse>
 
   private val serviceConnection = object : ServiceConnection {
@@ -53,6 +56,7 @@ class PollServerViewModel: ViewModel(), Serializable {
       serviceIsBound = true
       pollService?.let {
         appsResponse = it.dataResponse
+        clickedNotificationAppId = it.clickedNotificationAppId
       }
       setAppsResponseObserver()
     }
