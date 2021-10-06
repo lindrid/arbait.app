@@ -8,9 +8,7 @@ import `in`.arbait.http.response.SYSTEM_ERROR
 import android.graphics.Color
 import android.os.Bundle
 import android.util.Log
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
+import android.view.*
 import android.widget.EditText
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.AppCompatButton
@@ -39,6 +37,8 @@ class LoginFragment: Fragment()
 
     setViews(view)
 
+    setHasOptionsMenu(true)
+
     return view
   }
 
@@ -49,6 +49,20 @@ class LoginFragment: Fragment()
     val appName = getString(R.string.app_name)
     actionBar?.title = appName
   }
+
+  override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
+    inflater.inflate(R.menu.login_menu, menu)
+    super.onCreateOptionsMenu(menu, inflater)
+  }
+
+  override fun onOptionsItemSelected(item: MenuItem): Boolean {
+    if (item.itemId == R.id.bt_login_reg) {
+      val mainActivity = requireActivity() as MainActivity
+      mainActivity.replaceOnFragment("Registration")
+    }
+    return super.onOptionsItemSelected(item)
+  }
+
 
   private fun setViews(view: View) {
     tvLogin = view.findViewById(R.id.tv_log_login)

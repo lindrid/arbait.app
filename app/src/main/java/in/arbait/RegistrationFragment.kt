@@ -8,9 +8,7 @@ import `in`.arbait.http.response.SYSTEM_ERROR
 import android.graphics.Color
 import android.os.Bundle
 import android.util.Log
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
+import android.view.*
 import android.widget.Button
 import android.widget.EditText
 import android.widget.TextView
@@ -154,6 +152,8 @@ class RegistrationFragment : Fragment() {
       setRegistrationFieldsListeners()
     }
 
+    setHasOptionsMenu(true)
+
     return view
   }
 
@@ -163,6 +163,19 @@ class RegistrationFragment : Fragment() {
     val actionBar = (requireActivity() as AppCompatActivity).supportActionBar
     val appName = getString(R.string.app_name)
     actionBar?.title = "$appName"
+  }
+
+  override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
+    inflater.inflate(R.menu.registration_menu, menu)
+    super.onCreateOptionsMenu(menu, inflater)
+  }
+
+  override fun onOptionsItemSelected(item: MenuItem): Boolean {
+    if (item.itemId == R.id.bt_reg_login) {
+      val mainActivity = requireActivity() as MainActivity
+      mainActivity.replaceOnFragment("Login")
+    }
+    return super.onOptionsItemSelected(item)
   }
 
 
