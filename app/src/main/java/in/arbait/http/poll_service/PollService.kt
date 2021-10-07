@@ -221,7 +221,7 @@ class PollService : LifecycleService()
     var word = ""
     strToDate(newApp.date, DATE_FORMAT)?.let {
      if (!isItToday(it))
-       word = getString(R.string.tomorrow) + " "
+       word = getDateStr(it) + " "
     }
     val suffix = if (newApp.hourlyJob)
       getString(R.string.hourly_suffix)

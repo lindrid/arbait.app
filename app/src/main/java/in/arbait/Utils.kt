@@ -205,6 +205,41 @@ fun isItToday (date: Date): Boolean {
           (a[Calendar.DAY_OF_MONTH] == b[Calendar.DAY_OF_MONTH]))
 }
 
+fun getDateStr (date: Date): String {
+  val c = getCalendar(date)
+  val nowc = getCalendar(Calendar.getInstance().time)
+
+  if ((nowc[Calendar.MONTH] == c[Calendar.MONTH]) &&
+      (nowc[Calendar.DAY_OF_MONTH] == c[Calendar.DAY_OF_MONTH] - 1))
+  {
+    App.res?.let {
+      return it.getString(R.string.tomorrow)
+    }
+  }
+  else {
+    App.res?.let {
+      val strMonth = when(c[Calendar.MONTH]) {
+        0 -> it.getString(R.string.month_jan)
+        1 -> it.getString(R.string.month_feb)
+        2 -> it.getString(R.string.month_mar)
+        3 -> it.getString(R.string.month_apr)
+        4 -> it.getString(R.string.month_may)
+        5 -> it.getString(R.string.month_jun)
+        6 -> it.getString(R.string.month_jul)
+        7 -> it.getString(R.string.month_aug)
+        8 -> it.getString(R.string.month_sep)
+        9 -> it.getString(R.string.month_oct)
+        10 -> it.getString(R.string.month_nov)
+        11 -> it.getString(R.string.month_dec)
+        else -> ""
+      }
+      return "${c[Calendar.DAY_OF_MONTH]} $strMonth"
+    }
+  }
+
+  return ""
+}
+
 // предполагается, что дата last позднее даты first
 fun getDiffDays (first: Date, last: Date): Int {
   if (last < first) {

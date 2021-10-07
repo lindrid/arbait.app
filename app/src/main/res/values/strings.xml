@@ -20,6 +20,20 @@
     <string name="empty_phone">Укажите номер телефона!</string>
     <string name="wrong_phone">Задайте корректный российский номер телефона!</string>
 
+    <!-- Месяцы -->
+    <string name="month_jan">янв</string>
+    <string name="month_feb">фев</string>
+    <string name="month_mar">мар</string>
+    <string name="month_apr">апр</string>
+    <string name="month_may">мая</string>
+    <string name="month_jun">июня</string>
+    <string name="month_jul">июля</string>
+    <string name="month_aug">авг</string>
+    <string name="month_sep">сен</string>
+    <string name="month_oct">окт</string>
+    <string name="month_nov">ноя</string>
+    <string name="month_dec">дек</string>
+
     <!-- Фрагмент регистрации -->
     <string name="reg_registration">Регистрация</string>
     <string name="reg_first_name">Имя</string>
@@ -73,6 +87,7 @@
     <!-- Poll service -->
     <string name="poll_service_channel_id">Поиск заявок</string>
     <string name="poll_new_app_channel_id">Новая заявка</string>
+    <string name="poll_new_app_without_sound_channel_id">Новая заявка без звука</string>
 
     <!-- ApplicationFragment -->
     <string name="app_address"><![CDATA[<u>Адрес:</u> %s]]></string>
@@ -102,8 +117,9 @@
     <string name="dcd_select_debit_card">Укажите карту</string>
     <string name="dcd_choose_or_set">Введите номер карты или выберите ее из списка</string>
     <string name="dcd_set_valid_dc">Введите правильный номер карты или телефона</string>
+
+    <!-- Menu -->
     <string name="login_menu_registration">Регистрация</string>
     <string name="reg_menu_login">Вход</string>
-    <string name="poll_new_app_without_sound_channel_id">Новая заявка без звука</string>
 
 </resources>

@@ -336,11 +336,17 @@ class ApplicationsFragment: Fragment()
     private val tvAddress: TextView = view.findViewById(R.id.tv_apps_address)
     private lateinit var app: ApplicationItem
 
+    @SuppressLint("SetTextI18n")
     fun bind (app: ApplicationItem) {
       this.app = app
       Log.i (TAG, "taken app is $app")
 
-      tvTime.text = app.time
+      strToDate(app.date, DATE_FORMAT)?.let {
+        if (isItToday(it))
+          tvTime.text = app.time
+        else
+          tvTime.text = "${getDateStr(it)} ${app.time}"
+      }
       tvAddress.text = app.address
     }
 

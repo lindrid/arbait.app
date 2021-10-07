@@ -286,7 +286,7 @@ class ApplicationFragment (private val appId: Int): Fragment() {
         val time = if (isItToday(it))
           "${appItem.time}"
         else
-          "${getString(R.string.tomorrow)} ${appItem.time}"
+          "${getDateStr(it)} ${appItem.time}"
         tvTime.text = Html.fromHtml(getString(R.string.app_time, time))
       }
 
