@@ -11,7 +11,7 @@ data class ApplicationItem (
   val time: String,
   @SerializedName("what_to_do") val whatToDo: String,
   @SerializedName("pay_method") val payMethod: Int,
-  @SerializedName("client_phone_number") val clinePhoneNumber: String,
+  @SerializedName("client_phone_number") val clientPhoneNumber: String,
   @SerializedName("worker_count") val workerCount: Int,
   @SerializedName("worker_total") val workerTotal: Int,
   @SerializedName("hourly_job") val hourlyJob: Boolean,

@@ -6,6 +6,8 @@ import `in`.arbait.http.items.DebitCardItem
 import `in`.arbait.http.items.PhoneItem
 import `in`.arbait.http.items.PorterItem
 import `in`.arbait.http.response.SERVER_OK
+import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import android.text.Html
 import android.util.Log
@@ -98,7 +100,20 @@ class ApplicationFragment (private val appId: Int): Fragment() {
       vm.mainActivity.replaceOnFragment("Applications")
     }
 
+    btCallClient.setOnClickListener {
+      onCallClientBtnClick()
+    }
+
     return view
+  }
+
+  private fun onCallClientBtnClick() {
+    lvdAppItem.value?.let { appItem ->
+      val intent = Intent(Intent.ACTION_DIAL)
+      val uriStr = "tel:${appItem.clientPhoneNumber}"
+      intent.data = Uri.parse(uriStr)
+      context?.startActivity(intent)
+    }
   }
 
   override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -375,7 +390,10 @@ class ApplicationFragment (private val appId: Int): Fragment() {
           phoneCall = phones[i].number
 
       ivCall.setOnClickListener {
-        Toast.makeText(context, "Call to client: $phoneCall", Toast.LENGTH_SHORT).show()
+        val intent = Intent(Intent.ACTION_DIAL)
+        val uriStr = "tel:$phoneCall"
+        intent.data = Uri.parse(uriStr)
+        context?.startActivity(intent)
       }
     }
   }
