@@ -4,7 +4,6 @@ import `in`.arbait.App.Companion.context
 import `in`.arbait.database.User
 import `in`.arbait.http.poll_service.APP_NO_ID
 import `in`.arbait.http.poll_service.Actions
-import `in`.arbait.http.poll_service.FRAGMENT_NAME_ARG
 import android.content.*
 import android.content.ContentValues.TAG
 import android.os.Build
@@ -87,6 +86,7 @@ class MainActivity : AppCompatActivity()
             pollServerViewModel.rootView = View(context)
             pollServerViewModel.serviceDoAction(Actions.START)
             pollServerViewModel.bindService()
+            pollServerViewModel.pollService?.removeNotification(appId)
           }
         }
 

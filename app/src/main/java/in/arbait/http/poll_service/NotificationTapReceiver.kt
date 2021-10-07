@@ -18,24 +18,13 @@ private const val TAG = "NotificationTapReceiver"
 class NotificationTapReceiver : BroadcastReceiver() {
 
   override fun onReceive(context: Context, intent: Intent) {
-    // This method is called when the BroadcastReceiver is receiving an Intent broadcast.
     Log.i(TAG,"NotificationTapReceiver.onReceive()")
 
+    val appId = intent.getIntExtra(APP_ID_ARG, APP_NO_ID)
     val intentMain = Intent(context, MainActivity::class.java).apply {
-      val fName = intent.getStringExtra(FRAGMENT_NAME_ARG)
-      val appId = intent.getIntExtra(APP_ID_ARG, APP_NO_ID)
-      putExtra(FRAGMENT_NAME_ARG, fName)
       putExtra(APP_ID_ARG, appId)
       action = Intent.ACTION_MAIN
     }
     context.startActivity(intentMain)
-
-    /*
-    val dataIntent = Intent("DataToMainActivity")
-
-    val extra = intent.extras
-    Log.i (TAG, "fName=$fName, appId=$appId, extras = $extra")
-
-    LocalBroadcastManager.getInstance(context).sendBroadcast(dataIntent)*/
   }
 }

@@ -24,21 +24,20 @@ import android.app.NotificationManager
 import android.app.PendingIntent
 
 import android.app.PendingIntent.FLAG_UPDATE_CURRENT
-
-const val FRAGMENT_NAME_ARG = "fragmentName"
+import java.io.Serializable
 
 private const val TAG = "PollingService"
 private const val SERVICE_DELAY_SECONDS: Long = 5
 
 private const val SERVICE_NOTIFICATION_ID = 1
-private val SERVICE_NOTIFICATION_CHANNEL_ID = App.res!!.getString(R.string.poll_service_channel_id)
 
+private val SERVICE_NOTIFICATION_CHANNEL_ID = App.res!!.getString(R.string.poll_service_channel_id)
 private val NEW_APP_CHANNEL_ID = App.res!!.getString(R.string.poll_new_app_channel_id)
 private val NEW_APP_WITHOUT_SOUND_CHANNEL_ID = App.res!!.getString(R.string.poll_new_app_without_sound_channel_id)
 
 // https://robertohuertas.com/2019/06/29/android_foreground_services/
 // poll the server for applications
-class PollService : LifecycleService()
+class PollService : LifecycleService(), Serializable
 {
   lateinit var dataResponse: LiveData<ServiceDataResponse>
     private set
@@ -209,7 +208,7 @@ class PollService : LifecycleService()
     notificationManager.notify(id, notification)
   }
 
-  private fun removeNotification(id: Int) {
+  fun removeNotification(id: Int) {
     val notificationManager =
       applicationContext.getSystemService(NOTIFICATION_SERVICE) as NotificationManager
     notificationManager.cancel(id)
@@ -280,13 +279,10 @@ class PollService : LifecycleService()
 
     val pendingIntent: PendingIntent =
       Intent(App.context, NotificationTapReceiver::class.java).let { notificationIntent ->
-        Log.i (TAG, "PendingIntent: appId = $appId")
-        notificationIntent.putExtra(FRAGMENT_NAME_ARG, "Application")
-          notificationIntent.putExtra(APP_ID_ARG, appId)
-        Log.i (TAG, "PendingIntent: extras = ${notificationIntent.extras}")
-
+        notificationIntent.putExtra(APP_ID_ARG, appId)
         notificationIntent.action = "TAP_ON_NOTIFICATION"
-        PendingIntent.getBroadcast(App.context, 0, notificationIntent, FLAG_UPDATE_CURRENT)
+        PendingIntent.getBroadcast(App.context, 0, notificationIntent,
+          FLAG_UPDATE_CURRENT)
       }
 
     val builder: Notification.Builder =
@@ -302,6 +298,7 @@ class PollService : LifecycleService()
       .setSmallIcon(R.mipmap.ic_launcher)
       .setTicker("Ticker text")
       .setPriority(Notification.PRIORITY_HIGH) // for under android 26 compatibility
+      .setAutoCancel(true)
       .build()
   }
 }
