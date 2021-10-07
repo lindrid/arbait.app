@@ -104,5 +104,6 @@
     <string name="dcd_set_valid_dc">Введите правильный номер карты или телефона</string>
     <string name="login_menu_registration">Регистрация</string>
     <string name="reg_menu_login">Вход</string>
+    <string name="poll_new_app_without_sound_channel_id">Новая заявка без звука3</string>
 
 </resources>

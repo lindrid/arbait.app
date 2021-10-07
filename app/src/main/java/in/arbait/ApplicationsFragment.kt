@@ -4,24 +4,18 @@ import `in`.arbait.http.poll_service.*
 import `in`.arbait.http.items.ApplicationItem
 import android.annotation.SuppressLint
 import android.content.BroadcastReceiver
-import android.content.Context
-import android.content.Intent
-import android.content.IntentFilter
 import android.graphics.Color
 import android.os.Bundle
 import android.util.Log
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
+import android.view.*
 import android.widget.TextView
+import androidx.annotation.DrawableRes
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.core.content.ContextCompat
-import androidx.lifecycle.MutableLiveData
-import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import androidx.recyclerview.widget.ConcatAdapter
 import androidx.recyclerview.widget.DividerItemDecoration
 
@@ -106,6 +100,8 @@ class ApplicationsFragment: Fragment()
       }
     )
 
+    setHasOptionsMenu(true)
+
     return view
   }
 
@@ -118,8 +114,60 @@ class ApplicationsFragment: Fragment()
     actionBar?.title = "$appName - $apps"
   }
 
+  override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
+    inflater.inflate(R.menu.main_menu, menu)
+
+    val soundItem = menu.findItem(R.id.bt_menu_sound)
+    val notificationsItem = menu.findItem(R.id.bt_menu_notifications)
+
+    if (App.dbUser?.soundOff == true)
+      soundItem.setIcon(R.drawable.outline_volume_off_24)
+
+    if (App.dbUser?.notificationsOff == true)
+      notificationsItem.setIcon(R.drawable.outline_notifications_off_24)
+
+    super.onCreateOptionsMenu(menu, inflater)
+  }
+
+  override fun onOptionsItemSelected(item: MenuItem): Boolean {
+    if (item.itemId == R.id.bt_menu_sound) {
+      if (App.dbUser?.soundOff == false)
+        setSound(true, item, R.drawable.outline_volume_off_24)
+      else if (App.dbUser?.soundOff == true)
+        setSound(false, item, R.drawable.outline_volume_up_24)
+    }
+
+    if (item.itemId == R.id.bt_menu_notifications) {
+      if (App.dbUser?.notificationsOff == false)
+        setNotifications(true, item, R.drawable.outline_notifications_off_24)
+      else if (App.dbUser?.notificationsOff == true)
+        setNotifications(false, item, R.drawable.outline_notifications_active_24)
+    }
+
+    return super.onOptionsItemSelected(item)
+  }
+
   fun updateOpenAppsUI(openApps: List<ApplicationItem>) {
     rvOpenApps.adapter = getConcatOpenAdapter(openApps)
+  }
+
+
+  private fun setSound(soundOff: Boolean, item: MenuItem, @DrawableRes iconRes: Int) {
+    App.dbUser?.let { user->
+      user.soundOff = soundOff
+      App.repository.updateUser(user)
+    }
+    item.setIcon(iconRes)
+  }
+
+  private fun setNotifications(notificationsOff: Boolean, item: MenuItem,
+                               @DrawableRes iconRes: Int)
+  {
+    App.dbUser?.let { user->
+      user.notificationsOff = notificationsOff
+      App.repository.updateUser(user)
+    }
+    item.setIcon(iconRes)
   }
 
   private fun updateTakenAppsUI(takenApps: List<ApplicationItem>) {

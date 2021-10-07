@@ -16,7 +16,8 @@ class UserRepository private constructor(context: Context) {
     DATABASE_NAME
   ).addMigrations (
     migration_1_2, migration_2_3, migration_3_4,
-    migration_4_5, migration_5_6, migration_6_7
+    migration_4_5, migration_5_6, migration_6_7,
+    migration_7_8
   ).build()
 
   private val userDao = database.userDao()

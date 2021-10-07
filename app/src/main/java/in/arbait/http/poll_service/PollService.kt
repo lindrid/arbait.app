@@ -23,10 +23,7 @@ import kotlinx.coroutines.*
 import android.app.NotificationManager
 import android.app.PendingIntent
 
-import `in`.arbait.MainActivity
 import android.app.PendingIntent.FLAG_UPDATE_CURRENT
-import android.content.BroadcastReceiver
-import androidx.lifecycle.MutableLiveData
 
 const val FRAGMENT_NAME_ARG = "fragmentName"
 
@@ -36,26 +33,27 @@ private const val SERVICE_DELAY_SECONDS: Long = 5
 private const val SERVICE_NOTIFICATION_ID = 1
 private val SERVICE_NOTIFICATION_CHANNEL_ID = App.res!!.getString(R.string.poll_service_channel_id)
 
-private const val NEW_APP_NOTIFICATION_ID = 2
-private val NEW_APP_NOTIFICATION_CHANNEL_ID = App.res!!.getString(R.string.poll_new_app_channel_id)
+private val NEW_APP_CHANNEL_ID = App.res!!.getString(R.string.poll_new_app_channel_id)
+private val NEW_APP_WITHOUT_SOUND_CHANNEL_ID = App.res!!.getString(R.string.poll_new_app_without_sound_channel_id)
 
 // https://robertohuertas.com/2019/06/29/android_foreground_services/
 // poll the server for applications
-class PollService : LifecycleService() {
+class PollService : LifecycleService()
+{
   lateinit var dataResponse: LiveData<ServiceDataResponse>
     private set
 
-  var clickedNotificationAppId: Int? = null
+  var serviceIsStarted = false
+    private set
+
 
   private var openApps: List<ApplicationItem> = emptyList()
   private var takenApps: List<ApplicationItem> = emptyList()
 
   private var wakeLock: PowerManager.WakeLock? = null
-  private var serviceIsStarted = false
+
   private lateinit var server: Server
   private val binder: IBinder = PollBinder()
-
-  private var notificationId = NEW_APP_NOTIFICATION_ID
 
   inner class PollBinder : Binder() {
     // Return this instance of MyService so clients can call public methods
@@ -73,7 +71,7 @@ class PollService : LifecycleService() {
     super.onCreate()
     log("The service has been created".toUpperCase())
     // уведомление о запуске сервиса - без звука и вибрации
-    val notification = createNotification (SERVICE_NOTIFICATION_CHANNEL_ID, IMPORTANCE_DEFAULT)
+    val notification = createNotification (SERVICE_NOTIFICATION_CHANNEL_ID, IMPORTANCE_NONE)
     startForeground(SERVICE_NOTIFICATION_ID, notification)
 
     server = Server(this)
@@ -110,8 +108,10 @@ class PollService : LifecycleService() {
               openApps = openAppsFromServer
               if (newApps.isNotEmpty() && !firstTime) {
                 for (i in newApps.indices) {
-                  val n = createNewAppNotification(newApps[i])
-                  showNotification(newApps[i].id, n)
+                  if (App.dbUser?.notificationsOff == false) {
+                    val n = createNewAppNotification(newApps[i])
+                    showNotification(newApps[i].id, n)
+                  }
                 }
               }
               if (closedApps.isNotEmpty()) {
@@ -231,12 +231,20 @@ class PollService : LifecycleService() {
     val people = getString(R.string.people, newApp.workerTotal)
     val text = "$word${newApp.time}, $price, $people"
 
-    return createNotification ( NEW_APP_NOTIFICATION_CHANNEL_ID,
-                                IMPORTANCE_HIGH,
+    val importance = IMPORTANCE_HIGH
+    var channelId = NEW_APP_CHANNEL_ID
+
+    if (App.dbUser?.soundOff == true) {
+      channelId = NEW_APP_WITHOUT_SOUND_CHANNEL_ID
+    }
+
+    Log.i (TAG, "importance = $importance, channelId = $channelId")
+    return createNotification ( channelId,
+                                importance,
                                 true,
                                 title,
                                 text,
-                                NEW_APP_NOTIFICATION_CHANNEL_ID,
+                                channelId,
                                 newApp.id)
   }
 
@@ -251,6 +259,7 @@ class PollService : LifecycleService() {
     // depending on the Android API that we're dealing with we will have
     // to use a specific method to create the notification
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+      Log.i (TAG, "version >= Oreo")
       val notificationManager =
         getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
       val channel = NotificationChannel(
@@ -258,6 +267,8 @@ class PollService : LifecycleService() {
         name,
         importance
       ).let {
+        if (notificationChannelId == NEW_APP_WITHOUT_SOUND_CHANNEL_ID)
+          it.setSound(null, null)
         it.enableVibration(vibration)
         it.description = notificationChannelId
         it.enableLights(true)
@@ -267,35 +278,22 @@ class PollService : LifecycleService() {
       notificationManager.createNotificationChannel(channel)
     }
 
-    // on notification click
-    // `in`.arbait
-    /*val intent = Intent(Intent.ACTION_MAIN).apply {
-      setClassName("`in`.arbait", "MainActivity")
-      putExtra(FRAGMENT_NAME_ARG, "Application")
-      appId?.let { appId ->
-        putExtra(APP_ID_ARG, appId)
-      }
-    }
-    this.startActivity(intent)*/
     val pendingIntent: PendingIntent =
       Intent(App.context, NotificationTapReceiver::class.java).let { notificationIntent ->
         Log.i (TAG, "PendingIntent: appId = $appId")
         notificationIntent.putExtra(FRAGMENT_NAME_ARG, "Application")
           notificationIntent.putExtra(APP_ID_ARG, appId)
         Log.i (TAG, "PendingIntent: extras = ${notificationIntent.extras}")
-        //notificationIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
 
-        /*PendingIntent.getActivity(App.context, 0, notificationIntent,
-          PendingIntent.FLAG_UPDATE_CURRENT)*/
         notificationIntent.action = "TAP_ON_NOTIFICATION"
         PendingIntent.getBroadcast(App.context, 0, notificationIntent, FLAG_UPDATE_CURRENT)
       }
 
     val builder: Notification.Builder =
-      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) Notification.Builder(
-        this,
-        notificationChannelId
-      ) else Notification.Builder(this)
+      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
+        Notification.Builder(this, notificationChannelId)
+      else
+        Notification.Builder(this)
 
     return builder
       .setContentTitle(title)

@@ -56,7 +56,6 @@ class PollServerViewModel: ViewModel(), Serializable
       serviceIsBound = true
       pollService?.let {
         appsResponse = it.dataResponse
-        clickedNotificationAppId = it.clickedNotificationAppId
       }
       setAppsResponseObserver()
     }
