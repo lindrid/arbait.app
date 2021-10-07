@@ -37,8 +37,6 @@ const val TEXT_SIZE = 18f
 
 class ApplicationsFragment: Fragment()
 {
-  private lateinit var receiver: BroadcastReceiver
-
   private var todayApps = mutableListOf<ApplicationItem>()
   private var tomorrowApps = mutableListOf<ApplicationItem>()
   private var showTomorrowApps = false

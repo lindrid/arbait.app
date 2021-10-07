@@ -231,16 +231,16 @@ class PollService : LifecycleService()
     val people = getString(R.string.people, newApp.workerTotal)
     val text = "$word${newApp.time}, $price, $people"
 
-    val importance = IMPORTANCE_HIGH
     var channelId = NEW_APP_CHANNEL_ID
 
     if (App.dbUser?.soundOff == true) {
       channelId = NEW_APP_WITHOUT_SOUND_CHANNEL_ID
     }
 
-    Log.i (TAG, "importance = $importance, channelId = $channelId")
+    Log.i (TAG, "channelId = $channelId")
+
     return createNotification ( channelId,
-                                importance,
+                                IMPORTANCE_HIGH,
                                 true,
                                 title,
                                 text,

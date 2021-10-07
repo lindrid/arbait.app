@@ -42,9 +42,6 @@ class PollServerViewModel: ViewModel(), Serializable
   val takenApps: MutableLiveData<List<ApplicationItem>> = MutableLiveData()
   val lvdTakenApps = mutableMapOf<Int, MutableLiveData<ApplicationItem>>()
 
-  var clickedNotificationAppId: Int? = null
-
-  private var lvdClickedNotificationAppId = MutableLiveData<Int?>(null)
   private lateinit var appsResponse: LiveData<ServiceDataResponse>
 
   private val serviceConnection = object : ServiceConnection {
@@ -124,6 +121,8 @@ class PollServerViewModel: ViewModel(), Serializable
         Log.i (TAG, "appsResponse.openApps.size = ${appsResponse.openApps.size}")
       }*/
 
+      Log.i (TAG, "doOnServerOkResult")
+
       setOpenApps(appsResponse)
       setLiveDataOpenApps(appsResponse)
 
@@ -168,15 +167,10 @@ class PollServerViewModel: ViewModel(), Serializable
     private fun setLiveDataOpenApps(appsResponse: ServiceDataResponse) {
       for (i in appsResponse.openApps.indices) {
         val appId = appsResponse.openApps[i].id
-        if (lvdOpenApps.containsKey(appId)) {
-          lvdOpenApps[appId]?.let { lvdApp ->
-            lvdApp.value = appsResponse.openApps[i]
-          }
-        }
-        else {
-          val lvdValue = MutableLiveData<ApplicationItem>(appsResponse.openApps[i])
-          lvdOpenApps[appId] = lvdValue
-        }
+        if (lvdOpenApps.containsKey(appId))
+          lvdOpenApps[appId]?.value = appsResponse.openApps[i]
+        else
+          lvdOpenApps[appId] = MutableLiveData(appsResponse.openApps[i])
       }
     }
 
@@ -186,7 +180,11 @@ class PollServerViewModel: ViewModel(), Serializable
 
 
     private fun setTakenApps(appsResponse: ServiceDataResponse) {
+      if (appsResponse.takenApps == null) {
+        takenApps.value = emptyList()
+      }
       appsResponse.takenApps?.let { responseTakenApps ->
+        Log.i ("setTakenApps", "responseTakenApps = $responseTakenApps")
         if ((takenApps.value == null) || takenAppsDifferFrom(responseTakenApps)) {
           takenApps.value = responseTakenApps
         }
@@ -198,20 +196,17 @@ class PollServerViewModel: ViewModel(), Serializable
       appsResponse.takenApps?.let { responseTakenApps ->
         for (i in responseTakenApps.indices) {
           val appId = responseTakenApps[i].id
-          if (lvdTakenApps.containsKey(appId)) {
-            lvdTakenApps[appId]?.let { lvdApp ->
-              lvdApp.value = responseTakenApps[i]
-            }
-          }
-          else {
-            val lvdValue = MutableLiveData<ApplicationItem>(responseTakenApps[i])
-            lvdTakenApps[appId] = lvdValue
-          }
+          if (lvdTakenApps.containsKey(appId))
+            lvdTakenApps[appId]?.value = responseTakenApps[i]
+          else
+            lvdTakenApps[appId] = MutableLiveData(responseTakenApps[i])
         }
       }
     }
 
     private fun takenAppsDifferFrom (takenApps: List<ApplicationItem>): Boolean {
+      Log.i ("takenAppsDifferFrom", "this.takenApps=${this@PollServerViewModel.takenApps.value!!}")
+      Log.i ("takenAppsDifferFrom", "new takenApps = $takenApps")
       return listsAreDifferent(this@PollServerViewModel.takenApps.value!!, takenApps)
     }
   }

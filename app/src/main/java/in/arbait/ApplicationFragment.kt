@@ -6,7 +6,6 @@ import `in`.arbait.http.items.DebitCardItem
 import `in`.arbait.http.items.PhoneItem
 import `in`.arbait.http.items.PorterItem
 import `in`.arbait.http.response.SERVER_OK
-import android.opengl.Visibility
 import android.os.Bundle
 import android.text.Html
 import android.util.Log
@@ -71,27 +70,17 @@ class ApplicationFragment (private val appId: Int): Fragment() {
                             savedInstanceState: Bundle?): View?
   {
     val view = inflater.inflate(R.layout.fragment_application, container, false)
+    vm.rootView = view
+
     supportFragmentManager = requireActivity().supportFragmentManager
     server = Server(requireContext())
 
     Log.i (TAG, "OnCreate()")
 
     setViews(view)
-
-    vm.rootView = view
-    vm.lvdOpenApps[appId]?.let {
-      lvdAppItem = it
-      it.value?.let { appItem ->
-        Log.i (TAG, "set:lvdAppItem")
-        porter = getThisUserPorter(appItem)
-        porter?.let {
-          userIsEnrolled = true
-        }
-        updateUI()
-      }
-    }
-
-    Log.i (TAG, "Porter= $porter")
+    setAppItem()
+    setPorter()
+    updateUI()
 
     rvPorters.layoutManager = LinearLayoutManager(context)
     setAppObserver()
@@ -121,6 +110,27 @@ class ApplicationFragment (private val appId: Int): Fragment() {
     actionBar?.title = "$appName - $app"
   }
 
+
+  private fun setAppItem() {
+    vm.lvdOpenApps[appId]?.let {
+      lvdAppItem = it
+      return
+    }
+    vm.lvdTakenApps[appId]?.let {
+      lvdAppItem = it
+    }
+  }
+
+  private fun setPorter() {
+    lvdAppItem.value?.let { appItem ->
+      Log.i (TAG, "set:lvdAppItem")
+      porter = getThisUserPorter(appItem)
+      Log.i (TAG, "Porter= $porter")
+      porter?.let {
+        userIsEnrolled = true
+      }
+    }
+  }
 
   private fun onChangeDebitCardClick() {
     App.userItem?.let { user ->
@@ -268,9 +278,7 @@ class ApplicationFragment (private val appId: Int): Fragment() {
   }
 
   private fun setViewsTexts() {
-    val appItem = this.lvdAppItem.value
-
-    appItem?.let { appItem ->
+    lvdAppItem.value?.let { appItem ->
       tvAddress.text = Html.fromHtml(getString(R.string.app_address, appItem.address))
 
       val date = strToDate(appItem.date, DATE_FORMAT)
