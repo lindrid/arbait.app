@@ -28,8 +28,10 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.util.*
 import kotlin.math.pow
 
@@ -203,12 +205,16 @@ class ApplicationFragment (private val appId: Int): Fragment()
           val debitCardDialog = DebitCardDialog.newInstance(appId, user)
           debitCardDialog.show(supportFragmentManager, DEBIT_CARD_DIALOG_TAG)
           porterIsEnrolled = false
-          reactOnDebitCardDialog(view, enrollingPermission, newEnrollingPermission)
+          withContext (Dispatchers.Main) {
+            reactOnDebitCardDialog(view, enrollingPermission, newEnrollingPermission)
+          }
         }
 
         if (porterWantToRefuse) {
           ApplicationRefuseDialog().show(supportFragmentManager, APP_REFUSE_DIALOG_TAG)
-          reactOnRefuseDialog(view, enrollingPermission, newEnrollingPermission, clickCount)
+          withContext (Dispatchers.Main) {
+            reactOnRefuseDialog(view, enrollingPermission, newEnrollingPermission, clickCount)
+          }
         }
       }
     }
@@ -218,7 +224,6 @@ class ApplicationFragment (private val appId: Int): Fragment()
   {
     supportFragmentManager.setFragmentResultListener(APPLICATION_KEY, viewLifecycleOwner)
     { _, bundle ->
-      porterIsEnrolled = true
       val app = bundle.getSerializable(APPLICATION_KEY) as ApplicationItem
       Log.i (TAG, "app from dialog = $app")
 
@@ -232,8 +237,7 @@ class ApplicationFragment (private val appId: Int): Fragment()
 
       Log.i (TAG, "newEnrollingPermission = $newEp")
       addOrUpdateEnrollPermission(ep, newEp)
-
-      porterIsEnrolled = !porterIsEnrolled
+      porterIsEnrolled = true
     }
   }
 
@@ -247,7 +251,6 @@ class ApplicationFragment (private val appId: Int): Fragment()
       server.refuseApp(appId) { appUserResponse ->
         Log.i (TAG, "setFragmentResultListener. response.type=${appUserResponse.response.type}")
         if (appUserResponse.response.type == SERVER_OK) {
-          porterIsEnrolled = false
           setVisibilityToViews(false, view)
           btEnrollRefuse.text = getString(R.string.app_enroll)
           lvdAppItem.value = appUserResponse.app
@@ -270,7 +273,7 @@ class ApplicationFragment (private val appId: Int): Fragment()
 
           Log.i (TAG, "newEnrollingPermission = $newEp")
           addOrUpdateEnrollPermission(ep, newEp)
-          porterIsEnrolled = !porterIsEnrolled
+          porterIsEnrolled = false
         }
       }
     }
@@ -313,9 +316,8 @@ class ApplicationFragment (private val appId: Int): Fragment()
 
   private fun updateBtnEnabling() {
     GlobalScope.launch {
-      porter?.let { porter ->
-        val userId = porter.user.id
-        val ep = App.repository.getEnrollingPermission(userId)
+      App.userItem?.let { user ->
+        val ep = App.repository.getEnrollingPermission(user.id)
         val now = Date().time
 
         if (ep == null)

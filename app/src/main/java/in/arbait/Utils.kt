@@ -117,7 +117,7 @@ fun phoneNumberIsValid (phoneNumber: String?, countryCode: String?, logTag: Stri
 
 fun elementsFromANotInB (a: List<ApplicationItem>, b: List<ApplicationItem>): List<ApplicationItem> {
   val list: MutableList<ApplicationItem> = mutableListOf()
-
+  Log.i ("elementsFromANotInB", "a=$a, b=$b")
   for (i in a.indices) {
     var bHasElement = false
     for (j in b.indices) {

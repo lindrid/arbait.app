@@ -106,9 +106,11 @@ class PollService : LifecycleService(), Serializable
               log("newApps = $newApps")
               log("newApps.size = ${newApps.size}")
               openApps = openAppsFromServer
+              Log.i (TAG, "notificationsOff = ${App.dbUser?.notificationsOff}")
               if (newApps.isNotEmpty() && !firstTime) {
-                for (i in newApps.indices) {
-                  if (App.dbUser?.notificationsOff == false) {
+                if (App.dbUser?.notificationsOff == false) {
+                  Log.i (TAG, "newApps.indices=${newApps.indices}")
+                  for (i in newApps.indices) {
                     val n = createNewAppNotification(newApps[i])
                     showNotification(newApps[i].id, n)
                   }
@@ -119,6 +121,9 @@ class PollService : LifecycleService(), Serializable
                   removeNotification(closedApps[j].id)
                 }
               }
+            }
+            else {
+              this.openApps = openAppsFromServer
             }
             if (firstTime) firstTime = false
           }

@@ -71,7 +71,7 @@ val migration_8_9 = object : Migration(8, 9){
     database.execSQL(
       "CREATE TABLE IF NOT EXISTS `EnrollingPermission` (" +
             "`userId` INTEGER NOT NULL DEFAULT 0," +
-            "`clickCount` INTEGER NOT NULL DEFAULT 0," +
+            "`clickCountWithinOneMin` INTEGER NOT NULL DEFAULT 0," +
             "`enableClickTime` INTEGER NOT NULL DEFAULT 0," +
             "`lastClickTime` INTEGER NOT NULL DEFAULT 0," +
             "PRIMARY KEY(`userId`)" +
