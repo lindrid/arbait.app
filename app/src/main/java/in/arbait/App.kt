@@ -3,26 +3,23 @@ package `in`.arbait
 import `in`.arbait.database.User
 import `in`.arbait.http.items.UserItem
 import android.app.Application
-import android.content.Context
 import android.content.res.Resources
 
 class App : Application() {
   override fun onCreate() {
     super.onCreate()
 
-    context = applicationContext
     //instance = this
     res = resources
-    UserRepository.initialize(this)
-    repository = UserRepository.get()
+    Repository.initialize(this)
+    repository = Repository.get()
   }
 
   companion object {
-    lateinit var repository: UserRepository
+    lateinit var repository: Repository
       private set
 
-    var context: Context? = null
-      private set
+    var noInternetErrorCouldShown = true
 
     var dbUser: User? = null
 

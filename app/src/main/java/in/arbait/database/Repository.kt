@@ -8,20 +8,40 @@ import java.util.concurrent.Executors
 
 private const val DATABASE_NAME = "user-database"
 
-class UserRepository private constructor(context: Context) {
-
-  private val database: UserDatabase = Room.databaseBuilder(
+class Repository private constructor(context: Context)
+{
+  private val database: Database = Room.databaseBuilder(
     context.applicationContext,
-    UserDatabase::class.java,
+    Database::class.java,
     DATABASE_NAME
   ).addMigrations (
     migration_1_2, migration_2_3, migration_3_4,
     migration_4_5, migration_5_6, migration_6_7,
-    migration_7_8
+    migration_7_8, migration_8_9
   ).build()
 
   private val userDao = database.userDao()
+  private val enrollPermDao = database.enrollingPermissionDao()
+
   private val executor = Executors.newSingleThreadExecutor()
+
+
+  suspend fun getEnrollingPermission(userId: Int): EnrollingPermission? {
+    return enrollPermDao.get(userId)
+  }
+
+  fun updateEnrollingPermission (ep: EnrollingPermission) {
+    executor.execute {
+      enrollPermDao.update(ep)
+    }
+  }
+
+  fun addEnrollingPermission (ep: EnrollingPermission) {
+    executor.execute {
+      enrollPermDao.add(ep)
+    }
+  }
+
 
   suspend fun getUserLastByDate(): User? {
     return userDao.getUserLastByDate()
@@ -52,17 +72,17 @@ class UserRepository private constructor(context: Context) {
   }
 
   companion object {
-    private var instance: UserRepository? = null
+    private var instance: Repository? = null
 
     fun initialize(context: Context) {
       if (instance == null) {
-        instance = UserRepository(context)
+        instance = Repository(context)
       }
     }
 
-    fun get(): UserRepository {
+    fun get(): Repository {
       return instance ?:
-      throw IllegalStateException("UserRepository must be initialized")
+      throw IllegalStateException("Repository must be initialized")
     }
   }
 }

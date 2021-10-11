@@ -41,7 +41,7 @@ private const val FIRST_NAME_MAX_LENGTH = 20
 class RegistrationFragment : Fragment() {
 
   private lateinit var server: Server
-  private val repository = UserRepository.get()
+  private val repository = Repository.get()
 
   private var registrationFields = mutableListOf<EditText>()
   private var userBirthDate: Date? = null

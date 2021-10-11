@@ -1,5 +1,6 @@
 package `in`.arbait
 
+import `in`.arbait.database.EnrollingPermission
 import `in`.arbait.http.Server
 import `in`.arbait.http.items.ApplicationItem
 import `in`.arbait.http.items.DebitCardItem
@@ -16,7 +17,6 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
-import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.AppCompatButton
 import androidx.appcompat.widget.AppCompatTextView
@@ -28,9 +28,18 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
+import java.util.*
+import kotlin.math.pow
+
 
 private const val TAG = "ApplicationFragment"
 
+private const val DISABLE_BTN_MILLISECONDS = 1 * 10 * 1000  // 10 sec
+private const val ONE_MINUTE = 60 * 1000
+
+const val APP_REFUSE_DIALOG_TAG = "ApplicationRefuseDialog"
 const val DEBIT_CARD_DIALOG_TAG = "DebitCardDialog"
 const val APPLICATION_KEY = "application"
 
@@ -41,10 +50,11 @@ const val PHONE_CALL_AND_WHATSAPP = 3
 const val PM_CARD = 1
 const val PM_CASH = 2
 
-class ApplicationFragment (private val appId: Int): Fragment() {
-
+class ApplicationFragment (private val appId: Int): Fragment()
+{
+  private var btnClickCount = 0
   private var porter: PorterItem? = null
-  private var userIsEnrolled = false
+  private var porterIsEnrolled = false
   private lateinit var lvdAppItem: MutableLiveData<ApplicationItem>
 
   private lateinit var server: Server
@@ -86,7 +96,7 @@ class ApplicationFragment (private val appId: Int): Fragment() {
 
     rvPorters.layoutManager = LinearLayoutManager(context)
     setAppObserver()
-    setVisibilityToViews(userIsEnrolled, view)
+    setVisibilityToViews(porterIsEnrolled, view)
 
     btEnrollRefuse.setOnClickListener {
       onEnrollRefuseBtnClick(view)
@@ -142,7 +152,7 @@ class ApplicationFragment (private val appId: Int): Fragment() {
       porter = getThisUserPorter(appItem)
       Log.i (TAG, "Porter= $porter")
       porter?.let {
-        userIsEnrolled = true
+        porterIsEnrolled = true
       }
     }
   }
@@ -162,36 +172,162 @@ class ApplicationFragment (private val appId: Int): Fragment() {
   }
 
   private fun onEnrollRefuseBtnClick(view: View) {
-    userIsEnrolled = !userIsEnrolled
+    val porterWantToEnroll = !porterIsEnrolled
+    val porterWantToRefuse = porterIsEnrolled
 
-    if (userIsEnrolled) {
+    GlobalScope.launch {
       App.userItem?.let { user ->
-        val dcd = DebitCardDialog.newInstance(appId, user)
-        dcd.show(supportFragmentManager, DEBIT_CARD_DIALOG_TAG)
-        userIsEnrolled = false
+        val enrollingPermission = App.repository.getEnrollingPermission(user.id)
+        val now = Date().time
 
-        supportFragmentManager.setFragmentResultListener(APPLICATION_KEY, viewLifecycleOwner)
-        { _, bundle ->
-          userIsEnrolled = true
-          val app = bundle.getSerializable(APPLICATION_KEY) as ApplicationItem
-          Log.i (TAG, "app from dialog = $app")
-          lvdAppItem.value = app
-          setVisibilityToViews(true, view)
+        val passMoreThenOneMinuteAfterLastClick = (enrollingPermission != null &&
+          now > enrollingPermission.lastClickTime + ONE_MINUTE
+        )
+
+        val clickCount =
+          if (enrollingPermission == null || passMoreThenOneMinuteAfterLastClick) {
+            if (porterWantToEnroll) 1 else 0
+          }
+          else {
+            enrollingPermission.clickCountWithinOneMin + 1
+          }
+
+        val newEnrollingPermission = EnrollingPermission(
+          userId = user.id,
+          clickCountWithinOneMin = clickCount,
+          enableClickTime = now,
+          lastClickTime = now
+        )
+
+        if (porterWantToEnroll) {
+          val debitCardDialog = DebitCardDialog.newInstance(appId, user)
+          debitCardDialog.show(supportFragmentManager, DEBIT_CARD_DIALOG_TAG)
+          porterIsEnrolled = false
+          reactOnDebitCardDialog(view, enrollingPermission, newEnrollingPermission)
+        }
+
+        if (porterWantToRefuse) {
+          ApplicationRefuseDialog().show(supportFragmentManager, APP_REFUSE_DIALOG_TAG)
+          reactOnRefuseDialog(view, enrollingPermission, newEnrollingPermission, clickCount)
         }
       }
     }
-    else
+  }
+
+  private fun reactOnDebitCardDialog(view: View, ep: EnrollingPermission?, newEp: EnrollingPermission)
+  {
+    supportFragmentManager.setFragmentResultListener(APPLICATION_KEY, viewLifecycleOwner)
+    { _, bundle ->
+      porterIsEnrolled = true
+      val app = bundle.getSerializable(APPLICATION_KEY) as ApplicationItem
+      Log.i (TAG, "app from dialog = $app")
+
+      vm.lvdTakenApps[appId] = MutableLiveData(app)
+      vm.lvdTakenApps[appId]?.let {
+        lvdAppItem = it
+      }
+
+      setAppObserver()
+      setVisibilityToViews(true, view)
+
+      Log.i (TAG, "newEnrollingPermission = $newEp")
+      addOrUpdateEnrollPermission(ep, newEp)
+
+      porterIsEnrolled = !porterIsEnrolled
+    }
+  }
+
+  private fun reactOnRefuseDialog(view: View,
+                                  ep: EnrollingPermission?, newEp: EnrollingPermission,
+                                  clickCount: Int)
+  {
+    supportFragmentManager.setFragmentResultListener(OK_KEY, viewLifecycleOwner)
+    { _, bundle ->
+      Log.i (TAG, "setFragmentResultListener")
       server.refuseApp(appId) { appUserResponse ->
+        Log.i (TAG, "setFragmentResultListener. response.type=${appUserResponse.response.type}")
         if (appUserResponse.response.type == SERVER_OK) {
+          porterIsEnrolled = false
           setVisibilityToViews(false, view)
           btEnrollRefuse.text = getString(R.string.app_enroll)
           lvdAppItem.value = appUserResponse.app
+
+          vm.lvdOpenApps[appId] = MutableLiveData(lvdAppItem.value)
+          vm.lvdOpenApps[appId]?.let {
+            lvdAppItem = it
+          }
+          setAppObserver()
+
+          if (clickCount > 1 && ep != null) {
+            val now = Date().time
+            val p = ((clickCount / 2) - 1).toDouble()
+            val coefficient = 3.0.pow(p).toLong()
+            Log.i(TAG, "coefficient=$coefficient")
+
+            newEp.enableClickTime = now + coefficient * DISABLE_BTN_MILLISECONDS
+            btEnrollRefuse.isEnabled = false
+          }
+
+          Log.i (TAG, "newEnrollingPermission = $newEp")
+          addOrUpdateEnrollPermission(ep, newEp)
+          porterIsEnrolled = !porterIsEnrolled
         }
       }
+    }
   }
 
-  private fun setVisibilityToViews(userIsEnrolled: Boolean, view: View) {
-    if (userIsEnrolled) {
+  private fun addOrUpdateEnrollPermission(ep: EnrollingPermission?, newEp: EnrollingPermission) {
+    if (ep == null)
+      App.repository.addEnrollingPermission(newEp)
+    else
+      App.repository.updateEnrollingPermission(newEp)
+  }
+
+  private fun setAppObserver() {
+    lvdAppItem.observe(viewLifecycleOwner,
+      Observer { appItem ->
+        Log.i (TAG, "lvdAppItem=$lvdAppItem, observer appItem is $appItem")
+        appItem?.let {
+          if (appItem.porters != null)
+            porter = getThisUserPorter(it)
+          Log.i (TAG, "porter is $porter")
+          updateUI()
+        }
+      }
+    )
+  }
+
+  private fun updateUI() {
+    setViewsTexts()
+    updatePorters()
+    updateBtnEnabling()
+  }
+
+  private fun updatePorters() {
+    lvdAppItem.value?.let {
+      it.porters?.let { porters ->
+        rvPorters.adapter = PortersAdapter(porters)
+      }
+    }
+  }
+
+  private fun updateBtnEnabling() {
+    GlobalScope.launch {
+      porter?.let { porter ->
+        val userId = porter.user.id
+        val ep = App.repository.getEnrollingPermission(userId)
+        val now = Date().time
+
+        if (ep == null)
+          btEnrollRefuse.isEnabled = true
+        else
+          btEnrollRefuse.isEnabled = (now >= ep.enableClickTime)
+      }
+    }
+  }
+
+  private fun setVisibilityToViews(porterIsEnrolled: Boolean, view: View) {
+    if (porterIsEnrolled) {
       tvEnrolled.visibility = View.VISIBLE
       rvPorters.visibility = View.VISIBLE
       btCallClient.visibility = View.VISIBLE
@@ -232,19 +368,7 @@ class ApplicationFragment (private val appId: Int): Fragment() {
     //dp.marginStart = HEADER_MARGIN_START
   }
 
-  private fun setAppObserver() {
-    lvdAppItem.observe(viewLifecycleOwner,
-      Observer { appItem ->
-        Log.i (TAG, "observer appItem is $appItem")
-        appItem?.let {
-          if (appItem.porters != null)
-            porter = getThisUserPorter(it)
-          Log.i (TAG, "porter is $porter")
-          updateUI()
-        }
-      }
-    )
-  }
+
 
   private fun getThisUserPorter(app: ApplicationItem): PorterItem? {
     var porter: PorterItem? = null
@@ -263,18 +387,6 @@ class ApplicationFragment (private val appId: Int): Fragment() {
     return porter
   }
 
-  private fun updateUI() {
-    setViewsTexts()
-    updatePorters()
-  }
-
-  private fun updatePorters() {
-    lvdAppItem.value?.let {
-      it.porters?.let { porters ->
-        rvPorters.adapter = PortersAdapter(porters)
-      }
-    }
-  }
 
   private fun setViews(view: View) {
     tvEnrolled = view.findViewById(R.id.tv_app_enrolled)
@@ -320,7 +432,7 @@ class ApplicationFragment (private val appId: Int): Fragment() {
         else -> ""
       }
 
-      if (userIsEnrolled) {
+      if (porterIsEnrolled) {
         val debitCardNumber = getDebitCardNumber()
         btChangeDebitCard.text = debitCardNumber
         btChangeDebitCard.visibility = View.VISIBLE
@@ -334,7 +446,7 @@ class ApplicationFragment (private val appId: Int): Fragment() {
       val workers = "${appItem.workerCount} / ${appItem.workerTotal}"
       tvPortersCount.text = Html.fromHtml(getString(R.string.app_worker_count, workers))
 
-      btEnrollRefuse.text = if (userIsEnrolled)
+      btEnrollRefuse.text = if (porterIsEnrolled)
         getString(R.string.app_refuse)
       else
         getString(R.string.app_enroll)
@@ -380,14 +492,19 @@ class ApplicationFragment (private val appId: Int): Fragment() {
   private inner class PorterHolder (view: View) : RecyclerView.ViewHolder(view) {
     private val tvName: TextView = view.findViewById(R.id.tv_porter_name)
     private val ivCall: ImageView = view.findViewById(R.id.iv_porter_call)
+    private val ivWhatsapp: ImageView = view.findViewById(R.id.iv_porter_whatsapp)
 
     fun bind(porterName: String, phones: List<PhoneItem>) {
       tvName.text = porterName
 
+      var phoneWhatsapp = ""
       var phoneCall = ""
-      for (i in phones.indices)
+      for (i in phones.indices) {
         if (phones[i].type == PHONE_CALL || phones[i].type == PHONE_CALL_AND_WHATSAPP)
           phoneCall = phones[i].number
+        if (phones[i].type == PHONE_WHATSAPP || phones[i].type == PHONE_CALL_AND_WHATSAPP)
+          phoneWhatsapp = phones[i].number
+      }
 
       ivCall.setOnClickListener {
         val intent = Intent(Intent.ACTION_DIAL)
@@ -395,6 +512,17 @@ class ApplicationFragment (private val appId: Int): Fragment() {
         intent.data = Uri.parse(uriStr)
         context?.startActivity(intent)
       }
+
+      ivWhatsapp.setOnClickListener {
+        openWhatsappContact(phoneWhatsapp)
+      }
+    }
+
+    private fun openWhatsappContact(number: String) {
+      Log.i ("openWhatsappContact", "https://wa.me/$number")
+      val uri = Uri.parse("https://wa.me/$number")
+      val intent = Intent(Intent.ACTION_VIEW, uri)
+      startActivity(intent)
     }
   }
 

@@ -12,6 +12,7 @@
         <entry key="app/src/main/res/layout/fragment_applications.xml" value="0.33" />
         <entry key="app/src/main/res/layout/fragment_dialog_birth_date.xml" value="0.33" />
         <entry key="app/src/main/res/layout/fragment_dialog_debit_card.xml" value="0.22" />
+        <entry key="app/src/main/res/layout/fragment_dialog_refuse.xml" value="0.18659420289855072" />
         <entry key="app/src/main/res/layout/fragment_login.xml" value="0.22" />
         <entry key="app/src/main/res/layout/fragment_phone_confirmation.xml" value="0.19322916666666667" />
         <entry key="app/src/main/res/layout/fragment_registration.xml" value="0.25" />

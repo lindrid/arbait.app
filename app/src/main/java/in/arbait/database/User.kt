@@ -5,7 +5,7 @@ import androidx.room.PrimaryKey
 import java.io.Serializable
 import java.util.*
 
-@Entity
+@Entity(tableName = "User")
 data class User (
   var id: Int,
 

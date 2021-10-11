@@ -6,10 +6,11 @@ import androidx.room.TypeConverters
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 
-@Database(entities = [User::class], version = 8)
-@TypeConverters(UserTypeConverters::class)
-abstract class UserDatabase: RoomDatabase() {
+@Database(entities = [User::class, EnrollingPermission::class], version = 9)
+@TypeConverters(MyTypeConverters::class)
+abstract class Database: RoomDatabase() {
   abstract fun userDao(): UserDao
+  abstract fun enrollingPermissionDao(): EnrollingPermissionDao
 }
 
 val migration_1_2 = object: Migration(1, 2) {
@@ -62,5 +63,19 @@ val migration_7_8 = object: Migration(7, 8) {
   override fun migrate(database: SupportSQLiteDatabase) {
     database.execSQL("ALTER TABLE User ADD COLUMN notificationsOff TINYINT NOT NULL DEFAULT 0")
     database.execSQL("ALTER TABLE User ADD COLUMN soundOff TINYINT NOT NULL DEFAULT 0")
+  }
+}
+
+val migration_8_9 = object : Migration(8, 9){
+  override fun migrate(database: SupportSQLiteDatabase) {
+    database.execSQL(
+      "CREATE TABLE IF NOT EXISTS `EnrollingPermission` (" +
+            "`userId` INTEGER NOT NULL DEFAULT 0," +
+            "`clickCount` INTEGER NOT NULL DEFAULT 0," +
+            "`enableClickTime` INTEGER NOT NULL DEFAULT 0," +
+            "`lastClickTime` INTEGER NOT NULL DEFAULT 0," +
+            "PRIMARY KEY(`userId`)" +
+          ")"
+    )
   }
 }

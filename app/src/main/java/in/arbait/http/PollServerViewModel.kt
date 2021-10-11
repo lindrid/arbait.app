@@ -198,8 +198,10 @@ class PollServerViewModel: ViewModel(), Serializable
           val appId = responseTakenApps[i].id
           if (lvdTakenApps.containsKey(appId))
             lvdTakenApps[appId]?.value = responseTakenApps[i]
-          else
+          else {
             lvdTakenApps[appId] = MutableLiveData(responseTakenApps[i])
+          }
+          Log.i ("setLiveDataTakenApps", "lvdAppItem=${lvdTakenApps[appId]}, ${lvdTakenApps[appId]?.value}")
         }
       }
     }

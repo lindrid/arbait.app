@@ -1,6 +1,5 @@
 package `in`.arbait
 
-import `in`.arbait.App.Companion.context
 import `in`.arbait.database.User
 import `in`.arbait.http.poll_service.APP_NO_ID
 import `in`.arbait.http.poll_service.Actions
@@ -83,10 +82,9 @@ class MainActivity : AppCompatActivity()
 
           if (notificationWasTapped) {
             fragment = ApplicationFragment(appId)
-            pollServerViewModel.rootView = View(context)
+            pollServerViewModel.rootView = View(baseContext)
             pollServerViewModel.serviceDoAction(Actions.START)
             pollServerViewModel.bindService()
-            pollServerViewModel.pollService?.removeNotification(appId)
           }
         }
 

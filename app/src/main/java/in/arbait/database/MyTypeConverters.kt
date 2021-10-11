@@ -7,7 +7,7 @@ import com.google.gson.JsonElement
 import java.lang.reflect.Type
 import java.util.*
 
-class UserTypeConverters {
+class MyTypeConverters {
 
   @TypeConverter
   fun fromDate(date: Date?): Long? {

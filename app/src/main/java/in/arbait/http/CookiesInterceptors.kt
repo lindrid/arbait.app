@@ -7,7 +7,7 @@ import okhttp3.Response
 import java.io.IOException
 import android.content.SharedPreferences
 
-private const val COOKIES_KEY = "appCookies"
+const val COOKIES_KEY = "appCookies"
 
 class SendSavedCookiesInterceptor (private val context: Context) : Interceptor {
 

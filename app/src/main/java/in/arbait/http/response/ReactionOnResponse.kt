@@ -22,6 +22,8 @@ abstract class ReactionOnResponse (
   abstract fun doOnEndSessionError()
 
   fun doOnServerError() {
+    App.noInternetErrorCouldShown = true
+
     if (response.isItValidationError) {
       Log.i(TAG, "Поле: ${response.errorValidationField}")
       doOnServerFieldValidationError(response)
@@ -51,13 +53,17 @@ abstract class ReactionOnResponse (
 
   fun doOnSystemError() {
     if (!internetIsAvailable()) {
-      showErrorBalloon(context, view, R.string.internet_is_not_available)
+      if (App.noInternetErrorCouldShown) {
+        showErrorBalloon(context, view, R.string.internet_is_not_available)
+        App.noInternetErrorCouldShown = false
+      }
       return
     }
 
     App.res?.let {
       val systemError = it.getString(R.string.system_error, response.message)
       showErrorBalloon(context, view, systemError)
+      App.noInternetErrorCouldShown = true
     }
   }
 

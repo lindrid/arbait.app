@@ -84,6 +84,7 @@ class PollService : LifecycleService(), Serializable
           log("OBSERVER , firstTime = $firstTime")
           val response = it.response
           if (response.type == SERVER_OK) {
+            App.noInternetErrorCouldShown = true
             val openAppsFromServer = it.openApps
             log("openAppsFromServer = $openAppsFromServer")
 
@@ -278,10 +279,10 @@ class PollService : LifecycleService(), Serializable
     }
 
     val pendingIntent: PendingIntent =
-      Intent(App.context, NotificationTapReceiver::class.java).let { notificationIntent ->
+      Intent(this, NotificationTapReceiver::class.java).let { notificationIntent ->
         notificationIntent.putExtra(APP_ID_ARG, appId)
         notificationIntent.action = "TAP_ON_NOTIFICATION"
-        PendingIntent.getBroadcast(App.context, 0, notificationIntent,
+        PendingIntent.getBroadcast(this, 0, notificationIntent,
           FLAG_UPDATE_CURRENT)
       }
 
