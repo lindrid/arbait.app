@@ -128,5 +128,6 @@
 
     <!-- ApplicationRefuseDialog -->
     <string name="df_are_you_sure">Вы уверены?</string>
+    <string name="app_when_call">Звонить по приезду!</string>
 
 </resources>

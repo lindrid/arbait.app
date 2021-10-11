@@ -28,18 +28,15 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
+import kotlinx.coroutines.*
 import java.util.*
 import kotlin.math.pow
 
 
 private const val TAG = "ApplicationFragment"
 
-private const val DISABLE_BTN_MILLISECONDS = 1 * 10 * 1000  // 10 sec
-private const val ONE_MINUTE = 60 * 1000
+private const val DISABLE_BTN_MILLISECONDS = 20 * 1000  // 20 sec
+private const val ONE_AND_A_HALF_MINUTE = 90 * 1000
 
 const val APP_REFUSE_DIALOG_TAG = "ApplicationRefuseDialog"
 const val DEBIT_CARD_DIALOG_TAG = "DebitCardDialog"
@@ -177,13 +174,17 @@ class ApplicationFragment (private val appId: Int): Fragment()
     val porterWantToEnroll = !porterIsEnrolled
     val porterWantToRefuse = porterIsEnrolled
 
-    GlobalScope.launch {
+    GlobalScope.launch(Dispatchers.Main) {
       App.userItem?.let { user ->
-        val enrollingPermission = App.repository.getEnrollingPermission(user.id)
+        val coroutineValue = GlobalScope.async {
+          App.repository.getEnrollingPermission(user.id)
+        }
+
+        val enrollingPermission = coroutineValue.await()
         val now = Date().time
 
         val passMoreThenOneMinuteAfterLastClick = (enrollingPermission != null &&
-          now > enrollingPermission.lastClickTime + ONE_MINUTE
+          now > enrollingPermission.lastClickTime + ONE_AND_A_HALF_MINUTE
         )
 
         val clickCount =
@@ -205,16 +206,12 @@ class ApplicationFragment (private val appId: Int): Fragment()
           val debitCardDialog = DebitCardDialog.newInstance(appId, user)
           debitCardDialog.show(supportFragmentManager, DEBIT_CARD_DIALOG_TAG)
           porterIsEnrolled = false
-          withContext (Dispatchers.Main) {
-            reactOnDebitCardDialog(view, enrollingPermission, newEnrollingPermission)
-          }
+          reactOnDebitCardDialog(view, enrollingPermission, newEnrollingPermission)
         }
 
         if (porterWantToRefuse) {
           ApplicationRefuseDialog().show(supportFragmentManager, APP_REFUSE_DIALOG_TAG)
-          withContext (Dispatchers.Main) {
-            reactOnRefuseDialog(view, enrollingPermission, newEnrollingPermission, clickCount)
-          }
+          reactOnRefuseDialog(view, enrollingPermission, newEnrollingPermission, clickCount)
         }
       }
     }
@@ -227,6 +224,7 @@ class ApplicationFragment (private val appId: Int): Fragment()
       val app = bundle.getSerializable(APPLICATION_KEY) as ApplicationItem
       Log.i (TAG, "app from dialog = $app")
 
+      vm.lvdOpenApps.remove(appId)
       vm.lvdTakenApps[appId] = MutableLiveData(app)
       vm.lvdTakenApps[appId]?.let {
         lvdAppItem = it
@@ -315,9 +313,13 @@ class ApplicationFragment (private val appId: Int): Fragment()
   }
 
   private fun updateBtnEnabling() {
-    GlobalScope.launch {
+    GlobalScope.launch(Dispatchers.Main) {
       App.userItem?.let { user ->
-        val ep = App.repository.getEnrollingPermission(user.id)
+        val coroutineValue = GlobalScope.async {
+          App.repository.getEnrollingPermission(user.id)
+        }
+
+        val ep = coroutineValue.await()
         val now = Date().time
 
         if (ep == null)
