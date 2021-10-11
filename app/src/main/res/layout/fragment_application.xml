@@ -164,21 +164,22 @@
         android:id="@+id/bt_app_call_client"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="15dp"
+        android:layout_marginBottom="20dp"
         android:text="@string/app_call_client"
         app:layout_constraintBottom_toTopOf="@+id/bt_app_enroll_refuse"
-        app:layout_constraintEnd_toStartOf="@+id/tv_app_when_call"
+        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent" />
 
-    <TextView
+    <androidx.appcompat.widget.AppCompatTextView
         android:id="@+id/tv_app_when_call"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="25dp"
         android:text="@string/app_when_call"
-        android:textSize="20sp"
-        app:layout_constraintBottom_toTopOf="@+id/bt_app_back"
+        android:textColor="@color/emerald"
+        android:textSize="18sp"
+        android:visibility="invisible"
+        app:layout_constraintBottom_toTopOf="@+id/bt_app_enroll_refuse"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toEndOf="@id/bt_app_call_client" />
+        app:layout_constraintStart_toStartOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -51,13 +51,13 @@ const val PM_CASH = 2
 
 class ApplicationFragment (private val appId: Int): Fragment()
 {
-  private var btnClickCount = 0
   private var porter: PorterItem? = null
   private var porterIsEnrolled = false
   private lateinit var lvdAppItem: MutableLiveData<ApplicationItem>
 
   private lateinit var server: Server
   private lateinit var supportFragmentManager: FragmentManager
+
   private lateinit var tvEnrolled: AppCompatTextView
   private lateinit var tvAddress: AppCompatTextView
   private lateinit var tvTime: AppCompatTextView
@@ -71,6 +71,7 @@ class ApplicationFragment (private val appId: Int): Fragment()
   private lateinit var btBack: AppCompatButton
   private lateinit var btChangeDebitCard: AppCompatButton
   private lateinit var nsvApp: NestedScrollView
+  private lateinit var tvWhenCall: AppCompatTextView
 
   private val vm: PollServerViewModel by lazy {
     val mainActivity = requireActivity() as MainActivity
@@ -231,11 +232,14 @@ class ApplicationFragment (private val appId: Int): Fragment()
       }
 
       setAppObserver()
-      setVisibilityToViews(true, view)
 
       Log.i (TAG, "newEnrollingPermission = $newEp")
       addOrUpdateEnrollPermission(ep, newEp)
       porterIsEnrolled = true
+
+      btEnrollRefuse.text = getString(R.string.app_refuse)
+      setVisibilityToViews(true, view)
+      updateUI()
     }
   }
 
@@ -249,10 +253,9 @@ class ApplicationFragment (private val appId: Int): Fragment()
       server.refuseApp(appId) { appUserResponse ->
         Log.i (TAG, "setFragmentResultListener. response.type=${appUserResponse.response.type}")
         if (appUserResponse.response.type == SERVER_OK) {
-          setVisibilityToViews(false, view)
-          btEnrollRefuse.text = getString(R.string.app_enroll)
           lvdAppItem.value = appUserResponse.app
 
+          vm.lvdTakenApps.remove(appId)
           vm.lvdOpenApps[appId] = MutableLiveData(lvdAppItem.value)
           vm.lvdOpenApps[appId]?.let {
             lvdAppItem = it
@@ -272,6 +275,10 @@ class ApplicationFragment (private val appId: Int): Fragment()
           Log.i (TAG, "newEnrollingPermission = $newEp")
           addOrUpdateEnrollPermission(ep, newEp)
           porterIsEnrolled = false
+
+          btEnrollRefuse.text = getString(R.string.app_enroll)
+          setVisibilityToViews(false, view)
+          updateUI()
         }
       }
     }
@@ -335,6 +342,7 @@ class ApplicationFragment (private val appId: Int): Fragment()
       tvEnrolled.visibility = View.VISIBLE
       rvPorters.visibility = View.VISIBLE
       btCallClient.visibility = View.VISIBLE
+      tvWhenCall.visibility = View.VISIBLE
 
       val ap = tvAddress.layoutParams as ConstraintLayout.LayoutParams
       ap.topToTop = ConstraintLayout.LayoutParams.UNSET
@@ -354,6 +362,7 @@ class ApplicationFragment (private val appId: Int): Fragment()
       tvEnrolled.visibility = View.INVISIBLE
       rvPorters.visibility = View.INVISIBLE
       btCallClient.visibility = View.INVISIBLE
+      tvWhenCall.visibility = View.INVISIBLE
 
       val ap = tvAddress.layoutParams as ConstraintLayout.LayoutParams
       ap.topToTop = view.id
@@ -406,6 +415,7 @@ class ApplicationFragment (private val appId: Int): Fragment()
     btBack = view.findViewById(R.id.bt_app_back)
     btChangeDebitCard = view.findViewById(R.id.bt_app_change_debit_card)
     nsvApp = view.findViewById(R.id.nsv_app)
+    tvWhenCall = view.findViewById(R.id.tv_app_when_call)
   }
 
   private fun setViewsTexts() {
