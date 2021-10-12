@@ -110,6 +110,12 @@
     <string name="app_you_are_enrolled">Вы записаны</string>
     <string name="app_no_card">без карты</string>
 
+    <string name="app_when_call">Звонить по приезду!</string>
+    <string name="could_not_enroll_cause_interval">Нельзя записаться: между заявками меньше часа</string>
+    <string name="could_not_enroll_cause_refuses">Нельзя записаться: частая запись/отмена заявок</string>
+    <string name="could_not_enroll_cause_unknown">Нельзя записаться: неизвестная проблема</string>
+
+
     <!-- LoginFragment -->
     <string name="log_login">Войти</string>
     <string name="log_phone">Номер телефона</string>
@@ -128,6 +134,5 @@
 
     <!-- ApplicationRefuseDialog -->
     <string name="df_are_you_sure">Вы уверены?</string>
-    <string name="app_when_call">Звонить по приезду!</string>
 
 </resources>

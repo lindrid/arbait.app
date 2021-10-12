@@ -9,6 +9,7 @@ import `in`.arbait.http.items.PhoneItem
 import `in`.arbait.http.items.PorterItem
 import `in`.arbait.http.response.SERVER_OK
 import android.content.Intent
+import android.graphics.Color
 import android.net.Uri
 import android.os.Bundle
 import android.text.Html
@@ -31,13 +32,17 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import kotlinx.coroutines.*
 import java.util.*
-import kotlin.math.pow
+import kotlin.math.abs
 
 
 private const val TAG = "ApplicationFragment"
 
 private const val DISABLE_BTN_MILLISECONDS = 10 * 1000  // 10 sec
 private const val ONE_AND_A_HALF_MINUTE = 90 * 1000
+private const val ONE_HOUR = 60 * 60 * 1000
+
+private const val CAUSE_FREQUENT_APP_REFUSING = 0
+private const val CAUSE_SMALL_TIME_INTERVAL = 1
 
 const val APP_REFUSE_DIALOG_TAG = "ApplicationRefuseDialog"
 const val DEBIT_CARD_DIALOG_TAG = "DebitCardDialog"
@@ -52,6 +57,9 @@ const val PM_CASH = 2
 
 class ApplicationFragment (private val appId: Int): Fragment()
 {
+  private var couldEnroll = false
+  private var couldNotEnrollCause = -1
+
   private var porter: PorterItem? = null
   private var porterIsEnrolled = false
   private lateinit var lvdAppItem: MutableLiveData<ApplicationItem>
@@ -188,12 +196,12 @@ class ApplicationFragment (private val appId: Int): Fragment()
         val enrollingPermission = coroutineValue.await()
         val now = Date().time
 
-        val passMoreThenOneMinuteAfterLastClick = (enrollingPermission != null &&
+        val passTooMuchTimeAfterLastClick = (enrollingPermission != null &&
           now > enrollingPermission.lastClickTime + ONE_AND_A_HALF_MINUTE
         )
 
         val changeStateCount =
-          if (enrollingPermission == null || passMoreThenOneMinuteAfterLastClick) {
+          if (enrollingPermission == null || passTooMuchTimeAfterLastClick) {
             if (porterWantToEnroll) 1 else 0
           }
           else {
@@ -323,9 +331,68 @@ class ApplicationFragment (private val appId: Int): Fragment()
   }
 
   private fun updateUI() {
+    Log.i ("track", "updateUI")
     setViewsTexts()
     updatePorters()
-    updateBtnEnabling()
+    GlobalScope.launch(Dispatchers.Main) {
+      updateBtnEnabling()
+
+      if (!porterIsEnrolled) {
+        if (!(!couldEnroll && couldNotEnrollCause == CAUSE_FREQUENT_APP_REFUSING)) {
+          couldEnroll = true
+          couldNotEnrollCause = -1
+        }
+        val takenApps = vm.lvdTakenApps
+        val thisAppTimeStr = lvdAppItem.value?.time
+
+        for (i in takenApps.keys) {
+
+          if (takenApps[i] != null && takenApps[i]?.value != null)
+            if (takenApps[i]?.value?.id == lvdAppItem.value?.id)
+              continue
+
+          val takenAppTimeStr = takenApps[i]?.value?.time
+          takenAppTimeStr?.let { takenStr ->
+            thisAppTimeStr?.let { thisStr ->
+              val takenDate = strToDate(takenStr, "HH:mm")
+              val thisDate = strToDate(thisStr, "HH:mm")
+              takenDate?.let {
+                thisDate?.let {
+                  val diff = abs(takenDate.time - thisDate.time)
+                  if (diff < ONE_HOUR) {
+                    couldEnroll = false
+                    couldNotEnrollCause = CAUSE_SMALL_TIME_INTERVAL
+                  }
+                }
+              }
+            }
+          }
+          if (!couldEnroll) break
+        }
+
+        Log.i(
+          "track", "updateUI, portersIsEnrolled, " +
+              "couldEnroll=$couldEnroll, couldNotEnrollCause=$couldNotEnrollCause"
+        )
+
+        if (couldEnroll) {
+          tvEnrolled.visibility = View.INVISIBLE
+          btEnrollRefuse.isEnabled = true
+          setLayoutConstraints(tvEnrolledIsVisible = false, btEnrollRefuse)
+        } else {
+          tvEnrolled.text = when (couldNotEnrollCause) {
+            CAUSE_FREQUENT_APP_REFUSING -> getString(R.string.could_not_enroll_cause_refuses)
+            CAUSE_SMALL_TIME_INTERVAL -> getString(R.string.could_not_enroll_cause_interval)
+            else -> getString(R.string.could_not_enroll_cause_unknown)
+          }
+          tvEnrolled.textSize = 26.0f
+          tvEnrolled.setTextColor(Color.RED)
+          tvEnrolled.visibility = View.VISIBLE
+          btEnrollRefuse.isEnabled = false
+          setLayoutConstraints(tvEnrolledIsVisible = true, btEnrollRefuse)
+        }
+      }
+    }
   }
 
   private fun updatePorters() {
@@ -336,8 +403,7 @@ class ApplicationFragment (private val appId: Int): Fragment()
     }
   }
 
-  private fun updateBtnEnabling() {
-    GlobalScope.launch(Dispatchers.Main) {
+  private suspend fun updateBtnEnabling() {
       App.userItem?.let { user ->
         val coroutineValue = GlobalScope.async {
           App.repository.getEnrollingPermission(user.id)
@@ -346,21 +412,56 @@ class ApplicationFragment (private val appId: Int): Fragment()
         val ep = coroutineValue.await()
         val now = Date().time
 
-        if (ep == null)
-          btEnrollRefuse.isEnabled = true
-        else
-          btEnrollRefuse.isEnabled = (now >= ep.enableClickTime)
+        if (!(!couldEnroll && couldNotEnrollCause == CAUSE_SMALL_TIME_INTERVAL)) {
+          if (ep == null) {
+            btEnrollRefuse.isEnabled = true
+            couldNotEnrollCause = -1
+          }
+          else {
+            Log.i (TAG, "now is $now, enableCLickTime is ${ep.enableClickTime}")
+            btEnrollRefuse.isEnabled = (now >= ep.enableClickTime)
+            if (now >= ep.enableClickTime) {
+              couldEnroll = true
+              couldNotEnrollCause = -1
+            }
+            else {
+              couldEnroll = false
+              couldNotEnrollCause = CAUSE_FREQUENT_APP_REFUSING
+            }
+          }
+        }
       }
-    }
+
+      Log.i ("track", "updateBtnEnabling, couldEnroll=$couldEnroll," +
+          "couldNotEnrollCause=$couldNotEnrollCause, isEnabled=${btEnrollRefuse.isEnabled}")
+
   }
 
   private fun setVisibilityToViews(porterIsEnrolled: Boolean, view: View) {
     if (porterIsEnrolled) {
       tvEnrolled.visibility = View.VISIBLE
+      tvEnrolled.textSize = 34.0f
+      tvEnrolled.text = getString(R.string.app_you_are_enrolled)
+      tvEnrolled.setTextColor(resources.getColor(R.color.emerald))
+
       rvPorters.visibility = View.VISIBLE
       btCallClient.visibility = View.VISIBLE
       tvWhenCall.visibility = View.VISIBLE
+      setLayoutConstraints(tvEnrolledIsVisible = true, view)
+    }
+    else {
+      tvEnrolled.visibility = View.INVISIBLE
+      rvPorters.visibility = View.INVISIBLE
+      btCallClient.visibility = View.INVISIBLE
+      tvWhenCall.visibility = View.INVISIBLE
+      setLayoutConstraints(tvEnrolledIsVisible = false, view)
+    }
+    //dp.endToEnd = ConstraintLayout.LayoutParams.UNSET
+    //dp.marginStart = HEADER_MARGIN_START
+  }
 
+  private fun setLayoutConstraints(tvEnrolledIsVisible: Boolean, view: View) {
+    if (tvEnrolledIsVisible) {
       val ap = tvAddress.layoutParams as ConstraintLayout.LayoutParams
       ap.topToTop = ConstraintLayout.LayoutParams.UNSET
       ap.topToBottom = tvEnrolled.id
@@ -373,14 +474,8 @@ class ApplicationFragment (private val appId: Int): Fragment()
       val np = nsvApp.layoutParams as ConstraintLayout.LayoutParams
       np.bottomToTop = btCallClient.id
       nsvApp.layoutParams = np
-
     }
     else {
-      tvEnrolled.visibility = View.INVISIBLE
-      rvPorters.visibility = View.INVISIBLE
-      btCallClient.visibility = View.INVISIBLE
-      tvWhenCall.visibility = View.INVISIBLE
-
       val ap = tvAddress.layoutParams as ConstraintLayout.LayoutParams
       ap.topToTop = view.id
       ap.topToBottom = ConstraintLayout.LayoutParams.UNSET
@@ -394,10 +489,7 @@ class ApplicationFragment (private val appId: Int): Fragment()
       np.bottomToTop = btBack.id
       nsvApp.layoutParams = np
     }
-    //dp.endToEnd = ConstraintLayout.LayoutParams.UNSET
-    //dp.marginStart = HEADER_MARGIN_START
   }
-
 
 
   private fun getThisUserPorter(app: ApplicationItem): PorterItem? {
