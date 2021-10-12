@@ -6,7 +6,7 @@ import androidx.room.TypeConverters
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 
-@Database(entities = [User::class, EnrollingPermission::class], version = 9)
+@Database(entities = [User::class, EnrollingPermission::class], version = 10)
 @TypeConverters(MyTypeConverters::class)
 abstract class Database: RoomDatabase() {
   abstract fun userDao(): UserDao
@@ -66,7 +66,7 @@ val migration_7_8 = object: Migration(7, 8) {
   }
 }
 
-val migration_8_9 = object : Migration(8, 9){
+val migration_8_9 = object : Migration(8, 9) {
   override fun migrate(database: SupportSQLiteDatabase) {
     database.execSQL(
       "CREATE TABLE IF NOT EXISTS `EnrollingPermission` (" +
@@ -77,5 +77,26 @@ val migration_8_9 = object : Migration(8, 9){
             "PRIMARY KEY(`userId`)" +
           ")"
     )
+  }
+}
+
+val migration_9_10 = object : Migration(9, 10) {
+  override fun migrate(database: SupportSQLiteDatabase) {
+    database.execSQL(
+      "CREATE TABLE `EnrollingPermissionBackup` (" +
+          "`userId` INTEGER NOT NULL DEFAULT 0," +
+          "`changeStateCount` INTEGER NOT NULL DEFAULT 0," +
+          "`enableClickTime` INTEGER NOT NULL DEFAULT 0," +
+          "`lastClickTime` INTEGER NOT NULL DEFAULT 0," +
+          "PRIMARY KEY(`userId`)" +
+          ")"
+    )
+    database.execSQL("INSERT INTO EnrollingPermissionBackup SELECT userId, " +
+        "clickCountWithinOneMin, enableClickTime, lastClickTime FROM EnrollingPermission")
+    database.execSQL("DROP TABLE EnrollingPermission")
+    database.execSQL("ALTER TABLE EnrollingPermissionBackup RENAME to EnrollingPermission")
+
+    database.execSQL("ALTER TABLE EnrollingPermission " +
+        "ADD COLUMN lastState TINYINT NOT NULL DEFAULT 0")
   }
 }

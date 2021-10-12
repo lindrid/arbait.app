@@ -3,7 +3,6 @@ package `in`.arbait
 import `in`.arbait.http.poll_service.*
 import `in`.arbait.http.items.ApplicationItem
 import android.annotation.SuppressLint
-import android.content.BroadcastReceiver
 import android.graphics.Color
 import android.os.Bundle
 import android.util.Log
@@ -73,7 +72,7 @@ class ApplicationsFragment: Fragment()
     vm.rootView = rootView
 
     // заявки считываются с сервера нашим бесконечным PollService'ом
-    vm.serviceDoAction(Actions.START)
+    vm.serviceDoAction(Action.START)
     vm.bindService()
 
     vm.openApps.observe(viewLifecycleOwner,

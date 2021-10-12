@@ -2,10 +2,8 @@ package `in`.arbait
 
 import `in`.arbait.database.User
 import `in`.arbait.http.poll_service.APP_NO_ID
-import `in`.arbait.http.poll_service.Actions
-import android.content.*
+import `in`.arbait.http.poll_service.Action
 import android.content.ContentValues.TAG
-import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
@@ -15,12 +13,6 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import android.view.View
 import android.view.inputmethod.InputMethodManager
-import androidx.annotation.IdRes
-import androidx.fragment.app.FragmentManager
-import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.Observer
-import androidx.localbroadcastmanager.content.LocalBroadcastManager
-import androidx.recyclerview.widget.RecyclerView
 
 
 private const val TAG = "MainActivity"
@@ -83,7 +75,7 @@ class MainActivity : AppCompatActivity()
           if (notificationWasTapped) {
             fragment = ApplicationFragment(appId)
             pollServerViewModel.rootView = View(baseContext)
-            pollServerViewModel.serviceDoAction(Actions.START)
+            pollServerViewModel.serviceDoAction(Action.START)
             pollServerViewModel.bindService()
           }
         }

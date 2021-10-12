@@ -143,8 +143,8 @@ class PollService : LifecycleService(), Serializable
 
       log( "using an intent with action $action")
       when (action) {
-        Actions.START.name -> startService()
-        Actions.STOP.name -> stopService()
+        Action.START.name -> startService()
+        Action.STOP.name -> stopService()
         else -> Log.i(TAG,"This should never happen. No action in the received intent")
       }
     }

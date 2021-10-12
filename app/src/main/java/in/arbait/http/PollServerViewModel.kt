@@ -63,8 +63,8 @@ class PollServerViewModel: ViewModel(), Serializable
     }
   }
 
-  fun serviceDoAction (action: Actions) {
-    if (getServiceState(mainActivity) == ServiceState.STOPPED && action == Actions.STOP) return
+  fun serviceDoAction (action: Action) {
+    if (getServiceState(mainActivity) == ServiceState.STOPPED && action == Action.STOP) return
 
     Intent(mainActivity, PollService::class.java).also {
       it.action = action.name
@@ -146,7 +146,7 @@ class PollServerViewModel: ViewModel(), Serializable
       }
 
       unbindService()
-      serviceDoAction(Actions.STOP)
+      serviceDoAction(Action.STOP)
 
       /* Выясняем запущен ли уже LoginFragment или нет
       val myFragment: LoginFragment =

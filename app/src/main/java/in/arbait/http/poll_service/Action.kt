@@ -1,6 +1,6 @@
 package `in`.arbait.http.poll_service
 
-enum class Actions {
+enum class Action {
   START,
   STOP
 }

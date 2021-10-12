@@ -8,8 +8,9 @@ import java.util.*
 @Entity(tableName = "EnrollingPermission")
 data class EnrollingPermission (
   @PrimaryKey var userId: Int,
-  var clickCountWithinOneMin: Int = 0,
+  var changeStateCount: Int = 0,
   var enableClickTime: Long,
   var lastClickTime: Long,
+  var lastState: AppState
 ): Serializable {}
 

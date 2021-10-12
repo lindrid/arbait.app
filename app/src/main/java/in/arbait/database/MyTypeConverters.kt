@@ -21,4 +21,10 @@ class MyTypeConverters {
     }
   }
 
+  @TypeConverter
+  fun toState(value: Int) = enumValues<AppState>()[value]
+
+  @TypeConverter
+  fun fromState(value: AppState) = value.ordinal
+
 }

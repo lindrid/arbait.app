@@ -1,5 +1,6 @@
 package `in`.arbait
 
+import `in`.arbait.database.AppState
 import `in`.arbait.database.EnrollingPermission
 import `in`.arbait.http.Server
 import `in`.arbait.http.items.ApplicationItem
@@ -35,7 +36,7 @@ import kotlin.math.pow
 
 private const val TAG = "ApplicationFragment"
 
-private const val DISABLE_BTN_MILLISECONDS = 20 * 1000  // 20 sec
+private const val DISABLE_BTN_MILLISECONDS = 10 * 1000  // 10 sec
 private const val ONE_AND_A_HALF_MINUTE = 90 * 1000
 
 const val APP_REFUSE_DIALOG_TAG = "ApplicationRefuseDialog"
@@ -175,6 +176,9 @@ class ApplicationFragment (private val appId: Int): Fragment()
     val porterWantToEnroll = !porterIsEnrolled
     val porterWantToRefuse = porterIsEnrolled
 
+    val state = if (!porterIsEnrolled) AppState.ENROLLED
+                else AppState.REFUSED
+
     GlobalScope.launch(Dispatchers.Main) {
       App.userItem?.let { user ->
         val coroutineValue = GlobalScope.async {
@@ -188,19 +192,23 @@ class ApplicationFragment (private val appId: Int): Fragment()
           now > enrollingPermission.lastClickTime + ONE_AND_A_HALF_MINUTE
         )
 
-        val clickCount =
+        val changeStateCount =
           if (enrollingPermission == null || passMoreThenOneMinuteAfterLastClick) {
             if (porterWantToEnroll) 1 else 0
           }
           else {
-            enrollingPermission.clickCountWithinOneMin + 1
+            if (stateIsChanging(enrollingPermission, state))
+              enrollingPermission.changeStateCount + 1
+            else
+              enrollingPermission.changeStateCount
           }
 
         val newEnrollingPermission = EnrollingPermission(
           userId = user.id,
-          clickCountWithinOneMin = clickCount,
+          changeStateCount = changeStateCount,
           enableClickTime = now,
-          lastClickTime = now
+          lastClickTime = now,
+          lastState = state
         )
 
         if (porterWantToEnroll) {
@@ -212,10 +220,15 @@ class ApplicationFragment (private val appId: Int): Fragment()
 
         if (porterWantToRefuse) {
           ApplicationRefuseDialog().show(supportFragmentManager, APP_REFUSE_DIALOG_TAG)
-          reactOnRefuseDialog(view, enrollingPermission, newEnrollingPermission, clickCount)
+          reactOnRefuseDialog(view, enrollingPermission, newEnrollingPermission, changeStateCount)
         }
       }
     }
+  }
+
+  private fun stateIsChanging(ep: EnrollingPermission, state: AppState): Boolean {
+    return ep.lastState == AppState.ENROLLED && state == AppState.REFUSED ||
+        ep.lastState == AppState.REFUSED && state == AppState.ENROLLED
   }
 
   private fun reactOnDebitCardDialog(view: View, ep: EnrollingPermission?, newEp: EnrollingPermission)
@@ -245,7 +258,7 @@ class ApplicationFragment (private val appId: Int): Fragment()
 
   private fun reactOnRefuseDialog(view: View,
                                   ep: EnrollingPermission?, newEp: EnrollingPermission,
-                                  clickCount: Int)
+                                  changeStateCount: Int)
   {
     supportFragmentManager.setFragmentResultListener(OK_KEY, viewLifecycleOwner)
     { _, bundle ->
@@ -262,10 +275,14 @@ class ApplicationFragment (private val appId: Int): Fragment()
           }
           setAppObserver()
 
-          if (clickCount > 1 && ep != null) {
+          if (changeStateCount > 1 && ep != null) {
             val now = Date().time
-            val p = ((clickCount / 2) - 1).toDouble()
-            val coefficient = 3.0.pow(p).toLong()
+            val p: Int = changeStateCount / 2
+            var coefficient = 0
+
+            for (i in 1..p)
+              coefficient += 3
+
             Log.i(TAG, "coefficient=$coefficient")
 
             newEp.enableClickTime = now + coefficient * DISABLE_BTN_MILLISECONDS
