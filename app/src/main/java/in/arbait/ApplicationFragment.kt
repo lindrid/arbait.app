@@ -37,12 +37,14 @@ import kotlin.math.abs
 
 private const val TAG = "ApplicationFragment"
 
-private const val DISABLE_BTN_MILLISECONDS = 10 * 1000  // 10 sec
-private const val ONE_AND_A_HALF_MINUTE = 90 * 1000
-private const val ONE_HOUR = 60 * 60 * 1000
+private const val DISABLE_BTN_BASE_RANGE = 10 * 1000              // 10 sec
+private const val PENALTY_TIME_RANGE = 2 * 60 * 1000              // 2 min
+private const val MIN_TIME_RANGE_BETWEEN_APPS = 60 * 60 * 1000    // 1 hour
 
 private const val CAUSE_FREQUENT_APP_REFUSING = 0
 private const val CAUSE_SMALL_TIME_INTERVAL = 1
+
+const val ENROLL_REFUSE_WITHOUT_PENALTY_MAX_AMOUNT = 2
 
 const val APP_REFUSE_DIALOG_TAG = "ApplicationRefuseDialog"
 const val DEBIT_CARD_DIALOG_TAG = "DebitCardDialog"
@@ -197,7 +199,7 @@ class ApplicationFragment (private val appId: Int): Fragment()
         val now = Date().time
 
         val passTooMuchTimeAfterLastClick = (enrollingPermission != null &&
-          now > enrollingPermission.lastClickTime + ONE_AND_A_HALF_MINUTE
+          now > enrollingPermission.lastClickTime + PENALTY_TIME_RANGE
         )
 
         val changeStateCount =
@@ -283,7 +285,7 @@ class ApplicationFragment (private val appId: Int): Fragment()
           }
           setAppObserver()
 
-          if (changeStateCount > 1 && ep != null) {
+          if (changeStateCount > ENROLL_REFUSE_WITHOUT_PENALTY_MAX_AMOUNT && ep != null) {
             val now = Date().time
             val p: Int = changeStateCount / 2
             var coefficient = 0
@@ -293,7 +295,7 @@ class ApplicationFragment (private val appId: Int): Fragment()
 
             Log.i(TAG, "coefficient=$coefficient")
 
-            newEp.enableClickTime = now + coefficient * DISABLE_BTN_MILLISECONDS
+            newEp.enableClickTime = now + coefficient * DISABLE_BTN_BASE_RANGE
             btEnrollRefuse.isEnabled = false
           }
 
@@ -334,19 +336,21 @@ class ApplicationFragment (private val appId: Int): Fragment()
     Log.i ("track", "updateUI")
     setViewsTexts()
     updatePorters()
-    GlobalScope.launch(Dispatchers.Main) {
+
+    GlobalScope.launch(Dispatchers.Main)
+    {
       updateBtnEnabling()
 
       if (!porterIsEnrolled) {
-        if (!(!couldEnroll && couldNotEnrollCause == CAUSE_FREQUENT_APP_REFUSING)) {
+        if (couldNotEnrollCause != CAUSE_FREQUENT_APP_REFUSING) {
           couldEnroll = true
           couldNotEnrollCause = -1
         }
         val takenApps = vm.lvdTakenApps
         val thisAppTimeStr = lvdAppItem.value?.time
 
-        for (i in takenApps.keys) {
-
+        for (i in takenApps.keys)
+        {
           if (takenApps[i] != null && takenApps[i]?.value != null)
             if (takenApps[i]?.value?.id == lvdAppItem.value?.id)
               continue
@@ -359,7 +363,7 @@ class ApplicationFragment (private val appId: Int): Fragment()
               takenDate?.let {
                 thisDate?.let {
                   val diff = abs(takenDate.time - thisDate.time)
-                  if (diff < ONE_HOUR) {
+                  if (diff < MIN_TIME_RANGE_BETWEEN_APPS) {
                     couldEnroll = false
                     couldNotEnrollCause = CAUSE_SMALL_TIME_INTERVAL
                   }
@@ -370,16 +374,12 @@ class ApplicationFragment (private val appId: Int): Fragment()
           if (!couldEnroll) break
         }
 
-        Log.i(
-          "track", "updateUI, portersIsEnrolled, " +
-              "couldEnroll=$couldEnroll, couldNotEnrollCause=$couldNotEnrollCause"
-        )
-
         if (couldEnroll) {
           tvEnrolled.visibility = View.INVISIBLE
           btEnrollRefuse.isEnabled = true
           setLayoutConstraints(tvEnrolledIsVisible = false, btEnrollRefuse)
-        } else {
+        }
+        else {
           tvEnrolled.text = when (couldNotEnrollCause) {
             CAUSE_FREQUENT_APP_REFUSING -> getString(R.string.could_not_enroll_cause_refuses)
             CAUSE_SMALL_TIME_INTERVAL -> getString(R.string.could_not_enroll_cause_interval)
@@ -389,8 +389,11 @@ class ApplicationFragment (private val appId: Int): Fragment()
           tvEnrolled.setTextColor(Color.RED)
           tvEnrolled.visibility = View.VISIBLE
           btEnrollRefuse.isEnabled = false
-          setLayoutConstraints(tvEnrolledIsVisible = true, btEnrollRefuse)
+          setLayoutConstraints(tvEnrolledIsVisible = true, btEnrollRefuse, withoutPorters = true)
         }
+      }
+      else {
+        btEnrollRefuse.isEnabled = true
       }
     }
   }
@@ -404,37 +407,33 @@ class ApplicationFragment (private val appId: Int): Fragment()
   }
 
   private suspend fun updateBtnEnabling() {
-      App.userItem?.let { user ->
-        val coroutineValue = GlobalScope.async {
-          App.repository.getEnrollingPermission(user.id)
+    App.userItem?.let { user ->
+      val coroutineValue = GlobalScope.async {
+        App.repository.getEnrollingPermission(user.id)
+      }
+
+      val ep = coroutineValue.await()
+      val now = Date().time
+
+      if (couldNotEnrollCause != CAUSE_SMALL_TIME_INTERVAL) {
+        if (ep == null) {
+          btEnrollRefuse.isEnabled = true
+          couldEnroll = true
+          couldNotEnrollCause = -1
         }
-
-        val ep = coroutineValue.await()
-        val now = Date().time
-
-        if (!(!couldEnroll && couldNotEnrollCause == CAUSE_SMALL_TIME_INTERVAL)) {
-          if (ep == null) {
-            btEnrollRefuse.isEnabled = true
+        else {
+          btEnrollRefuse.isEnabled = (now >= ep.enableClickTime)
+          if (now >= ep.enableClickTime) {
+            couldEnroll = true
             couldNotEnrollCause = -1
           }
           else {
-            Log.i (TAG, "now is $now, enableCLickTime is ${ep.enableClickTime}")
-            btEnrollRefuse.isEnabled = (now >= ep.enableClickTime)
-            if (now >= ep.enableClickTime) {
-              couldEnroll = true
-              couldNotEnrollCause = -1
-            }
-            else {
-              couldEnroll = false
-              couldNotEnrollCause = CAUSE_FREQUENT_APP_REFUSING
-            }
+            couldEnroll = false
+            couldNotEnrollCause = CAUSE_FREQUENT_APP_REFUSING
           }
         }
       }
-
-      Log.i ("track", "updateBtnEnabling, couldEnroll=$couldEnroll," +
-          "couldNotEnrollCause=$couldNotEnrollCause, isEnabled=${btEnrollRefuse.isEnabled}")
-
+    }
   }
 
   private fun setVisibilityToViews(porterIsEnrolled: Boolean, view: View) {
@@ -456,20 +455,27 @@ class ApplicationFragment (private val appId: Int): Fragment()
       tvWhenCall.visibility = View.INVISIBLE
       setLayoutConstraints(tvEnrolledIsVisible = false, view)
     }
-    //dp.endToEnd = ConstraintLayout.LayoutParams.UNSET
-    //dp.marginStart = HEADER_MARGIN_START
   }
 
-  private fun setLayoutConstraints(tvEnrolledIsVisible: Boolean, view: View) {
+  private fun setLayoutConstraints(tvEnrolledIsVisible: Boolean, view: View,
+                                   withoutPorters: Boolean = false)
+  {
     if (tvEnrolledIsVisible) {
       val ap = tvAddress.layoutParams as ConstraintLayout.LayoutParams
       ap.topToTop = ConstraintLayout.LayoutParams.UNSET
       ap.topToBottom = tvEnrolled.id
       tvAddress.layoutParams = ap
 
-      val dp = tvDescription.layoutParams as ConstraintLayout.LayoutParams
-      dp.topToBottom = rvPorters.id
-      tvDescription.layoutParams = dp
+      if (withoutPorters) {
+        val dp = tvDescription.layoutParams as ConstraintLayout.LayoutParams
+        dp.topToBottom = tvPortersCount.id
+        tvDescription.layoutParams = dp
+      }
+      else {
+        val dp = tvDescription.layoutParams as ConstraintLayout.LayoutParams
+        dp.topToBottom = rvPorters.id
+        tvDescription.layoutParams = dp
+      }
 
       val np = nsvApp.layoutParams as ConstraintLayout.LayoutParams
       np.bottomToTop = btCallClient.id
