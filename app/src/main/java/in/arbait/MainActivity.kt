@@ -1,6 +1,7 @@
 package `in`.arbait
 
 import `in`.arbait.database.User
+import `in`.arbait.http.PollServerViewModel
 import `in`.arbait.http.poll_service.APP_NO_ID
 import `in`.arbait.http.poll_service.Action
 import android.content.ContentValues.TAG

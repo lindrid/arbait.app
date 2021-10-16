@@ -1,9 +1,13 @@
-package `in`.arbait
+package `in`.arbait.http
 
+import `in`.arbait.App
+import `in`.arbait.MainActivity
+import `in`.arbait.elementsFromANotInB
 import `in`.arbait.http.*
 import `in`.arbait.http.poll_service.*
 import `in`.arbait.http.items.ApplicationItem
 import `in`.arbait.http.response.*
+import `in`.arbait.listsAreDifferent
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
@@ -16,8 +20,7 @@ import androidx.lifecycle.*
 import androidx.lifecycle.Observer
 import java.io.Serializable
 
-
-private const val TAG = "ApplicationsViewModel"
+private const val TAG = "PollServerViewModel"
 
 class PollServerViewModel: ViewModel(), Serializable
 {
@@ -116,18 +119,9 @@ class PollServerViewModel: ViewModel(), Serializable
     ReactionOnResponse (TAG, context, rootView, response) {
 
     fun doOnServerOkResult(appsResponse: ServiceDataResponse) {
-      /*openApps.value?.let { value ->
-        Log.i (TAG, "openApps.size = ${value.size}")
-        Log.i (TAG, "appsResponse.openApps.size = ${appsResponse.openApps.size}")
-      }*/
-
       Log.i (TAG, "doOnServerOkResult")
-
       setOpenApps(appsResponse)
-      setLiveDataOpenApps(appsResponse)
-
       setTakenApps(appsResponse)
-      setLiveDataTakenApps(appsResponse)
     }
 
     override fun doOnServerOkResult() {}
@@ -159,18 +153,36 @@ class PollServerViewModel: ViewModel(), Serializable
 
 
     private fun setOpenApps(appsResponse: ServiceDataResponse) {
+      val prevApps = this@PollServerViewModel.openApps.value
+      var goneApps = listOf<ApplicationItem>()
+      prevApps?.let {
+        // closed or deleted apps
+        goneApps = elementsFromANotInB(it, appsResponse.openApps)
+      }
+
       if ((openApps.value == null) || openAppsDifferFrom(appsResponse.openApps)) {
         openApps.value = appsResponse.openApps
       }
+
+      setLiveDataOpenApps(appsResponse, goneApps)
     }
 
-    private fun setLiveDataOpenApps(appsResponse: ServiceDataResponse) {
+    private fun setLiveDataOpenApps(appsResponse: ServiceDataResponse,
+                                    goneApps: List<ApplicationItem>)
+    {
       for (i in appsResponse.openApps.indices) {
         val appId = appsResponse.openApps[i].id
         if (lvdOpenApps.containsKey(appId))
           lvdOpenApps[appId]?.value = appsResponse.openApps[i]
         else
           lvdOpenApps[appId] = MutableLiveData(appsResponse.openApps[i])
+      }
+
+      if (goneApps.isNotEmpty()) {
+        for (i in goneApps.indices) {
+          val appId = goneApps[i].id
+          lvdOpenApps[appId]?.value = null
+        }
       }
     }
 
@@ -183,6 +195,16 @@ class PollServerViewModel: ViewModel(), Serializable
       if (appsResponse.takenApps == null) {
         takenApps.value = emptyList()
       }
+
+      val prevApps = this@PollServerViewModel.takenApps.value
+      var goneApps = listOf<ApplicationItem>()
+      prevApps?.let { prevTakenApps ->
+        appsResponse.takenApps?.let { newTakenApps ->
+          // closed or deleted apps
+          goneApps = elementsFromANotInB(prevTakenApps, newTakenApps)
+        }
+      }
+
       appsResponse.takenApps?.let { responseTakenApps ->
         Log.i ("setTakenApps", "responseTakenApps = $responseTakenApps")
         if ((takenApps.value == null) || takenAppsDifferFrom(responseTakenApps)) {
@@ -190,9 +212,12 @@ class PollServerViewModel: ViewModel(), Serializable
         }
       }
 
+      setLiveDataTakenApps(appsResponse, goneApps)
     }
 
-    private fun setLiveDataTakenApps(appsResponse: ServiceDataResponse) {
+    private fun setLiveDataTakenApps(appsResponse: ServiceDataResponse,
+                                     goneApps: List<ApplicationItem>)
+    {
       appsResponse.takenApps?.let { responseTakenApps ->
         for (i in responseTakenApps.indices) {
           val appId = responseTakenApps[i].id
@@ -202,6 +227,13 @@ class PollServerViewModel: ViewModel(), Serializable
             lvdTakenApps[appId] = MutableLiveData(responseTakenApps[i])
           }
           Log.i ("setLiveDataTakenApps", "lvdAppItem=${lvdTakenApps[appId]}, ${lvdTakenApps[appId]?.value}")
+        }
+      }
+
+      if (goneApps.isNotEmpty()) {
+        for (i in goneApps.indices) {
+          val appId = goneApps[i].id
+          lvdTakenApps[appId]?.value = null
         }
       }
     }

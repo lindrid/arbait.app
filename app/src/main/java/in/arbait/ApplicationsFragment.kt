@@ -1,5 +1,6 @@
 package `in`.arbait
 
+import `in`.arbait.http.PollServerViewModel
 import `in`.arbait.http.poll_service.*
 import `in`.arbait.http.items.ApplicationItem
 import android.annotation.SuppressLint
@@ -7,6 +8,7 @@ import android.graphics.Color
 import android.os.Bundle
 import android.util.Log
 import android.view.*
+import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.annotation.DrawableRes
 import androidx.appcompat.app.AppCompatActivity
@@ -43,6 +45,7 @@ class ApplicationsFragment: Fragment()
   private lateinit var rootView: View
   private lateinit var rvOpenApps: RecyclerView
   private lateinit var rvTakenApps: RecyclerView
+  private lateinit var llTakenApps: LinearLayout
 
   private val vm: PollServerViewModel by lazy {
     val mainActivity = requireActivity() as MainActivity
@@ -56,6 +59,7 @@ class ApplicationsFragment: Fragment()
     val view = inflater.inflate(R.layout.fragment_applications, container, false)
     rootView = view
 
+    llTakenApps = view.findViewById(R.id.app_linear_layout)
     rvOpenApps = view.findViewById(R.id.rv_app_list)
     rvOpenApps.layoutManager = LinearLayoutManager(context)
     rvOpenApps.adapter = OpenAppAdapter(emptyList())
@@ -93,6 +97,12 @@ class ApplicationsFragment: Fragment()
           Log.i(TAG, "Taken apps size is ${it.size}")
           Log.i(TAG, "takenApps is $it")
           updateTakenAppsUI(it)
+
+          if (it.isEmpty() && llTakenApps.visibility == View.VISIBLE)
+            llTakenApps.visibility = View.INVISIBLE
+
+          if (it.isNotEmpty() && llTakenApps.visibility == View.INVISIBLE)
+            llTakenApps.visibility = View.VISIBLE
         }
       }
     )
@@ -347,6 +357,11 @@ class ApplicationsFragment: Fragment()
           tvTime.text = "${getDateStr(it)} ${app.time}"
       }
       tvAddress.text = app.address
+
+      if (app.state == PAYED_STATE) {
+        tvTime.setTextColor(Color.GRAY)
+        tvAddress.setTextColor(Color.GRAY)
+      }
     }
 
     override fun onClick(v: View?) {

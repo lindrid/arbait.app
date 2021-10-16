@@ -2,6 +2,7 @@ package `in`.arbait
 
 import `in`.arbait.database.AppState
 import `in`.arbait.database.EnrollingPermission
+import `in`.arbait.http.PollServerViewModel
 import `in`.arbait.http.Server
 import `in`.arbait.http.items.ApplicationItem
 import `in`.arbait.http.items.DebitCardItem
@@ -36,6 +37,10 @@ import kotlin.math.abs
 
 
 private const val TAG = "ApplicationFragment"
+
+const val CLOSED_STATE = 2
+const val PAYED_STATE = 6
+
 
 private const val DISABLE_BTN_BASE_RANGE = 10 * 1000              // 10 sec
 private const val PENALTY_TIME_RANGE = 2 * 60 * 1000              // 2 min
@@ -147,14 +152,17 @@ class ApplicationFragment (private val appId: Int): Fragment()
   }
 
 
-  private fun setAppItem() {
+  private fun setAppItem(): Boolean {
     vm.lvdOpenApps[appId]?.let {
       lvdAppItem = it
-      return
+      return true
     }
     vm.lvdTakenApps[appId]?.let {
       lvdAppItem = it
+      return true
     }
+
+    return false
   }
 
   private fun setPorter() {
@@ -322,6 +330,19 @@ class ApplicationFragment (private val appId: Int): Fragment()
     lvdAppItem.observe(viewLifecycleOwner,
       Observer { appItem ->
         Log.i (TAG, "lvdAppItem=$lvdAppItem, observer appItem is $appItem")
+        if (appItem == null) {
+          tvEnrolled.text = if (porterIsEnrolled)
+            getString(R.string.app_you_were_deleted)
+          else
+            getString(R.string.app_is_gone)
+
+          tvEnrolled.textSize = 26.0f
+          tvEnrolled.setTextColor(Color.RED)
+          tvEnrolled.visibility = View.VISIBLE
+          btEnrollRefuse.isEnabled = false
+          btCallClient.isEnabled = false
+          setLayoutConstraints(tvEnrolledIsVisible = true, btEnrollRefuse, withoutPorters = true)
+        }
         appItem?.let {
           if (appItem.porters != null)
             porter = getThisUserPorter(it)
@@ -381,9 +402,9 @@ class ApplicationFragment (private val appId: Int): Fragment()
         }
         else {
           tvEnrolled.text = when (couldNotEnrollCause) {
-            CAUSE_FREQUENT_APP_REFUSING -> getString(R.string.could_not_enroll_cause_refuses)
-            CAUSE_SMALL_TIME_INTERVAL -> getString(R.string.could_not_enroll_cause_interval)
-            else -> getString(R.string.could_not_enroll_cause_unknown)
+            CAUSE_FREQUENT_APP_REFUSING -> getString(R.string.app_could_not_enroll_cause_refuses)
+            CAUSE_SMALL_TIME_INTERVAL -> getString(R.string.app_could_not_enroll_cause_interval)
+            else -> getString(R.string.app_could_not_enroll_cause_unknown)
           }
           tvEnrolled.textSize = 26.0f
           tvEnrolled.setTextColor(Color.RED)
@@ -394,6 +415,21 @@ class ApplicationFragment (private val appId: Int): Fragment()
       }
       else {
         btEnrollRefuse.isEnabled = true
+      }
+
+      val app = lvdAppItem.value
+      if (app != null && app.state > CLOSED_STATE) {
+        btEnrollRefuse.isEnabled = false
+      }
+
+      if (app != null && app.state == PAYED_STATE) {
+        tvEnrolled.textSize = 26.0f
+        tvEnrolled.text = Html.fromHtml(getString(
+          R.string.app_payed,
+          porter?.pivot?.workHours,
+          porter?.pivot?.money
+        ))
+        btCallClient.isEnabled = false
       }
     }
   }

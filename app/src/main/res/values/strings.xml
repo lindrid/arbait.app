@@ -111,10 +111,12 @@
     <string name="app_no_card">без карты</string>
 
     <string name="app_when_call">Звонить по приезду!</string>
-    <string name="could_not_enroll_cause_interval">Нельзя записаться: между заявками меньше часа</string>
-    <string name="could_not_enroll_cause_refuses">Нельзя записаться: частая запись/отмена заявок</string>
-    <string name="could_not_enroll_cause_unknown">Нельзя записаться: неизвестная проблема</string>
+    <string name="app_could_not_enroll_cause_interval">Нельзя записаться: между заявками меньше часа</string>
+    <string name="app_could_not_enroll_cause_refuses">Нельзя записаться: частая запись/отмена заявок</string>
+    <string name="app_could_not_enroll_cause_unknown">Нельзя записаться: неизвестная проблема</string>
 
+    <string name="app_payed"><![CDATA[Заявка оплачена <br> Часов отработано: %1$d <br> Денег получено: %2$d <br>]]></string>
+    <string name="app_is_gone">Заявка собрана или удалена</string>
 
     <!-- LoginFragment -->
     <string name="log_login">Войти</string>
@@ -134,5 +136,6 @@
 
     <!-- ApplicationRefuseDialog -->
     <string name="df_are_you_sure">Вы уверены?</string>
+    <string name="app_you_were_deleted">Вы были удалены с заявки (или сама заявка была удалена)</string>
 
 </resources>
