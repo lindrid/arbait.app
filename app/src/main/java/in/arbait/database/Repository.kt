@@ -10,7 +10,7 @@ private const val DATABASE_NAME = "user-database"
 
 class Repository private constructor(context: Context)
 {
-  private val database: Database = Room.databaseBuilder(
+  val database: Database = Room.databaseBuilder(
     context.applicationContext,
     Database::class.java,
     DATABASE_NAME

@@ -3,6 +3,7 @@ package `in`.arbait
 import `in`.arbait.database.User
 import `in`.arbait.http.items.UserItem
 import android.app.Application
+import android.content.Context
 import android.content.res.Resources
 
 const val APP_VERSION = 1.0
@@ -15,6 +16,10 @@ class App : Application() {
     res = resources
     Repository.initialize(this)
     repository = Repository.get()
+  }
+
+  override fun getApplicationContext(): Context {
+    return super.getApplicationContext()
   }
 
   companion object {

@@ -1,5 +1,6 @@
 package `in`.arbait
 
+import `in`.arbait.database.User
 import `in`.arbait.http.*
 import `in`.arbait.http.response.*
 import android.os.Bundle
@@ -137,6 +138,7 @@ class PhoneConfirmationFragment(private val confirmationForLogin: Boolean = fals
   {
     override fun doOnServerOkResult() {
       Log.i(TAG, "все ок, пользователь вошел")
+      Log.i (TAG, "App.dbUser = ${App.dbUser}")
       App.dbUser?.let { user ->
         user.isItRegistration = false
         user.isConfirmed = true
@@ -146,6 +148,7 @@ class PhoneConfirmationFragment(private val confirmationForLogin: Boolean = fals
         }
         App.repository.updateUser(user)
       }
+
       val mainActivity = requireActivity() as MainActivity
       mainActivity.replaceOnFragment("Applications")
     }

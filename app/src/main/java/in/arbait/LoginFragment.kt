@@ -1,5 +1,6 @@
 package `in`.arbait
 
+import `in`.arbait.database.User
 import `in`.arbait.http.*
 import `in`.arbait.http.response.Response
 import `in`.arbait.http.response.SERVER_ERROR
@@ -14,6 +15,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.AppCompatButton
 import androidx.appcompat.widget.AppCompatTextView
 import androidx.fragment.app.Fragment
+import java.util.*
 
 private const val TAG = "LoginFragment"
 
@@ -133,8 +135,14 @@ class LoginFragment: Fragment()
     ReactionOnResponse(TAG, requireContext(), rootView, response)
   {
     override fun doOnServerOkResult() {
-      val user = App.dbUser
-      user?.let {
+      if (App.dbUser == null) {
+        App.dbUser = User(0, "", true, isConfirmed = false, false, false,
+        false, false, false, Date())
+        App.dbUser?.let { user ->
+          App.repository.addUser(user)
+        }
+      }
+      App.dbUser?.let {
         // чтобы отличать от того случая, когда пользователь хочет не залогиниться,
         // а зарегистрироваться: it.login = true
         it.login = true

@@ -24,6 +24,7 @@ class NotificationTapReceiver : BroadcastReceiver() {
     val intentMain = Intent(context, MainActivity::class.java).apply {
       putExtra(APP_ID_ARG, appId)
       action = Intent.ACTION_MAIN
+      flags = Intent.FLAG_ACTIVITY_NEW_TASK
     }
     context.startActivity(intentMain)
   }
