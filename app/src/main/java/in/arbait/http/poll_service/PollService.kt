@@ -100,31 +100,27 @@ class PollService : LifecycleService(), Serializable
               this.takenApps = takenApps
             }
 
-            if (openAppsFromServer.isNotEmpty()) {
-              val newApps = elementsFromANotInB(openAppsFromServer, openApps)
-              val closedApps = elementsFromANotInB(openApps, openAppsFromServer)
-              log("newApps = $newApps")
-              log("newApps.size = ${newApps.size}")
-              openApps = openAppsFromServer
-              Log.i (TAG, "notificationsOff = ${App.dbUser?.notificationsOff}")
-              if (newApps.isNotEmpty() && !firstTime) {
-                if (App.dbUser?.notificationsOff == false) {
-                  Log.i (TAG, "newApps.indices=${newApps.indices}")
-                  for (i in newApps.indices) {
-                    val n = createNewAppNotification(newApps[i])
-                    showNotification(newApps[i].id, n)
-                  }
-                }
-              }
-              if (closedApps.isNotEmpty()) {
-                for (j in closedApps.indices) {
-                  removeNotification(closedApps[j].id)
+            val newApps = elementsFromANotInB(openAppsFromServer, openApps)
+            val closedApps = elementsFromANotInB(openApps, openAppsFromServer)
+            logApps(newApps, closedApps)
+
+            openApps = openAppsFromServer
+            Log.i (TAG, "notificationsOff = ${App.dbUser?.notificationsOff}")
+            if (newApps.isNotEmpty() && !firstTime) {
+              if (App.dbUser?.notificationsOff == false) {
+                Log.i (TAG, "newApps.indices=${newApps.indices}")
+                for (i in newApps.indices) {
+                  val n = createNewAppNotification(newApps[i])
+                  showNotification(newApps[i].id, n)
                 }
               }
             }
-            else {
-              this.openApps = openAppsFromServer
+            if (closedApps.isNotEmpty()) {
+              for (j in closedApps.indices) {
+                removeNotification(closedApps[j].id)
+              }
             }
+
             if (firstTime) firstTime = false
           }
         }
@@ -137,9 +133,6 @@ class PollService : LifecycleService(), Serializable
     log( "onStartCommand executed with startId: $startId")
     if (intent != null) {
       val action = intent.action
-
-      //context =  Gson().fromJson(intent.getStringExtra(CONTEXT_ARG), Context::class.java)
-      //view =  Gson().fromJson(intent.getStringExtra(VIEW_ARG), View::class.java)
 
       log( "using an intent with action $action")
       when (action) {
@@ -162,6 +155,14 @@ class PollService : LifecycleService(), Serializable
     Toast.makeText(this, "Service destroyed", Toast.LENGTH_SHORT).show()
   }
 
+
+
+  private fun logApps(newApps: List<ApplicationItem>, closedApps: List<ApplicationItem>) {
+    log("newApps = $newApps")
+    log("newApps.size = ${newApps.size}")
+    log("closed/remove Apps = $closedApps")
+    log("closed/remove Apps.size = ${closedApps.size}")
+  }
 
   private fun startService() {
     if (serviceIsStarted) return

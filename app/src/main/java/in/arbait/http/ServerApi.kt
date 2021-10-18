@@ -1,5 +1,6 @@
 package `in`.arbait.http
 
+import `in`.arbait.APP_VERSION
 import `in`.arbait.http.response.ApplicationUserResponse
 import `in`.arbait.http.response.ServiceDataResponse
 import `in`.arbait.http.response.UserResponse
@@ -44,6 +45,7 @@ interface ServerApi {
                   @Query("debit_card_id") debitCardId: Int?,
                   @Query("debit_card") debitCard: String?): Call<ApplicationUserResponse>
 
-  @GET("/api/service/data")
-  fun getData (@HeaderMap headers: Map<String, String>): Call<ServiceDataResponse>
+  @GET("/api/service/data/{version}")
+  fun getData (@HeaderMap headers: Map<String, String>,
+              @Path("version") version: Double): Call<ServiceDataResponse>
 }

@@ -5,6 +5,8 @@ import `in`.arbait.http.items.UserItem
 import android.app.Application
 import android.content.res.Resources
 
+const val APP_VERSION = 1.0
+
 class App : Application() {
   override fun onCreate() {
     super.onCreate()

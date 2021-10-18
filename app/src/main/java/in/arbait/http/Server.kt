@@ -1,5 +1,6 @@
 package `in`.arbait.http
 
+import `in`.arbait.APP_VERSION
 import `in`.arbait.http.response.ApplicationUserResponse
 import `in`.arbait.http.response.ServiceDataResponse
 import `in`.arbait.http.response.UserResponse
@@ -59,7 +60,7 @@ class Server (private val context: Context)
   }
 
   fun updateApplicationsResponse () {
-    serverApi.getData(headers).enqueue (
+    serverApi.getData(headers, APP_VERSION).enqueue (
       object : Callback<ServiceDataResponse> {
 
         override fun onFailure (call: Call<ServiceDataResponse>, t: Throwable) {

@@ -105,6 +105,8 @@ class ApplicationFragment (private val appId: Int): Fragment()
 
     Log.i (TAG, "OnCreate()")
 
+    Log.i (TAG, "vm.lvdOpenApps = ${vm.lvdOpenApps}")
+    Log.i (TAG, "vm.lvdTakenApps = ${vm.lvdTakenApps}")
     setViews(view)
     setAppItem()
     setPorter()
@@ -161,7 +163,10 @@ class ApplicationFragment (private val appId: Int): Fragment()
       lvdAppItem = it
       return true
     }
-
+    lvdAppItem = MutableLiveData(
+      ApplicationItem(0,"","","","",
+      0,"",0,0,true,0,0,
+    1,0, true, listOf<PorterItem>()))
     return false
   }
 
@@ -430,6 +435,11 @@ class ApplicationFragment (private val appId: Int): Fragment()
           porter?.pivot?.money
         ))
         btCallClient.isEnabled = false
+      }
+
+      lvdAppItem.value?.let { app ->
+        if (app.id == 0)
+          btEnrollRefuse.isEnabled = false
       }
     }
   }

@@ -77,7 +77,7 @@
     <string name="apps_address">Адрес</string>
     <string name="apps_worker_income">Ставка</string>
     <string name="apps_workers">Кол-во чел</string>
-    <string name="apps_no_open_apps">На сегодня заявок нет</string>
+    <string name="apps_no_open_apps">На данный момент заявок нет</string>
     <string name="apps_today">Сегодня</string>
     <string name="apps_tomorrow">Завтра (%1$d шт., жми)</string>
     <string name="apps_tomorrow_no_press">Завтра (%1$d шт)</string>
