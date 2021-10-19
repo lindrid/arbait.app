@@ -241,7 +241,11 @@ class RegistrationFragment : Fragment() {
         isItRegistration = true,
         createdAt = now
       )
-      repository.addUser(user)
+      val added = repository.addUser(user)
+      Log.i (TAG, "added = $added")
+      if (!added)
+        repository.updateUser(user)
+
       val args = Bundle().apply {
         putBoolean(VERIFY_FOR_LOGIN_ARG, false)
       }

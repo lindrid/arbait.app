@@ -2,7 +2,9 @@ package `in`.arbait
 
 import `in`.arbait.database.*
 import android.content.Context
+import android.database.sqlite.SQLiteConstraintException
 import androidx.room.Room
+import kotlinx.coroutines.*
 import java.util.*
 import java.util.concurrent.Executors
 
@@ -59,10 +61,18 @@ class Repository private constructor(context: Context)
     }
   }
 
-  fun addUser (user: User) {
-    executor.execute {
-      userDao.addUser(user)
+  fun addUser (user: User): Boolean = runBlocking {
+    val coroutineValue = GlobalScope.async {
+      var error = false
+      try {
+        userDao.addUser(user)
+      } catch (e: SQLiteConstraintException) {
+        error = true
+      }
+      error
     }
+
+    !coroutineValue.await()
   }
 
   fun deleteUser (user: User) {

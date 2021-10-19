@@ -84,14 +84,13 @@ class PollServerViewModel: ViewModel(), Serializable
 
   fun bindService() {
     val intent = Intent(mainActivity, PollService::class.java)
-    mainActivity.bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE)
-    serviceIsBound = true
+    serviceIsBound = mainActivity.bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE)
   }
 
   fun unbindService() {
     serviceIsBound?.let {
       if (it && getServiceState(context) == ServiceState.STARTED) {
-        mainActivity.unbindService(serviceConnection)
+            mainActivity.unbindService(serviceConnection)
       }
     }
   }

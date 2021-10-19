@@ -167,7 +167,7 @@ class PollService : LifecycleService(), Serializable
   private fun startService() {
     if (serviceIsStarted) return
     log("Starting the foreground service task")
-    Toast.makeText(this, "Service starting its task", Toast.LENGTH_SHORT).show()
+    //Toast.makeText(this, "Service starting its task", Toast.LENGTH_SHORT).show()
     serviceIsStarted = true
     setServiceState(this, ServiceState.STARTED)
 

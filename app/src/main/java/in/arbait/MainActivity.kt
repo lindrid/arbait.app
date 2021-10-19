@@ -4,6 +4,7 @@ import `in`.arbait.database.User
 import `in`.arbait.http.PollServerViewModel
 import `in`.arbait.http.poll_service.APP_NO_ID
 import `in`.arbait.http.poll_service.Action
+import `in`.arbait.http.poll_service.NOTIFICATION_ARG
 import android.content.ContentValues.TAG
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
@@ -39,12 +40,6 @@ class MainActivity : AppCompatActivity()
 
       Log.i (TAG, "Repository.getUserLastByDate(): $lastUser")
 
-      /*App.dbUser?.let {
-        it.isConfirmed = false
-        it.login = false
-        App.repository.updateUser(it)
-      }*/
-
       val currentFragment = supportFragmentManager.findFragmentById(R.id.fragment_container)
 
       if (currentFragment == null) {
@@ -59,18 +54,20 @@ class MainActivity : AppCompatActivity()
                 PhoneConfirmationFragment(true)
           }
           else {
-            App.dbUser?.let { user ->
-              fragment =
-                if (user.isItRegistration)
-                  PhoneConfirmationFragment()
-                else
-                  LoginFragment()
-            }
+            fragment =
+              if (lastUser.isItRegistration)
+                PhoneConfirmationFragment()
+              else
+                LoginFragment()
           }
         }
 
         if (intent != null) {
-          val appId = intent.getIntExtra(APP_ID_ARG, APP_NO_ID)
+          val s = intent.getStringExtra(NOTIFICATION_ARG)
+          if (s == "thisIsNotificationIntent") {
+            fragment = ApplicationsFragment()
+          }
+          /*val appId = intent.getIntExtra(APP_ID_ARG, APP_NO_ID)
           val notificationWasTapped = appId != APP_NO_ID
 
           if (notificationWasTapped) {
@@ -78,7 +75,7 @@ class MainActivity : AppCompatActivity()
             pollServerViewModel.rootView = View(baseContext)
             pollServerViewModel.serviceDoAction(Action.START)
             pollServerViewModel.bindService()
-          }
+          }*/
         }
 
         supportFragmentManager

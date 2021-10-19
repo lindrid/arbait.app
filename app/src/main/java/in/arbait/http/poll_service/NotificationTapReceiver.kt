@@ -12,7 +12,9 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
+const val NOTIFICATION_ARG = "notificationArg"
 const val APP_NO_ID = -1
+
 private const val TAG = "NotificationTapReceiver"
 
 class NotificationTapReceiver : BroadcastReceiver() {
@@ -23,6 +25,7 @@ class NotificationTapReceiver : BroadcastReceiver() {
     val appId = intent.getIntExtra(APP_ID_ARG, APP_NO_ID)
     val intentMain = Intent(context, MainActivity::class.java).apply {
       putExtra(APP_ID_ARG, appId)
+      putExtra(NOTIFICATION_ARG, "thisIsNotificationIntent")
       action = Intent.ACTION_MAIN
       flags = Intent.FLAG_ACTIVITY_NEW_TASK
     }

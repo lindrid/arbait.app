@@ -47,5 +47,5 @@ interface ServerApi {
 
   @GET("/api/service/data/{version}")
   fun getData (@HeaderMap headers: Map<String, String>,
-              @Path("version") version: Double): Call<ServiceDataResponse>
+              @Path("version") version: String): Call<ServiceDataResponse>
 }
