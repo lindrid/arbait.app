@@ -95,11 +95,9 @@ class Server (private val context: Context)
     serverApi.changeDebitCard(headers, appId, debitCardId, debitCard).enqueue(appUserCallback)
   }
 
-  fun enrollPorter (appId: Int, debitCardId: Int?, debitCard: String?,
-                    onResult: (ApplicationUserResponse) -> Unit)
-  {
+  fun enrollPorter (appId: Int, onResult: (ApplicationUserResponse) -> Unit) {
     appUserCallback.onResult = onResult
-    serverApi.enrollPorter(headers, appId, debitCardId, debitCard).enqueue(appUserCallback)
+    serverApi.enrollPorter(headers, appId).enqueue(appUserCallback)
   }
 
   fun refuseApp (appId: Int, onResult: (ApplicationUserResponse) -> Unit) {

@@ -1,13 +1,10 @@
 package `in`.arbait.http
 
-import `in`.arbait.App
-import `in`.arbait.MainActivity
-import `in`.arbait.elementsFromANotInB
+import `in`.arbait.*
 import `in`.arbait.http.*
 import `in`.arbait.http.poll_service.*
 import `in`.arbait.http.items.ApplicationItem
 import `in`.arbait.http.response.*
-import `in`.arbait.listsAreDifferent
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
@@ -90,7 +87,7 @@ class PollServerViewModel: ViewModel(), Serializable
   fun unbindService() {
     serviceIsBound?.let {
       if (it && getServiceState(context) == ServiceState.STARTED) {
-            mainActivity.unbindService(serviceConnection)
+        mainActivity.unbindService(serviceConnection)
       }
     }
   }
@@ -106,7 +103,18 @@ class PollServerViewModel: ViewModel(), Serializable
           when (response.type) {
             SERVER_OK     -> PollServerReaction(response).doOnServerOkResult(it)
             SYSTEM_ERROR  -> PollServerReaction(response).doOnSystemError()
-            SERVER_ERROR  -> PollServerReaction(response).doOnServerError()
+            SERVER_ERROR  -> {
+              if (response.isItErrorWithCode && response.code == OLD_VERSION_ERROR_CODE) {
+                unbindService()
+                serviceDoAction(Action.STOP)
+                response.message?.let { msg ->
+                  showErrorBalloon(context, rootView, msg)
+                }
+              }
+              else {
+                PollServerReaction(response).doOnServerError()
+              }
+            }
           }
         }
       }

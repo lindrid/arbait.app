@@ -15,7 +15,6 @@ import android.os.Build
 import android.os.IBinder
 import android.os.PowerManager
 import android.util.Log
-import android.widget.Toast
 import androidx.lifecycle.LifecycleService
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.Observer
@@ -24,7 +23,12 @@ import android.app.NotificationManager
 import android.app.PendingIntent
 
 import android.app.PendingIntent.FLAG_UPDATE_CURRENT
+import android.net.Uri
 import java.io.Serializable
+import android.media.AudioAttributes
+
+
+
 
 private const val TAG = "PollingService"
 private const val SERVICE_DELAY_SECONDS: Long = 5
@@ -152,7 +156,6 @@ class PollService : LifecycleService(), Serializable
   override fun onDestroy() {
     super.onDestroy()
     log("The service has been destroyed".toUpperCase())
-    Toast.makeText(this, "Service destroyed", Toast.LENGTH_SHORT).show()
   }
 
 
@@ -167,7 +170,6 @@ class PollService : LifecycleService(), Serializable
   private fun startService() {
     if (serviceIsStarted) return
     log("Starting the foreground service task")
-    //Toast.makeText(this, "Service starting its task", Toast.LENGTH_SHORT).show()
     serviceIsStarted = true
     setServiceState(this, ServiceState.STARTED)
 
@@ -193,7 +195,6 @@ class PollService : LifecycleService(), Serializable
 
   private fun stopService() {
     log("Stopping the foreground service")
-    Toast.makeText(this, "Service stopping", Toast.LENGTH_SHORT).show()
     try {
       wakeLock?.let {
         if (it.isHeld) {
@@ -273,8 +274,18 @@ class PollService : LifecycleService(), Serializable
         name,
         importance
       ).let {
-        if (notificationChannelId == NEW_APP_WITHOUT_SOUND_CHANNEL_ID)
+        if (notificationChannelId == NEW_APP_WITHOUT_SOUND_CHANNEL_ID) {
           it.setSound(null, null)
+        }
+        else {
+          val sound = Uri.parse(("android.resource://" + applicationContext.packageName) + "/"
+              + R.raw.horn)
+          val audioAttributes = AudioAttributes.Builder()
+            .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+            .setUsage(AudioAttributes.USAGE_ALARM)
+            .build()
+          it.setSound(sound, audioAttributes)
+        }
         it.enableVibration(vibration)
         it.description = notificationChannelId
         it.enableLights(true)

@@ -3,12 +3,12 @@ package `in`.arbait
 import `in`.arbait.database.AppState
 import `in`.arbait.database.EnrollingPermission
 import `in`.arbait.http.PollServerViewModel
+import `in`.arbait.http.ReactionOnResponse
 import `in`.arbait.http.Server
 import `in`.arbait.http.items.ApplicationItem
-import `in`.arbait.http.items.DebitCardItem
 import `in`.arbait.http.items.PhoneItem
 import `in`.arbait.http.items.PorterItem
-import `in`.arbait.http.response.SERVER_OK
+import `in`.arbait.http.response.*
 import android.content.Intent
 import android.graphics.Color
 import android.net.Uri
@@ -85,7 +85,6 @@ class ApplicationFragment (private val appId: Int): Fragment()
   private lateinit var btCallClient: AppCompatButton
   private lateinit var btEnrollRefuse: AppCompatButton
   private lateinit var btBack: AppCompatButton
-  private lateinit var btChangeDebitCard: AppCompatButton
   private lateinit var nsvApp: NestedScrollView
   private lateinit var tvWhenCall: AppCompatTextView
 
@@ -117,11 +116,7 @@ class ApplicationFragment (private val appId: Int): Fragment()
     setVisibilityToViews(porterIsEnrolled, view)
 
     btEnrollRefuse.setOnClickListener {
-      onEnrollRefuseBtnClick(view)
-    }
-
-    btChangeDebitCard.setOnClickListener {
-      onChangeDebitCardClick()
+      onEnrollRefuseBtnClick()
     }
 
     btBack.setOnClickListener {
@@ -181,21 +176,8 @@ class ApplicationFragment (private val appId: Int): Fragment()
     }
   }
 
-  private fun onChangeDebitCardClick() {
-    App.userItem?.let { user ->
-      val dcd = DebitCardDialog.newInstance(appId, user, itIsChangingCard = true)
-      dcd.show(supportFragmentManager, DEBIT_CARD_DIALOG_TAG)
 
-      supportFragmentManager.setFragmentResultListener(APPLICATION_KEY, viewLifecycleOwner)
-      { _, bundle ->
-        val app = bundle.getSerializable(APPLICATION_KEY) as ApplicationItem
-        Log.i (TAG, "when change card, app from dialog = $app")
-        lvdAppItem.value = app
-      }
-    }
-  }
-
-  private fun onEnrollRefuseBtnClick(view: View) {
+  private fun onEnrollRefuseBtnClick() {
     val porterWantToEnroll = !porterIsEnrolled
     val porterWantToRefuse = porterIsEnrolled
 
@@ -234,17 +216,11 @@ class ApplicationFragment (private val appId: Int): Fragment()
           lastState = state
         )
 
-        if (porterWantToEnroll) {
-          val debitCardDialog = DebitCardDialog.newInstance(appId, user)
-          debitCardDialog.show(supportFragmentManager, DEBIT_CARD_DIALOG_TAG)
-          porterIsEnrolled = false
-          reactOnDebitCardDialog(view, enrollingPermission, newEnrollingPermission)
-        }
+        if (porterWantToEnroll)
+          enrollPorter(enrollingPermission, newEnrollingPermission)
 
-        if (porterWantToRefuse) {
-          ApplicationRefuseDialog().show(supportFragmentManager, APP_REFUSE_DIALOG_TAG)
-          reactOnRefuseDialog(view, enrollingPermission, newEnrollingPermission, changeStateCount)
-        }
+        if (porterWantToRefuse)
+          refuseFromApp(enrollingPermission, newEnrollingPermission, changeStateCount)
       }
     }
   }
@@ -254,12 +230,24 @@ class ApplicationFragment (private val appId: Int): Fragment()
         ep.lastState == AppState.REFUSED && state == AppState.ENROLLED
   }
 
-  private fun reactOnDebitCardDialog(view: View, ep: EnrollingPermission?, newEp: EnrollingPermission)
+  private fun enrollPorter(ep: EnrollingPermission?, newEp: EnrollingPermission) {
+    server.enrollPorter(appId) { appUserResponse: ApplicationUserResponse ->
+      when (appUserResponse.response.type) {
+        SERVER_OK     -> EnrollReaction(appUserResponse).doOnServerOkResult(ep, newEp)
+        SYSTEM_ERROR  -> EnrollReaction(appUserResponse).doOnSystemError()
+        SERVER_ERROR  -> EnrollReaction(appUserResponse).doOnServerError()
+      }
+    }
+  }
+
+  private inner class EnrollReaction (val appUserResponse: ApplicationUserResponse):
+    ReactionOnResponse(TAG, requireContext(), vm.rootView, appUserResponse.response)
   {
-    supportFragmentManager.setFragmentResultListener(APPLICATION_KEY, viewLifecycleOwner)
-    { _, bundle ->
-      val app = bundle.getSerializable(APPLICATION_KEY) as ApplicationItem
-      Log.i (TAG, "app from dialog = $app")
+    override fun doOnServerOkResult() {}
+
+    fun doOnServerOkResult(ep: EnrollingPermission?, newEp: EnrollingPermission) {
+      App.userItem = appUserResponse.user
+      val app = appUserResponse.app
 
       vm.lvdOpenApps.remove(appId)
       vm.lvdTakenApps[appId] = MutableLiveData(app)
@@ -274,54 +262,72 @@ class ApplicationFragment (private val appId: Int): Fragment()
       porterIsEnrolled = true
 
       btEnrollRefuse.text = getString(R.string.app_refuse)
-      setVisibilityToViews(true, view)
+      setVisibilityToViews(true, vm.rootView)
       updateUI()
+    }
+
+    override fun doOnServerFieldValidationError(response: Response) {}
+    override fun doOnEndSessionError() {}
+  }
+
+  private fun refuseFromApp(ep: EnrollingPermission?, newEp: EnrollingPermission,
+                            changeStateCount: Int)
+  {
+    server.refuseApp(appId) { appUserResponse ->
+      Log.i (TAG, "setFragmentResultListener. response.type=${appUserResponse.response.type}")
+      when (appUserResponse.response.type) {
+        SERVER_OK     -> RefuseReaction(appUserResponse).doOnServerOkResult(ep, newEp,
+          changeStateCount)
+        SYSTEM_ERROR  -> RefuseReaction(appUserResponse).doOnSystemError()
+        SERVER_ERROR  -> RefuseReaction(appUserResponse).doOnServerError()
+      }
     }
   }
 
-  private fun reactOnRefuseDialog(view: View,
-                                  ep: EnrollingPermission?, newEp: EnrollingPermission,
-                                  changeStateCount: Int)
+  private inner class RefuseReaction (val appUserResponse: ApplicationUserResponse):
+    ReactionOnResponse(TAG, requireContext(), vm.rootView, appUserResponse.response)
   {
-    supportFragmentManager.setFragmentResultListener(OK_KEY, viewLifecycleOwner)
-    { _, bundle ->
-      Log.i (TAG, "setFragmentResultListener")
-      server.refuseApp(appId) { appUserResponse ->
-        Log.i (TAG, "setFragmentResultListener. response.type=${appUserResponse.response.type}")
-        if (appUserResponse.response.type == SERVER_OK) {
-          lvdAppItem.value = appUserResponse.app
+    override fun doOnServerOkResult() {}
 
-          vm.lvdTakenApps.remove(appId)
-          vm.lvdOpenApps[appId] = MutableLiveData(lvdAppItem.value)
-          vm.lvdOpenApps[appId]?.let {
-            lvdAppItem = it
-          }
-          setAppObserver()
+    fun doOnServerOkResult(ep: EnrollingPermission?, newEp: EnrollingPermission,
+                           changeStateCount: Int)
+    {
+      App.userItem = appUserResponse.user
 
-          if (changeStateCount > ENROLL_REFUSE_WITHOUT_PENALTY_MAX_AMOUNT && ep != null) {
-            val now = Date().time
-            val p: Int = changeStateCount / 2
-            var coefficient = 0
+      lvdAppItem.value = appUserResponse.app
 
-            for (i in 1..p)
-              coefficient += 3
-
-            Log.i(TAG, "coefficient=$coefficient")
-
-            newEp.enableClickTime = now + coefficient * DISABLE_BTN_BASE_RANGE
-            btEnrollRefuse.isEnabled = false
-          }
-
-          Log.i (TAG, "newEnrollingPermission = $newEp")
-          addOrUpdateEnrollPermission(ep, newEp)
-          porterIsEnrolled = false
-
-          btEnrollRefuse.text = getString(R.string.app_enroll)
-          setVisibilityToViews(false, view)
-          updateUI()
-        }
+      vm.lvdTakenApps.remove(appId)
+      vm.lvdOpenApps[appId] = MutableLiveData(lvdAppItem.value)
+      vm.lvdOpenApps[appId]?.let {
+        lvdAppItem = it
       }
+      setAppObserver()
+
+      if (changeStateCount > ENROLL_REFUSE_WITHOUT_PENALTY_MAX_AMOUNT && ep != null) {
+        val now = Date().time
+        val p: Int = changeStateCount / 2
+        var coefficient = 0
+
+        for (i in 1..p)
+          coefficient += 3
+
+        Log.i(TAG, "coefficient=$coefficient")
+
+        newEp.enableClickTime = now + coefficient * DISABLE_BTN_BASE_RANGE
+        btEnrollRefuse.isEnabled = false
+      }
+
+      Log.i (TAG, "newEnrollingPermission = $newEp")
+      addOrUpdateEnrollPermission(ep, newEp)
+      porterIsEnrolled = false
+
+      btEnrollRefuse.text = getString(R.string.app_enroll)
+      setVisibilityToViews(false, vm.rootView)
+      updateUI()
     }
+
+    override fun doOnServerFieldValidationError(response: Response) {}
+    override fun doOnEndSessionError() {}
   }
 
   private fun addOrUpdateEnrollPermission(ep: EnrollingPermission?, newEp: EnrollingPermission) {
@@ -574,7 +580,6 @@ class ApplicationFragment (private val appId: Int): Fragment()
     btCallClient = view.findViewById(R.id.bt_app_call_client)
     btEnrollRefuse = view.findViewById(R.id.bt_app_enroll_refuse)
     btBack = view.findViewById(R.id.bt_app_back)
-    btChangeDebitCard = view.findViewById(R.id.bt_app_change_debit_card)
     nsvApp = view.findViewById(R.id.nsv_app)
     tvWhenCall = view.findViewById(R.id.tv_app_when_call)
   }
@@ -607,15 +612,6 @@ class ApplicationFragment (private val appId: Int): Fragment()
         else -> ""
       }
 
-      if (porterIsEnrolled) {
-        val debitCardNumber = getDebitCardNumber()
-        btChangeDebitCard.text = debitCardNumber
-        btChangeDebitCard.visibility = View.VISIBLE
-      }
-      else {
-        btChangeDebitCard.visibility = View.INVISIBLE
-      }
-
       tvPayMethod.text = Html.fromHtml(getString(R.string.app_pay_method, payMethod))
 
       val workers = "${appItem.workerCount} / ${appItem.workerTotal}"
@@ -629,40 +625,6 @@ class ApplicationFragment (private val appId: Int): Fragment()
     }
   }
 
-  private fun getDebitCardNumber(): String {
-    porter?.let { porter ->
-      val dcId = porter.pivot.appDebitCardId
-      Log.i (TAG, "debitCardId = $dcId")
-      var dcStr = getString(R.string.app_no_card)
-
-      if (dcId != 0) {
-        val debitCards = porter.user.debitCards
-        for (i in debitCards.indices)
-          if (debitCards[i].id == dcId) {
-            dcStr = debitCards[i].number
-            break
-          }
-      }
-
-      return dcStr
-    }
-
-    return ""
-  }
-
-  private fun getMainDebitCard(): DebitCardItem? {
-    var dc: DebitCardItem? = null
-    porter?.let {
-      val cards = it.user.debitCards
-      for (i in cards.indices) {
-        if (cards[i].main) {
-          dc = cards[i]
-          break
-        }
-      }
-    }
-    return dc
-  }
 
   private inner class PorterHolder (view: View) : RecyclerView.ViewHolder(view) {
     private val tvName: TextView = view.findViewById(R.id.tv_porter_name)

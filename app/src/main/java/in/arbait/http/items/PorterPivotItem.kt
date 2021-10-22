@@ -6,10 +6,9 @@ import java.io.Serializable
 data class PorterPivotItem (
   @SerializedName("application_id") val appId: Int,
   @SerializedName("app_porter_id") val appPorterId: Int,
-  @SerializedName("app_debit_card_id") val appDebitCardId: Int,
   @SerializedName("work_hours") val workHours: Int,
   @SerializedName("money") val money: Int,
-  @SerializedName("porter_got_money") val gotMoney: Int
+  @SerializedName("payed") val payed: Boolean
 ): Serializable {}
 
 /*

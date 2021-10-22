@@ -31,9 +31,7 @@ interface ServerApi {
 
   @POST("/api/porter/enroll")
   fun enrollPorter (@HeaderMap headers: Map<String, String>,
-                    @Query("app_id") appId: Int,
-                    @Query("debit_card_id") debitCardId: Int?,
-                    @Query("debit_card") debitCard: String?): Call<ApplicationUserResponse>
+                    @Query("app_id") appId: Int): Call<ApplicationUserResponse>
 
   @POST("/api/porter/refuse")
   fun refuseApp ( @HeaderMap headers: Map<String, String>,

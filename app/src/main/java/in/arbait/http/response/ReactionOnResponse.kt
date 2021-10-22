@@ -8,6 +8,7 @@ import android.content.Context
 import android.util.Log
 import android.view.View
 
+const val OLD_VERSION_ERROR_CODE = 99
 const val END_SESSION_ERROR_CODE = 100
 
 abstract class ReactionOnResponse (
@@ -33,14 +34,16 @@ abstract class ReactionOnResponse (
     if (response.isItErrorWithCode) {
       Log.i (TAG, "Response type ${response.type}, message: ${response.message}")
 
-      if (response.code == END_SESSION_ERROR_CODE) {
-        doOnEndSessionError()
-        return
-      }
-      else {
-        response.message?.let {
-          showErrorBalloon(context, view, it)
+      when(response.code) {
+        END_SESSION_ERROR_CODE -> {
+          doOnEndSessionError()
           return
+        }
+        else -> {
+          response.message?.let {
+            showErrorBalloon(context, view, it)
+            return
+          }
         }
       }
     }
