@@ -104,8 +104,8 @@ class PollService : LifecycleService(), Serializable
               this.takenApps = takenApps
             }
 
-            val newApps = elementsFromANotInB(openAppsFromServer, openApps)
-            val closedApps = elementsFromANotInB(openApps, openAppsFromServer)
+            val newApps = appsFromANotInB(openAppsFromServer, openApps)
+            val closedApps = appsFromANotInB(openApps, openAppsFromServer)
             logApps(newApps, closedApps)
 
             openApps = openAppsFromServer

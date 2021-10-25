@@ -127,8 +127,7 @@ class PollServerViewModel: ViewModel(), Serializable
 
     fun doOnServerOkResult(appsResponse: ServiceDataResponse) {
       Log.i (TAG, "doOnServerOkResult")
-      setOpenApps(appsResponse)
-      setTakenApps(appsResponse)
+      setApps(appsResponse)
     }
 
     override fun doOnServerOkResult() {}
@@ -159,18 +158,19 @@ class PollServerViewModel: ViewModel(), Serializable
     }
 
 
-    private fun setOpenApps(appsResponse: ServiceDataResponse) {
+    private fun setApps(appsResponse: ServiceDataResponse) {
       val prevApps = this@PollServerViewModel.openApps.value
       var goneApps = listOf<ApplicationItem>()
       prevApps?.let {
         // closed or deleted apps
-        goneApps = elementsFromANotInB(it, appsResponse.openApps)
+        goneApps = appsFromANotInB(it, appsResponse.openApps)
       }
 
       if ((openApps.value == null) || openAppsDifferFrom(appsResponse.openApps)) {
         openApps.value = appsResponse.openApps
       }
 
+      setTakenApps(appsResponse)
       setLiveDataOpenApps(appsResponse, goneApps)
     }
 
@@ -208,7 +208,7 @@ class PollServerViewModel: ViewModel(), Serializable
       prevApps?.let { prevTakenApps ->
         appsResponse.takenApps?.let { newTakenApps ->
           // closed or deleted apps
-          goneApps = elementsFromANotInB(prevTakenApps, newTakenApps)
+          goneApps = appsFromANotInB(prevTakenApps, newTakenApps)
         }
       }
 

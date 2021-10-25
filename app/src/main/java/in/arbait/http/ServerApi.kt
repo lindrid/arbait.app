@@ -7,7 +7,7 @@ import `in`.arbait.http.response.UserResponse
 import retrofit2.Call
 import retrofit2.http.*
 
-const val ARBAIT_BASE_URL = "http://arbait.in"
+const val ARBAIT_BASE_URL = "https://arbait.in"
 
 interface ServerApi {
 

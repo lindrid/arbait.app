@@ -64,12 +64,14 @@ const val PM_CASH = 2
 
 class ApplicationFragment (private val appId: Int): Fragment()
 {
+  private var youWereDeletedFromApp = false
   private var couldEnroll = false
   private var couldNotEnrollCause = -1
 
   private var porter: PorterItem? = null
   private var porterIsEnrolled = false
   private lateinit var lvdAppItem: MutableLiveData<ApplicationItem>
+  private var lastAppItem: ApplicationItem? = null
 
   private lateinit var server: Server
   private lateinit var supportFragmentManager: FragmentManager
@@ -151,17 +153,24 @@ class ApplicationFragment (private val appId: Int): Fragment()
 
   private fun setAppItem(): Boolean {
     vm.lvdOpenApps[appId]?.let {
-      lvdAppItem = it
-      return true
+      if (it.value != null) {
+        lvdAppItem = it
+        return true
+      }
     }
     vm.lvdTakenApps[appId]?.let {
-      lvdAppItem = it
-      return true
+      if (it.value != null) {
+        lvdAppItem = it
+        return true
+      }
     }
     lvdAppItem = MutableLiveData(
       ApplicationItem(0,"","","","",
       0,"",0,0,true,0,0,
     1,0, true, listOf<PorterItem>()))
+    lastAppItem?.let {
+      lvdAppItem.value = it
+    }
     return false
   }
 
@@ -292,15 +301,13 @@ class ApplicationFragment (private val appId: Int): Fragment()
     fun doOnServerOkResult(ep: EnrollingPermission?, newEp: EnrollingPermission,
                            changeStateCount: Int)
     {
-      App.userItem = appUserResponse.user
-
       lvdAppItem.value = appUserResponse.app
 
-      vm.lvdTakenApps.remove(appId)
       vm.lvdOpenApps[appId] = MutableLiveData(lvdAppItem.value)
       vm.lvdOpenApps[appId]?.let {
         lvdAppItem = it
       }
+      vm.lvdTakenApps.remove(appId)
       setAppObserver()
 
       if (changeStateCount > ENROLL_REFUSE_WITHOUT_PENALTY_MAX_AMOUNT && ep != null) {
@@ -342,19 +349,32 @@ class ApplicationFragment (private val appId: Int): Fragment()
       Observer { appItem ->
         Log.i (TAG, "lvdAppItem=$lvdAppItem, observer appItem is $appItem")
         if (appItem == null) {
-          tvEnrolled.text = if (porterIsEnrolled)
-            getString(R.string.app_you_were_deleted)
-          else
-            getString(R.string.app_is_gone)
+          val anotherPorterTakeApp = setAppItem()
+          youWereDeletedFromApp = !anotherPorterTakeApp
+          if (youWereDeletedFromApp) {
+            tvEnrolled.text = if (porterIsEnrolled)
+              getString(R.string.app_you_were_deleted)
+            else
+              getString(R.string.app_is_gone)
 
-          tvEnrolled.textSize = 26.0f
-          tvEnrolled.setTextColor(Color.RED)
-          tvEnrolled.visibility = View.VISIBLE
-          btEnrollRefuse.isEnabled = false
-          btCallClient.isEnabled = false
-          setLayoutConstraints(tvEnrolledIsVisible = true, btEnrollRefuse, withoutPorters = true)
+            rvPorters.visibility = View.INVISIBLE
+            tvEnrolled.textSize = 26.0f
+            tvEnrolled.setTextColor(Color.RED)
+            tvEnrolled.visibility = View.VISIBLE
+            btCallClient.isEnabled = false
+            setLayoutConstraints(tvEnrolledIsVisible = true, btEnrollRefuse, withoutPorters = true)
+            lvdAppItem.value?.let {
+              it.workerCount--
+              updateUI()
+              btEnrollRefuse.isEnabled = false
+            }
+          }
+          if (anotherPorterTakeApp) {
+            updateUI()
+          }
         }
         appItem?.let {
+          lastAppItem = it
           if (appItem.porters != null)
             porter = getThisUserPorter(it)
           Log.i (TAG, "porter is $porter")
@@ -368,6 +388,9 @@ class ApplicationFragment (private val appId: Int): Fragment()
     Log.i ("track", "updateUI")
     setViewsTexts()
     updatePorters()
+
+    if (youWereDeletedFromApp)
+      return
 
     GlobalScope.launch(Dispatchers.Main)
     {

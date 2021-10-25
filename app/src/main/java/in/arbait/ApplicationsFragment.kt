@@ -280,7 +280,7 @@ class ApplicationsFragment: Fragment()
       val price = app.priceForWorker.toString()
       tvIncome.text = when (app.hourlyJob) {
         true -> "$price ${getString(R.string.hourly_suffix)}"
-        false -> "$price${getString(R.string.daily_suffix)}"
+        false -> "$price ${getString(R.string.daily_suffix)}"
       }
     }
 
