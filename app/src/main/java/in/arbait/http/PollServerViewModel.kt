@@ -30,17 +30,19 @@ class PollServerViewModel: ViewModel(), Serializable
   /* инициализируются в текущем фрагменте */
 
   lateinit var rootView: View
+  lateinit var doOnOpenAppsChange: () -> Unit
+  lateinit var doOnTakenAppsChange: () -> Unit
 
   /* ******************************* */
 
   var pollService: PollService? = null
   var serviceIsBound: Boolean? = null
 
-  val openApps: MutableLiveData<List<ApplicationItem>> = MutableLiveData()
-  val lvdOpenApps = mutableMapOf<Int, MutableLiveData<ApplicationItem>>()
+  var openAppsLvdList: MutableLiveData<List<ApplicationItem>> = MutableLiveData()
+  val openAppsLvdItems = mutableMapOf<Int, MutableLiveData<ApplicationItem>>()
 
-  val takenApps: MutableLiveData<List<ApplicationItem>> = MutableLiveData()
-  val lvdTakenApps = mutableMapOf<Int, MutableLiveData<ApplicationItem>>()
+  var takenAppsLvdList: MutableLiveData<List<ApplicationItem>> = MutableLiveData()
+  val takenAppsLvdItems = mutableMapOf<Int, MutableLiveData<ApplicationItem>>()
 
   private lateinit var appsResponse: LiveData<ServiceDataResponse>
 
@@ -53,8 +55,11 @@ class PollServerViewModel: ViewModel(), Serializable
       serviceIsBound = true
       pollService?.let {
         appsResponse = it.dataResponse
+        openAppsLvdList = it.openAppsLvdList
+        takenAppsLvdList = it.takenAppsLvdList
       }
       setAppsResponseObserver()
+      setAppsObservers()
     }
 
     override fun onServiceDisconnected(arg0: ComponentName) {
@@ -101,7 +106,6 @@ class PollServerViewModel: ViewModel(), Serializable
           Log.i (TAG, "CODE: ${response.type}")
 
           when (response.type) {
-            SERVER_OK     -> PollServerReaction(response).doOnServerOkResult(it)
             SYSTEM_ERROR  -> PollServerReaction(response).doOnSystemError()
             SERVER_ERROR  -> {
               if (response.isItErrorWithCode && response.code == OLD_VERSION_ERROR_CODE) {
@@ -121,21 +125,40 @@ class PollServerViewModel: ViewModel(), Serializable
     )
   }
 
+  fun setAppsObservers() {
+    openAppsLvdList.observe(viewLifecycleOwner,
+      Observer { openApps ->
+        Log.i (TAG, "openApps list changed")
+        /*val prevApps = this@PollServerViewModel.openAppsLvdList.value
+        var goneApps = listOf<ApplicationItem>()
+        prevApps?.let {
+          // closed or deleted apps
+          goneApps = appsFromANotInB(it, openApps)
+        }*/
+        setOpenAppsLvdItems(openApps)
+        doOnOpenAppsChange()
+      }
+    )
+
+    takenAppsLvdList.observe(viewLifecycleOwner,
+      Observer { takenApps ->
+        Log.i (TAG, "takenApps list changed")
+        setTakenAppsLvdItems(takenApps)
+        doOnTakenAppsChange()
+      }
+    )
+  }
+
 
   private inner class PollServerReaction (response: Response):
-    ReactionOnResponse (TAG, context, rootView, response) {
-
-    fun doOnServerOkResult(appsResponse: ServiceDataResponse) {
-      Log.i (TAG, "doOnServerOkResult")
-      setApps(appsResponse)
-    }
-
+    ReactionOnResponse (TAG, context, rootView, response)
+  {
     override fun doOnServerOkResult() {}
 
     override fun doOnServerFieldValidationError(response: Response) {}
 
     override fun doOnEndSessionError() {
-      Log.i (TAG, "doOnEndSessionError()")
+      Log.i(TAG, "doOnEndSessionError()")
 
       App.dbUser?.let {
         it.login = false
@@ -156,100 +179,40 @@ class PollServerViewModel: ViewModel(), Serializable
       }*/
       mainActivity.replaceOnFragment("Login")
     }
-
-
-    private fun setApps(appsResponse: ServiceDataResponse) {
-      val prevApps = this@PollServerViewModel.openApps.value
-      var goneApps = listOf<ApplicationItem>()
-      prevApps?.let {
-        // closed or deleted apps
-        goneApps = appsFromANotInB(it, appsResponse.openApps)
-      }
-
-      if ((openApps.value == null) || openAppsDifferFrom(appsResponse.openApps)) {
-        openApps.value = appsResponse.openApps
-      }
-
-      setTakenApps(appsResponse)
-      setLiveDataOpenApps(appsResponse, goneApps)
-    }
-
-    private fun setLiveDataOpenApps(appsResponse: ServiceDataResponse,
-                                    goneApps: List<ApplicationItem>)
-    {
-      for (i in appsResponse.openApps.indices) {
-        val appId = appsResponse.openApps[i].id
-        if (lvdOpenApps.containsKey(appId))
-          lvdOpenApps[appId]?.value = appsResponse.openApps[i]
-        else
-          lvdOpenApps[appId] = MutableLiveData(appsResponse.openApps[i])
-      }
-
-      if (goneApps.isNotEmpty()) {
-        for (i in goneApps.indices) {
-          val appId = goneApps[i].id
-          lvdOpenApps[appId]?.value = null
-        }
-      }
-    }
-
-    private fun openAppsDifferFrom (openApps: List<ApplicationItem>): Boolean {
-      return listsAreDifferent(this@PollServerViewModel.openApps.value!!, openApps)
-    }
-
-
-    private fun setTakenApps(appsResponse: ServiceDataResponse) {
-      if (appsResponse.takenApps == null) {
-        takenApps.value = emptyList()
-      }
-
-      val prevApps = this@PollServerViewModel.takenApps.value
-      var goneApps = listOf<ApplicationItem>()
-      prevApps?.let { prevTakenApps ->
-        appsResponse.takenApps?.let { newTakenApps ->
-          // closed or deleted apps
-          goneApps = appsFromANotInB(prevTakenApps, newTakenApps)
-        }
-      }
-
-      appsResponse.takenApps?.let { responseTakenApps ->
-        Log.i ("setTakenApps", "responseTakenApps = $responseTakenApps")
-        if ((takenApps.value == null) || takenAppsDifferFrom(responseTakenApps)) {
-          takenApps.value = responseTakenApps
-        }
-      }
-
-      setLiveDataTakenApps(appsResponse, goneApps)
-    }
-
-    private fun setLiveDataTakenApps(appsResponse: ServiceDataResponse,
-                                     goneApps: List<ApplicationItem>)
-    {
-      appsResponse.takenApps?.let { responseTakenApps ->
-        for (i in responseTakenApps.indices) {
-          val appId = responseTakenApps[i].id
-          if (lvdTakenApps.containsKey(appId))
-            lvdTakenApps[appId]?.value = responseTakenApps[i]
-          else {
-            lvdTakenApps[appId] = MutableLiveData(responseTakenApps[i])
-          }
-          Log.i ("setLiveDataTakenApps", "lvdAppItem=${lvdTakenApps[appId]}, ${lvdTakenApps[appId]?.value}")
-        }
-      }
-
-      if (goneApps.isNotEmpty()) {
-        for (i in goneApps.indices) {
-          val appId = goneApps[i].id
-          lvdTakenApps[appId]?.value = null
-        }
-      }
-    }
-
-    private fun takenAppsDifferFrom (takenApps: List<ApplicationItem>): Boolean {
-      Log.i ("takenAppsDifferFrom", "this.takenApps=${this@PollServerViewModel.takenApps.value!!}")
-      Log.i ("takenAppsDifferFrom", "new takenApps = $takenApps")
-      return listsAreDifferent(this@PollServerViewModel.takenApps.value!!, takenApps)
-    }
   }
 
+  fun setOpenAppsLvdItems(openApps: List<ApplicationItem>) {
+    for (i in openApps.indices) {
+      val appId = openApps[i].id
+      if (openAppsLvdItems.containsKey(appId))
+        openAppsLvdItems[appId]?.value = openApps[i]
+      else
+        openAppsLvdItems[appId] = MutableLiveData(openApps[i])
+    }
+
+    /*if (goneApps.isNotEmpty()) {
+      for (i in goneApps.indices) {
+        val appId = goneApps[i].id
+        openAppsLvdItems[appId]?.value = null
+      }
+    }*/
+  }
+
+  fun setTakenAppsLvdItems(takenApps: List<ApplicationItem>) {
+    for (i in takenApps.indices) {
+      val appId = takenApps[i].id
+      if (takenAppsLvdItems.containsKey(appId))
+        takenAppsLvdItems[appId]?.value = takenApps[i]
+      else
+        takenAppsLvdItems[appId] = MutableLiveData(takenApps[i])
+      Log.i ("setLiveDataTakenApps", "lvdAppItem=${takenAppsLvdItems[appId]}, ${takenAppsLvdItems[appId]?.value}")
+    }
+/*
+    if (goneApps.isNotEmpty()) {
+      for (i in goneApps.indices) {
+        val appId = goneApps[i].id
+        takenAppsLvdItems[appId]?.value = null
+      }
+    }*/
+  }
 }

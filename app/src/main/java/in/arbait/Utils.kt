@@ -136,10 +136,7 @@ fun listsAreDifferent (a: List<ApplicationItem>, b: List<ApplicationItem>): Bool
   if (a.size != b.size) return true
 
   for (i in a.indices) {
-    if (a[i].id == 4744) {
-      Log.i ("live_data", "a[i] != b[i] == ${a[i] != b[i]}, a[i] = ${a[i]}, b[i] = ${b[i]}")
-    }
-    if (a[i] != b[i]) {
+    if ((a[i] != b[i]) && (a[i].address != null && b[i].address != null)) {
       return true
     }
   }

@@ -32,8 +32,7 @@ class App : Application() {
 
     var userItem: UserItem? = null
 
-    //var instance: App? = null
-     // private set
+    val appWaitingTime = mutableMapOf<Int, Long>()
 
     var res: Resources? = null
       private set

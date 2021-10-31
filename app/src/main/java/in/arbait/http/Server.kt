@@ -59,8 +59,9 @@ class Server (private val context: Context)
     headers["X-Authorization"] = "access_token"
   }
 
-  fun updateApplicationsResponse () {
-    serverApi.getData(headers, APP_VERSION).enqueue (
+  fun updateApplicationsResponse (cache: Boolean = true) {
+    val intCache = if (cache) 1 else 0
+    serverApi.getData(headers, APP_VERSION, intCache).enqueue (
       object : Callback<ServiceDataResponse> {
 
         override fun onFailure (call: Call<ServiceDataResponse>, t: Throwable) {

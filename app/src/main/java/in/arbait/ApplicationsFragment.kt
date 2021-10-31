@@ -17,10 +17,12 @@ import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.MutableLiveData
 import androidx.recyclerview.widget.ConcatAdapter
 import androidx.recyclerview.widget.DividerItemDecoration
 
 const val DATE_FORMAT = "yyyy-MM-dd"
+const val DATE_TIME_FORMAT = "yyyy-MM-dd HH:mm:ss"
 const val APP_ID_ARG = "applicationId"
 const val APPLICATION_FRAGMENT_NAME = "Application"
 
@@ -38,6 +40,9 @@ const val TEXT_SIZE = 18f
 
 class ApplicationsFragment: Fragment()
 {
+  private var openAppsLvdList: MutableLiveData<List<ApplicationItem>> = MutableLiveData()
+  private var takenAppsLvdList: MutableLiveData<List<ApplicationItem>> = MutableLiveData()
+
   private var todayApps = mutableListOf<ApplicationItem>()
   private var tomorrowApps = mutableListOf<ApplicationItem>()
   private var showTomorrowApps = false
@@ -74,38 +79,35 @@ class ApplicationsFragment: Fragment()
     rvOpenApps.addItemDecoration(divider)
 
     vm.rootView = rootView
+    vm.doOnOpenAppsChange = {
+      val openApps = vm.openAppsLvdList.value
+      openApps?.let {
+        Log.i(TAG, "Open apps size is ${it.size}")
+        Log.i(TAG, "openApps is $it")
+        setTodayAndTomorrowApps(it)
+        showTomorrowApps = todayApps.isEmpty()
+        updateOpenAppsUI(it)
+      }
+    }
+
+    vm.doOnTakenAppsChange = {
+      val takenApps = vm.takenAppsLvdList.value
+      takenApps?.let {
+        Log.i(TAG, "Taken apps size is ${it.size}")
+        Log.i(TAG, "takenApps is $it")
+        updateTakenAppsUI(it)
+
+        if (it.isEmpty() && llTakenApps.visibility == View.VISIBLE)
+          llTakenApps.visibility = View.INVISIBLE
+
+        if (it.isNotEmpty() && llTakenApps.visibility == View.INVISIBLE)
+          llTakenApps.visibility = View.VISIBLE
+      }
+    }
 
     // заявки считываются с сервера нашим бесконечным PollService'ом
     vm.serviceDoAction(Action.START)
     vm.bindService()
-
-    vm.openApps.observe(viewLifecycleOwner,
-      Observer { openApps ->
-        openApps?.let {
-          Log.i(TAG, "Open apps size is ${it.size}")
-          Log.i(TAG, "openApps is $it")
-          setTodayAndTomorrowApps(it)
-          showTomorrowApps = todayApps.isEmpty()
-          updateOpenAppsUI(it)
-        }
-      }
-    )
-
-    vm.takenApps.observe(viewLifecycleOwner,
-      Observer { takenApps ->
-        takenApps?.let {
-          Log.i(TAG, "Taken apps size is ${it.size}")
-          Log.i(TAG, "takenApps is $it")
-          updateTakenAppsUI(it)
-
-          if (it.isEmpty() && llTakenApps.visibility == View.VISIBLE)
-            llTakenApps.visibility = View.INVISIBLE
-
-          if (it.isNotEmpty() && llTakenApps.visibility == View.INVISIBLE)
-            llTakenApps.visibility = View.VISIBLE
-        }
-      }
-    )
 
     setHasOptionsMenu(true)
 
@@ -236,9 +238,11 @@ class ApplicationsFragment: Fragment()
 
     for (i in apps.indices) {
       strToDate(apps[i].date, DATE_FORMAT)?.let {
-        when (isItToday(it)) {
-          true -> todayApps.add(apps[i])
-          false -> tomorrowApps.add(apps[i])
+        if (apps[i].notificationHasShown) {
+          when (isItToday(it)) {
+            true -> todayApps.add(apps[i])
+            false -> tomorrowApps.add(apps[i])
+          }
         }
       }
     }
@@ -426,7 +430,7 @@ class ApplicationsFragment: Fragment()
       if (dayIsTomorrow) {
         holder.itemView.setOnClickListener {
           showTomorrowApps = !showTomorrowApps
-          vm.openApps.value?.let {
+          vm.openAppsLvdList.value?.let {
             updateOpenAppsUI(it)
             App.dbUser?.let { user ->
               if (!user.headerWasPressed) {

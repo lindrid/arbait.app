@@ -43,7 +43,8 @@ interface ServerApi {
                   @Query("debit_card_id") debitCardId: Int?,
                   @Query("debit_card") debitCard: String?): Call<ApplicationUserResponse>
 
-  @GET("/api/service/data/{version}")
+  @GET("/api/service/data/{v}/{c}")
   fun getData (@HeaderMap headers: Map<String, String>,
-              @Path("version") version: String): Call<ServiceDataResponse>
+               @Path("v") version: String,
+               @Path("c") cache: Int): Call<ServiceDataResponse>
 }

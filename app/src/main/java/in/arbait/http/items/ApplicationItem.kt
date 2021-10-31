@@ -6,7 +6,7 @@ import java.io.Serializable
 
 data class ApplicationItem (
   val id: Int,
-  val address: String,
+  val address: String?,
   val date: String,
   val time: String,
   @SerializedName("what_to_do") val whatToDo: String,
@@ -21,7 +21,10 @@ data class ApplicationItem (
   @SerializedName("dispatcher_id") val dispatcherId: Int,
   var expanded: Boolean = true,
 
-  @SerializedName("porters") val porters: List<PorterItem>?
+  @SerializedName("porters") val porters: List<PorterItem>?,
+
+  var hideUntilTime: Long = -1L,
+  var notificationHasShown: Boolean = false
 ): Serializable {}
 
 data class LiveDataAppItem (val lvdAppItem: LiveData<ApplicationItem>): Serializable{}

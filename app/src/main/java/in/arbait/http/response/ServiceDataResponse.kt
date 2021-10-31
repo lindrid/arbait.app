@@ -6,14 +6,20 @@ import com.google.gson.annotations.SerializedName
 
 
 class ServiceDataResponse (var response: Response = Response()) {
-  @SerializedName("open_apps")
+  @SerializedName("o")
   lateinit var openApps: List<ApplicationItem>
 
-  @SerializedName("user")
+  @SerializedName("u")
   var user: UserItem? = null
 
-  @SerializedName("taken_apps")
+  @SerializedName("t")
   var takenApps: List<ApplicationItem>? = null
+
+  @SerializedName("n")
+  var serverTime: String? = null
+
+  @SerializedName("m")
+  var maxPorterRating: Int? = null
 
   init {
     if (response.noResult)

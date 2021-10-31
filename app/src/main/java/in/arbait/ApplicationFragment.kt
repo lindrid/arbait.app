@@ -106,8 +106,8 @@ class ApplicationFragment (private val appId: Int): Fragment()
 
     Log.i (TAG, "OnCreate()")
 
-    Log.i (TAG, "vm.lvdOpenApps = ${vm.lvdOpenApps}")
-    Log.i (TAG, "vm.lvdTakenApps = ${vm.lvdTakenApps}")
+    Log.i (TAG, "vm.lvdOpenApps = ${vm.openAppsLvdItems}")
+    Log.i (TAG, "vm.lvdTakenApps = ${vm.takenAppsLvdItems}")
     setViews(view)
     setAppItem()
     setPorter()
@@ -152,13 +152,13 @@ class ApplicationFragment (private val appId: Int): Fragment()
 
 
   private fun setAppItem(): Boolean {
-    vm.lvdOpenApps[appId]?.let {
+    vm.openAppsLvdItems[appId]?.let {
       if (it.value != null) {
         lvdAppItem = it
         return true
       }
     }
-    vm.lvdTakenApps[appId]?.let {
+    vm.takenAppsLvdItems[appId]?.let {
       if (it.value != null) {
         lvdAppItem = it
         return true
@@ -258,9 +258,9 @@ class ApplicationFragment (private val appId: Int): Fragment()
       App.userItem = appUserResponse.user
       val app = appUserResponse.app
 
-      vm.lvdOpenApps.remove(appId)
-      vm.lvdTakenApps[appId] = MutableLiveData(app)
-      vm.lvdTakenApps[appId]?.let {
+      vm.openAppsLvdItems.remove(appId)
+      vm.takenAppsLvdItems[appId] = MutableLiveData(app)
+      vm.takenAppsLvdItems[appId]?.let {
         lvdAppItem = it
       }
 
@@ -303,11 +303,11 @@ class ApplicationFragment (private val appId: Int): Fragment()
     {
       lvdAppItem.value = appUserResponse.app
 
-      vm.lvdOpenApps[appId] = MutableLiveData(lvdAppItem.value)
-      vm.lvdOpenApps[appId]?.let {
+      vm.openAppsLvdItems[appId] = MutableLiveData(lvdAppItem.value)
+      vm.openAppsLvdItems[appId]?.let {
         lvdAppItem = it
       }
-      vm.lvdTakenApps.remove(appId)
+      vm.takenAppsLvdItems.remove(appId)
       setAppObserver()
 
       if (changeStateCount > ENROLL_REFUSE_WITHOUT_PENALTY_MAX_AMOUNT && ep != null) {
@@ -401,7 +401,7 @@ class ApplicationFragment (private val appId: Int): Fragment()
           couldEnroll = true
           couldNotEnrollCause = -1
         }
-        val takenApps = vm.lvdTakenApps
+        val takenApps = vm.takenAppsLvdItems
         val thisAppTimeStr = lvdAppItem.value?.time
 
         for (i in takenApps.keys)

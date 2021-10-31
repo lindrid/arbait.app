@@ -26,8 +26,8 @@ import android.app.PendingIntent.FLAG_UPDATE_CURRENT
 import android.net.Uri
 import java.io.Serializable
 import android.media.AudioAttributes
-
-
+import androidx.lifecycle.MutableLiveData
+import java.util.*
 
 
 private const val TAG = "PollingService"
@@ -49,9 +49,11 @@ class PollService : LifecycleService(), Serializable
   var serviceIsStarted = false
     private set
 
+  val openAppsLvdList: MutableLiveData<List<ApplicationItem>> = MutableLiveData()
+  val takenAppsLvdList: MutableLiveData<List<ApplicationItem>> = MutableLiveData()
 
-  private var openApps: List<ApplicationItem> = emptyList()
-  private var takenApps: List<ApplicationItem> = emptyList()
+  private var openApps: MutableList<ApplicationItem> = mutableListOf()
+  private var takenApps: MutableList<ApplicationItem> = mutableListOf()
 
   private var wakeLock: PowerManager.WakeLock? = null
 
@@ -78,7 +80,7 @@ class PollService : LifecycleService(), Serializable
     startForeground(SERVICE_NOTIFICATION_ID, notification)
 
     server = Server(this)
-    server.updateApplicationsResponse()
+    server.updateApplicationsResponse(cache = false)
     dataResponse = server.serviceDataResponse
 
     var firstTime = true
@@ -97,28 +99,57 @@ class PollService : LifecycleService(), Serializable
               log("App.userItem = $user")
             }
 
-            if (it.takenApps == null)
-              this.takenApps = emptyList()
-
-            it.takenApps?.let { takenApps ->
-              this.takenApps = takenApps
+            var serverTimeStr = ""
+            it.serverTime?.let { serverTime ->
+              serverTimeStr = serverTime
             }
 
+            Log.i(TAG, "appsFromANotInB(openAppsFromServer, $openApps)")
             val newApps = appsFromANotInB(openAppsFromServer, openApps)
             val closedApps = appsFromANotInB(openApps, openAppsFromServer)
             logApps(newApps, closedApps)
 
-            openApps = openAppsFromServer
-            Log.i (TAG, "notificationsOff = ${App.dbUser?.notificationsOff}")
-            if (newApps.isNotEmpty() && !firstTime) {
-              if (App.dbUser?.notificationsOff == false) {
+            setOpenApps(openAppsFromServer)
+
+            if (newApps.isNotEmpty()) {
                 Log.i (TAG, "newApps.indices=${newApps.indices}")
                 for (i in newApps.indices) {
-                  val n = createNewAppNotification(newApps[i])
-                  showNotification(newApps[i].id, n)
+                  newApps[i].hideUntilTime = getAppWaitingTime(newApps[i], serverTimeStr)
+                  Log.i(TAG, "app.id = ${newApps[i].id}, hideUntilTime = " +
+                      "${newApps[i].hideUntilTime}")
+                }
+            }
+
+            for (i in openApps.indices) {
+              val notificationHasNotShown = !(openApps[i].notificationHasShown)
+              if (notificationHasNotShown) {
+                var now = 0L
+                strToDate(serverTimeStr, DATE_TIME_FORMAT)?.let { serverTime ->
+                  now = serverTime.time
+                }
+                if (now >= openApps[i].hideUntilTime) {
+                  Log.i(TAG, "Notify: app.id = ${openApps[i].id}")
+                  openApps[i].notificationHasShown = true
+
+                  Log.i (TAG, "notificationsOff = ${App.dbUser?.notificationsOff}")
+                  if (App.dbUser?.notificationsOff == false && !firstTime) {
+                    val n = createNewAppNotification(openApps[i])
+                    showNotification(openApps[i].id, n)
+                  }
                 }
               }
             }
+
+            if (it.takenApps == null)
+              this.takenApps = mutableListOf()
+
+            it.takenApps?.let { takenAppsFromServer ->
+              setTakenApps(takenAppsFromServer)
+            }
+
+            openAppsLvdList.value = openApps
+            takenAppsLvdList.value = takenApps
+
             if (closedApps.isNotEmpty()) {
               for (j in closedApps.indices) {
                 removeNotification(closedApps[j].id)
@@ -159,6 +190,59 @@ class PollService : LifecycleService(), Serializable
   }
 
 
+  private fun setOpenApps(openAppsFromServer: List<ApplicationItem>) {
+    if (openApps.isEmpty()) {
+      openApps = openAppsFromServer.toMutableList()
+    }
+    else {
+      for (i in openAppsFromServer.indices) {
+        val appIsNewOrUpdated = (openAppsFromServer[i].address != null)
+        var openAppsContainThisApp = false
+
+        for (j in openApps.indices) {
+          if (openApps[j].id == openAppsFromServer[i].id) {
+            openAppsContainThisApp = true
+            if (appIsNewOrUpdated) {
+              val hut = openApps[j].hideUntilTime
+              val nhs = openApps[j].notificationHasShown
+              openApps[j] = openAppsFromServer[i]
+              openApps[j].hideUntilTime = hut
+              openApps[j].notificationHasShown = nhs
+            }
+          }
+        }
+
+        if (!openAppsContainThisApp) {
+          openApps.add(openAppsFromServer[i])
+        }
+      }
+    }
+  }
+
+  private fun setTakenApps(takenAppsFromServer: List<ApplicationItem>) {
+    if (takenApps.isEmpty()) {
+      takenApps = takenAppsFromServer.toMutableList()
+    }
+    else {
+      for (i in takenAppsFromServer.indices) {
+        val appIsNewOrUpdated = (takenAppsFromServer[i].address != null)
+        var takenAppsContainThisApp = false
+
+        for (j in takenApps.indices) {
+          if (takenApps[j].id == takenAppsFromServer[i].id) {
+            takenAppsContainThisApp = true
+            if (appIsNewOrUpdated) {
+              takenApps[j] = takenAppsFromServer[i]
+            }
+          }
+        }
+
+        if (!takenAppsContainThisApp) {
+          takenApps.add(takenAppsFromServer[i])
+        }
+      }
+    }
+  }
 
   private fun logApps(newApps: List<ApplicationItem>, closedApps: List<ApplicationItem>) {
     log("newApps = $newApps")
@@ -211,19 +295,32 @@ class PollService : LifecycleService(), Serializable
     setServiceState(this, ServiceState.STOPPED)
   }
 
+
+
   private fun showNotification(id: Int, notification: Notification) {
     val notificationManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
     notificationManager.notify(id, notification)
   }
 
-  fun removeNotification(id: Int) {
+  private fun removeNotification(id: Int) {
     val notificationManager =
       applicationContext.getSystemService(NOTIFICATION_SERVICE) as NotificationManager
     notificationManager.cancel(id)
   }
 
+
+  private fun getAppWaitingTime(newApp: ApplicationItem, serverTime: String): Long {
+    var now = 0L
+    strToDate(serverTime, DATE_TIME_FORMAT)?.let { dateTime ->
+      now = dateTime.time
+      Log.i(TAG, "dateTime=$dateTime")
+      Log.i(TAG, "dateTime=${Date(now+30*1000)}")
+    }
+    return now + 30 * 1000 // 30 sec
+  }
+
   private fun createNewAppNotification (newApp: ApplicationItem): Notification {
-    val title = newApp.address
+    val title = newApp.address ?: "Oops..."
 
     var word = ""
     strToDate(newApp.date, DATE_FORMAT)?.let {
