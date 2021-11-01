@@ -32,6 +32,11 @@ import java.util.*
 
 private const val TAG = "PollingService"
 private const val SERVICE_DELAY_SECONDS: Long = 5
+private const val MAX_PORTER_RATING_BY_DEFAULT = 5
+
+private const val ONE_HOUR = 60 * 60 * 1000
+private const val ONE_MINUTE = 60 * 1000
+private const val APP_MILLISECONDS_ADDITION_BY_DEFAULT = 2 * ONE_HOUR
 
 private const val SERVICE_NOTIFICATION_ID = 1
 
@@ -99,22 +104,30 @@ class PollService : LifecycleService(), Serializable
               log("App.userItem = $user")
             }
 
-            var serverTimeStr = ""
-            it.serverTime?.let { serverTime ->
-              serverTimeStr = serverTime
-            }
-
             Log.i(TAG, "appsFromANotInB(openAppsFromServer, $openApps)")
             val newApps = appsFromANotInB(openAppsFromServer, openApps)
             val closedApps = appsFromANotInB(openApps, openAppsFromServer)
             logApps(newApps, closedApps)
 
-            setOpenApps(openAppsFromServer)
+            setOpenApps(openAppsFromServer, closedApps)
+
+            var serverTime = Date().time
+            it.serverTime?.let { serverTimeStr ->
+              strToDate(serverTimeStr, DATE_TIME_FORMAT)?.let { time ->
+                serverTime = time.time
+              }
+            }
+
+            var maxPorterRating = MAX_PORTER_RATING_BY_DEFAULT
+            it.maxPorterRating?.let { mpr ->
+              maxPorterRating = mpr
+            }
 
             if (newApps.isNotEmpty()) {
                 Log.i (TAG, "newApps.indices=${newApps.indices}")
                 for (i in newApps.indices) {
-                  newApps[i].hideUntilTime = getAppWaitingTime(newApps[i], serverTimeStr)
+                  newApps[i].hideUntilTime = getAppWaitingTime(newApps[i], serverTime,
+                    maxPorterRating)
                   Log.i(TAG, "app.id = ${newApps[i].id}, hideUntilTime = " +
                       "${newApps[i].hideUntilTime}")
                 }
@@ -123,11 +136,7 @@ class PollService : LifecycleService(), Serializable
             for (i in openApps.indices) {
               val notificationHasNotShown = !(openApps[i].notificationHasShown)
               if (notificationHasNotShown) {
-                var now = 0L
-                strToDate(serverTimeStr, DATE_TIME_FORMAT)?.let { serverTime ->
-                  now = serverTime.time
-                }
-                if (now >= openApps[i].hideUntilTime) {
+                if (serverTime >= openApps[i].hideUntilTime) {
                   Log.i(TAG, "Notify: app.id = ${openApps[i].id}")
                   openApps[i].notificationHasShown = true
 
@@ -190,7 +199,8 @@ class PollService : LifecycleService(), Serializable
   }
 
 
-  private fun setOpenApps(openAppsFromServer: List<ApplicationItem>) {
+  private fun setOpenApps(openAppsFromServer: List<ApplicationItem>, closedApps: List<ApplicationItem>)
+  {
     if (openApps.isEmpty()) {
       openApps = openAppsFromServer.toMutableList()
     }
@@ -215,6 +225,17 @@ class PollService : LifecycleService(), Serializable
         if (!openAppsContainThisApp) {
           openApps.add(openAppsFromServer[i])
         }
+      }
+
+      openApps.removeAll { app->
+        var appIsClosedOrDeleted = false
+        for (i in closedApps.indices) {
+          if (app.id == closedApps[i].id) {
+            appIsClosedOrDeleted = true
+            break
+          }
+        }
+        appIsClosedOrDeleted
       }
     }
   }
@@ -309,14 +330,36 @@ class PollService : LifecycleService(), Serializable
   }
 
 
-  private fun getAppWaitingTime(newApp: ApplicationItem, serverTime: String): Long {
-    var now = 0L
-    strToDate(serverTime, DATE_TIME_FORMAT)?.let { dateTime ->
-      now = dateTime.time
-      Log.i(TAG, "dateTime=$dateTime")
-      Log.i(TAG, "dateTime=${Date(now+30*1000)}")
+  private fun getAppWaitingTime(newApp: ApplicationItem, serverTime: Long, maxRating: Int): Long
+  {
+    if (maxRating == 0)
+      return serverTime
+
+    val appDateTimeStr = "${newApp.date} ${newApp.time}:00"
+    var appDateTime = serverTime + APP_MILLISECONDS_ADDITION_BY_DEFAULT
+    strToDate(appDateTimeStr, DATE_TIME_FORMAT)?.let { time ->
+      appDateTime = time.time
     }
-    return now + 30 * 1000 // 30 sec
+    val diffTime = appDateTime - serverTime
+    val interval: Int = if (diffTime <= ONE_HOUR)
+      3 * ONE_MINUTE
+    else if (diffTime > ONE_HOUR && diffTime <= 2 * ONE_HOUR)
+      15 * ONE_MINUTE
+    else if (diffTime > 2 * ONE_HOUR && diffTime <= 3 * ONE_HOUR)
+      30 * ONE_MINUTE
+    else if (diffTime > 3 * ONE_HOUR && diffTime <= 4 * ONE_HOUR)
+      40 * ONE_MINUTE
+    else if (diffTime > 4 * ONE_HOUR && diffTime <= 5 * ONE_HOUR)
+      50 * ONE_MINUTE
+    else if (diffTime > 5 * ONE_HOUR && diffTime <= 6 * ONE_HOUR)
+      60 * ONE_MINUTE
+    else
+      60 * ONE_MINUTE
+
+    val waitMultiplier = interval / maxRating
+    val porterRating = App.userItem?.porter?.rating ?: 0
+
+    return serverTime + (waitMultiplier * (maxRating - porterRating)).toLong()
   }
 
   private fun createNewAppNotification (newApp: ApplicationItem): Notification {

@@ -6,7 +6,8 @@ import java.io.Serializable
 data class PorterItem (
   val id: Int,
   @SerializedName("user") val user: UserItem,
-  @SerializedName("pivot") val pivot: PorterPivotItem
+  @SerializedName("pivot") val pivot: PorterPivotItem,
+  @SerializedName("rating") val rating: Int
 ): Serializable {}
 
 /*

@@ -40,9 +40,6 @@ const val TEXT_SIZE = 18f
 
 class ApplicationsFragment: Fragment()
 {
-  private var openAppsLvdList: MutableLiveData<List<ApplicationItem>> = MutableLiveData()
-  private var takenAppsLvdList: MutableLiveData<List<ApplicationItem>> = MutableLiveData()
-
   private var todayApps = mutableListOf<ApplicationItem>()
   private var tomorrowApps = mutableListOf<ApplicationItem>()
   private var showTomorrowApps = false
@@ -89,6 +86,7 @@ class ApplicationsFragment: Fragment()
         updateOpenAppsUI(it)
       }
     }
+    vm.doOnOpenAppsChange()
 
     vm.doOnTakenAppsChange = {
       val takenApps = vm.takenAppsLvdList.value
@@ -104,6 +102,7 @@ class ApplicationsFragment: Fragment()
           llTakenApps.visibility = View.VISIBLE
       }
     }
+    vm.doOnTakenAppsChange()
 
     // заявки считываются с сервера нашим бесконечным PollService'ом
     vm.serviceDoAction(Action.START)
