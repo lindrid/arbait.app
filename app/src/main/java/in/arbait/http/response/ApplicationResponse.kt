@@ -5,9 +5,7 @@ import `in`.arbait.http.items.ApplicationItem
 import `in`.arbait.http.items.UserItem
 import com.google.gson.annotations.SerializedName
 
-class ApplicationUserResponse (var response: Response = Response()) {
+class ApplicationResponse (var response: Response = Response()) {
   @SerializedName("application")
   lateinit var app: ApplicationItem
-  @SerializedName("user")
-  lateinit var user: UserItem
 }

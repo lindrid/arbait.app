@@ -51,8 +51,6 @@ private const val CAUSE_SMALL_TIME_INTERVAL = 1
 
 const val ENROLL_REFUSE_WITHOUT_PENALTY_MAX_AMOUNT = 2
 
-const val APP_REFUSE_DIALOG_TAG = "ApplicationRefuseDialog"
-const val DEBIT_CARD_DIALOG_TAG = "DebitCardDialog"
 const val APPLICATION_KEY = "application"
 
 const val PHONE_CALL = 1
@@ -240,23 +238,22 @@ class ApplicationFragment (private val appId: Int): Fragment()
   }
 
   private fun enrollPorter(ep: EnrollingPermission?, newEp: EnrollingPermission) {
-    server.enrollPorter(appId) { appUserResponse: ApplicationUserResponse ->
-      when (appUserResponse.response.type) {
-        SERVER_OK     -> EnrollReaction(appUserResponse).doOnServerOkResult(ep, newEp)
-        SYSTEM_ERROR  -> EnrollReaction(appUserResponse).doOnSystemError()
-        SERVER_ERROR  -> EnrollReaction(appUserResponse).doOnServerError()
+    server.enrollPorter(appId) { appResponse: ApplicationResponse ->
+      when (appResponse.response.type) {
+        SERVER_OK     -> EnrollReaction(appResponse).doOnServerOkResult(ep, newEp)
+        SYSTEM_ERROR  -> EnrollReaction(appResponse).doOnSystemError()
+        SERVER_ERROR  -> EnrollReaction(appResponse).doOnServerError()
       }
     }
   }
 
-  private inner class EnrollReaction (val appUserResponse: ApplicationUserResponse):
-    ReactionOnResponse(TAG, requireContext(), vm.rootView, appUserResponse.response)
+  private inner class EnrollReaction (val appResponse: ApplicationResponse):
+    ReactionOnResponse(TAG, requireContext(), vm.rootView, appResponse.response)
   {
     override fun doOnServerOkResult() {}
 
     fun doOnServerOkResult(ep: EnrollingPermission?, newEp: EnrollingPermission) {
-      App.userItem = appUserResponse.user
-      val app = appUserResponse.app
+      val app = appResponse.app
 
       vm.openAppsLvdItems.remove(appId)
       vm.takenAppsLvdItems[appId] = MutableLiveData(app)
@@ -293,15 +290,15 @@ class ApplicationFragment (private val appId: Int): Fragment()
     }
   }
 
-  private inner class RefuseReaction (val appUserResponse: ApplicationUserResponse):
-    ReactionOnResponse(TAG, requireContext(), vm.rootView, appUserResponse.response)
+  private inner class RefuseReaction (val appResponse: ApplicationResponse):
+    ReactionOnResponse(TAG, requireContext(), vm.rootView, appResponse.response)
   {
     override fun doOnServerOkResult() {}
 
     fun doOnServerOkResult(ep: EnrollingPermission?, newEp: EnrollingPermission,
                            changeStateCount: Int)
     {
-      lvdAppItem.value = appUserResponse.app
+      lvdAppItem.value = appResponse.app
 
       vm.openAppsLvdItems[appId] = MutableLiveData(lvdAppItem.value)
       vm.openAppsLvdItems[appId]?.let {

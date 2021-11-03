@@ -1,7 +1,7 @@
 package `in`.arbait.http
 
 import `in`.arbait.APP_VERSION
-import `in`.arbait.http.response.ApplicationUserResponse
+import `in`.arbait.http.response.ApplicationResponse
 import `in`.arbait.http.response.ServiceDataResponse
 import `in`.arbait.http.response.UserResponse
 import android.content.Context
@@ -90,18 +90,18 @@ class Server (private val context: Context)
   }
 
   fun changeDebitCard ( appId: Int, debitCardId: Int?, debitCard: String?,
-                        onResult: (ApplicationUserResponse) -> Unit)
+                        onResult: (ApplicationResponse) -> Unit)
   {
     appUserCallback.onResult = onResult
     serverApi.changeDebitCard(headers, appId, debitCardId, debitCard).enqueue(appUserCallback)
   }
 
-  fun enrollPorter (appId: Int, onResult: (ApplicationUserResponse) -> Unit) {
+  fun enrollPorter (appId: Int, onResult: (ApplicationResponse) -> Unit) {
     appUserCallback.onResult = onResult
     serverApi.enrollPorter(headers, appId).enqueue(appUserCallback)
   }
 
-  fun refuseApp (appId: Int, onResult: (ApplicationUserResponse) -> Unit) {
+  fun refuseApp (appId: Int, onResult: (ApplicationResponse) -> Unit) {
     appUserCallback.onResult = onResult
     serverApi.refuseApp(headers, appId).enqueue (appUserCallback)
   }
@@ -202,27 +202,27 @@ class Server (private val context: Context)
     }
   }
 
-  private val appUserCallback = object : Callback<ApplicationUserResponse>
+  private val appUserCallback = object : Callback<ApplicationResponse>
   {
-    lateinit var onResult: (ApplicationUserResponse) -> Unit
+    lateinit var onResult: (ApplicationResponse) -> Unit
 
-    override fun onFailure (call: Call<ApplicationUserResponse>, t: Throwable) {
+    override fun onFailure (call: Call<ApplicationResponse>, t: Throwable) {
       Log.e (TAG, "Enroll porter FAILED!", t)
-      onResult(ApplicationUserResponse(`in`.arbait.http.response.Response(t)))
+      onResult(ApplicationResponse(`in`.arbait.http.response.Response(t)))
     }
 
-    override fun onResponse (call: Call<ApplicationUserResponse>,
-                             response: Response<ApplicationUserResponse>)
+    override fun onResponse (call: Call<ApplicationResponse>,
+                             response: Response<ApplicationResponse>)
     {
       if (response.code() == 200) {
         Log.i(TAG, "ApplicationResponse received, response.body() = ${response.body()}")
-        val appUserResponse: ApplicationUserResponse? = response.body()
-        onResult(appUserResponse ?: ApplicationUserResponse())
+        val appResponse: ApplicationResponse? = response.body()
+        onResult(appResponse ?: ApplicationResponse())
       }
       else {
         Log.e (TAG, "Server error with code ${response.code()}")
         response.errorBody()?.let {
-          onResult(ApplicationUserResponse(`in`.arbait.http.response.Response(it, response.code())))
+          onResult(ApplicationResponse(`in`.arbait.http.response.Response(it, response.code())))
         }
       }
     }

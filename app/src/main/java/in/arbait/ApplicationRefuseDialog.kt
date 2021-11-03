@@ -8,7 +8,6 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import androidx.fragment.app.DialogFragment
-import java.util.*
 
 private const val TAG = "ApplicationRefuseDialog"
 const val OK_KEY = "ok_key"
@@ -43,21 +42,20 @@ class ApplicationRefuseDialog: DialogFragment(), View.OnClickListener
     dismiss()
   }
 
-  private fun onResult(appUserResponse: ApplicationUserResponse) {
-    when (appUserResponse.response.type) {
-      SERVER_OK     -> RefuseReaction(appUserResponse).doOnServerOkResult()
-      SYSTEM_ERROR  -> RefuseReaction(appUserResponse).doOnSystemError()
-      SERVER_ERROR  -> RefuseReaction(appUserResponse).doOnServerError()
+  private fun onResult(appResponse: ApplicationResponse) {
+    when (appResponse.response.type) {
+      SERVER_OK     -> RefuseReaction(appResponse).doOnServerOkResult()
+      SYSTEM_ERROR  -> RefuseReaction(appResponse).doOnSystemError()
+      SERVER_ERROR  -> RefuseReaction(appResponse).doOnServerError()
     }
   }
 
-  private inner class RefuseReaction (val appUserResponse: ApplicationUserResponse):
-    ReactionOnResponse(TAG, requireContext(), rootView, appUserResponse.response)
+  private inner class RefuseReaction (val appResponse: ApplicationResponse):
+    ReactionOnResponse(TAG, requireContext(), rootView, appResponse.response)
   {
     override fun doOnServerOkResult() {
-      App.userItem = appUserResponse.user
       val bundle = Bundle().apply {
-        putSerializable(APPLICATION_KEY, appUserResponse.app)
+        putSerializable(APPLICATION_KEY, appResponse.app)
       }
       requireActivity().supportFragmentManager.setFragmentResult(APPLICATION_KEY, bundle)
       dismiss()

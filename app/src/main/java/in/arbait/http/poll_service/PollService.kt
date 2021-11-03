@@ -35,7 +35,7 @@ private const val SERVICE_DELAY_SECONDS: Long = 5
 private const val MAX_PORTER_RATING_BY_DEFAULT = 5
 
 private const val ONE_HOUR = 60 * 60 * 1000
-private const val ONE_MINUTE = 60 * 1000
+private const val MINUTE = 60 * 1000
 private const val APP_MILLISECONDS_ADDITION_BY_DEFAULT = 2 * ONE_HOUR
 
 private const val SERVICE_NOTIFICATION_ID = 1
@@ -153,7 +153,8 @@ class PollService : LifecycleService(), Serializable
               this.takenApps = mutableListOf()
 
             it.takenApps?.let { takenAppsFromServer ->
-              setTakenApps(takenAppsFromServer)
+              val refusedApps = appsFromANotInB(takenApps, takenAppsFromServer)
+              setTakenApps(takenAppsFromServer, refusedApps)
             }
 
             openAppsLvdList.value = openApps
@@ -199,7 +200,8 @@ class PollService : LifecycleService(), Serializable
   }
 
 
-  private fun setOpenApps(openAppsFromServer: List<ApplicationItem>, closedApps: List<ApplicationItem>)
+  private fun setOpenApps(openAppsFromServer: List<ApplicationItem>,
+                          closedApps: List<ApplicationItem>)
   {
     if (openApps.isEmpty()) {
       openApps = openAppsFromServer.toMutableList()
@@ -240,7 +242,8 @@ class PollService : LifecycleService(), Serializable
     }
   }
 
-  private fun setTakenApps(takenAppsFromServer: List<ApplicationItem>) {
+  private fun setTakenApps(takenAppsFromServer: List<ApplicationItem>,
+                           refusedApps: List<ApplicationItem>) {
     if (takenApps.isEmpty()) {
       takenApps = takenAppsFromServer.toMutableList()
     }
@@ -261,6 +264,17 @@ class PollService : LifecycleService(), Serializable
         if (!takenAppsContainThisApp) {
           takenApps.add(takenAppsFromServer[i])
         }
+      }
+
+      takenApps.removeAll { app->
+        var appIsDeletedOrPorterIsRefused = false
+        for (i in refusedApps.indices) {
+          if (app.id == refusedApps[i].id) {
+            appIsDeletedOrPorterIsRefused = true
+            break
+          }
+        }
+        appIsDeletedOrPorterIsRefused
       }
     }
   }
@@ -341,20 +355,25 @@ class PollService : LifecycleService(), Serializable
       appDateTime = time.time
     }
     val diffTime = appDateTime - serverTime
-    val interval: Int = if (diffTime <= ONE_HOUR)
-      3 * ONE_MINUTE
-    else if (diffTime > ONE_HOUR && diffTime <= 2 * ONE_HOUR)
-      15 * ONE_MINUTE
-    else if (diffTime > 2 * ONE_HOUR && diffTime <= 3 * ONE_HOUR)
-      30 * ONE_MINUTE
+
+    val interval: Int = if (diffTime <= 60 * MINUTE)
+      3 * MINUTE
+    else if (diffTime > 60 * MINUTE && diffTime <= 75 * MINUTE)
+      5 * MINUTE
+    else if (diffTime > 75 * MINUTE && diffTime <= 135 * MINUTE)
+      15 * MINUTE
+    else if (diffTime > 135 * MINUTE && diffTime <= 150 * MINUTE)
+      20 * MINUTE
+    else if (diffTime > 150 * MINUTE && diffTime <= 3 * ONE_HOUR)
+      30 * MINUTE
     else if (diffTime > 3 * ONE_HOUR && diffTime <= 4 * ONE_HOUR)
-      40 * ONE_MINUTE
+      40 * MINUTE
     else if (diffTime > 4 * ONE_HOUR && diffTime <= 5 * ONE_HOUR)
-      50 * ONE_MINUTE
+      50 * MINUTE
     else if (diffTime > 5 * ONE_HOUR && diffTime <= 6 * ONE_HOUR)
-      60 * ONE_MINUTE
+      60 * MINUTE
     else
-      60 * ONE_MINUTE
+      90 * MINUTE
 
     val waitMultiplier = interval / maxRating
     val porterRating = App.userItem?.porter?.rating ?: 0
