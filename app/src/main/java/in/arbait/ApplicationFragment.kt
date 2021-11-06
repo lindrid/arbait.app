@@ -144,8 +144,7 @@ class ApplicationFragment (private val appId: Int): Fragment()
 
     val actionBar = (requireActivity() as AppCompatActivity).supportActionBar
     val appName = getString(R.string.app_name)
-    val app = getString(R.string.app_action_bar_title)
-    actionBar?.title = "$appName - $app"
+    actionBar?.title = "$appName"
   }
 
 

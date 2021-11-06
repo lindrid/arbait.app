@@ -116,8 +116,7 @@ class ApplicationsFragment: Fragment()
 
     val actionBar = (requireActivity() as AppCompatActivity).supportActionBar
     val appName = getString(R.string.app_name)
-    val apps = getString(R.string.apps_action_bar_title)
-    actionBar?.title = "$appName - $apps"
+    actionBar?.title = "$appName"
   }
 
   override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
