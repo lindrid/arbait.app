@@ -96,9 +96,10 @@
     <!-- ApplicationFragment -->
     <string name="app_address"><![CDATA[<u>Адрес:</u> %s]]></string>
     <string name="app_time"><![CDATA[<u>Время:</u> %s]]></string>
-    <string name="app_worker_income"><![CDATA[<u>Ставка:</u> %s]]></string>
-    <string name="app_description"><![CDATA[<u>Описание:</u> %s]]></string>
+    <string name="app_money"><![CDATA[<u>Ставка:</u> %s]]></string>
+    <string name="app_commission"><![CDATA[<u>Комиссия:</u> %s]]></string>
     <string name="app_pay_method"><![CDATA[<u>Оплата:</u> %s]]></string>
+    <string name="app_description"><![CDATA[<u>Описание:</u> %s]]></string>
     <string name="app_on_card">на карту</string>
     <string name="app_cash">наличные</string>
     <string name="app_worker_count"><![CDATA[<u>Кол-во работников:</u> %s]]></string>
@@ -115,7 +116,7 @@
     <string name="app_could_not_enroll_cause_refuses">Нельзя записаться: частая запись/отмена заявок</string>
     <string name="app_could_not_enroll_cause_unknown">Нельзя записаться: неизвестная проблема</string>
 
-    <string name="app_payed"><![CDATA[Заявка оплачена <br> Часов отработано: %1$d <br> Денег получено: %2$d <br>]]></string>
+    <string name="app_payed"><![CDATA[Заявка завершена <br> Часов отработано: %1$d <br> Денег получено: %2$d <br> Комиссия: %3$d]]></string>
     <string name="app_is_gone">Заявка собрана или удалена</string>
 
     <!-- LoginFragment -->

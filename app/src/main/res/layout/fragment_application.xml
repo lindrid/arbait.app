@@ -62,7 +62,7 @@
                 app:layout_constraintTop_toBottomOf="@id/tv_app_address" />
 
             <androidx.appcompat.widget.AppCompatTextView
-                android:id="@+id/tv_app_worker_income"
+                android:id="@+id/tv_app_money"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="20dp"
@@ -72,6 +72,18 @@
                 android:textSize="18sp"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@id/tv_app_time" />
+
+            <androidx.appcompat.widget.AppCompatTextView
+                android:id="@+id/tv_app_commission"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="20dp"
+                android:layout_marginTop="10dp"
+                android:text="TextView"
+                android:textColor="@color/black"
+                android:textSize="18sp"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/tv_app_money" />
 
             <androidx.appcompat.widget.AppCompatTextView
                 android:id="@+id/tv_app_description"
@@ -98,7 +110,7 @@
                 android:textColor="@color/black"
                 android:textSize="18sp"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/tv_app_worker_income" />
+                app:layout_constraintTop_toBottomOf="@+id/tv_app_commission" />
 
             <androidx.appcompat.widget.AppCompatTextView
                 android:id="@+id/tv_app_porters"
@@ -124,16 +136,6 @@
                 app:layout_constraintHorizontal_bias="0.0"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@+id/tv_app_porters" />
-
-            <androidx.appcompat.widget.AppCompatButton
-                android:id="@+id/bt_app_change_debit_card"
-                android:layout_width="wrap_content"
-                android:layout_height="45dp"
-                android:layout_marginTop="1dp"
-                android:textSize="18sp"
-                android:visibility="invisible"
-                app:layout_constraintStart_toEndOf="@+id/tv_app_pay_method"
-                app:layout_constraintTop_toBottomOf="@+id/tv_app_worker_income" />
 
         </androidx.constraintlayout.widget.ConstraintLayout>
         >

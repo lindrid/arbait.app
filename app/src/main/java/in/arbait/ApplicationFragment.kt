@@ -39,8 +39,7 @@ import kotlin.math.abs
 private const val TAG = "ApplicationFragment"
 
 const val CLOSED_STATE = 2
-const val PAYED_STATE = 6
-
+const val READY_TO_PAY = 4
 
 private const val DISABLE_BTN_BASE_RANGE = 10 * 1000              // 10 sec
 private const val PENALTY_TIME_RANGE = 2 * 60 * 1000              // 2 min
@@ -77,9 +76,10 @@ class ApplicationFragment (private val appId: Int): Fragment()
   private lateinit var tvEnrolled: AppCompatTextView
   private lateinit var tvAddress: AppCompatTextView
   private lateinit var tvTime: AppCompatTextView
-  private lateinit var tvIncome: AppCompatTextView
-  private lateinit var tvDescription: AppCompatTextView
+  private lateinit var tvMoney: AppCompatTextView
+  private lateinit var tvCommission: AppCompatTextView
   private lateinit var tvPayMethod: AppCompatTextView
+  private lateinit var tvDescription: AppCompatTextView
   private lateinit var tvPortersCount: AppCompatTextView
   private lateinit var rvPorters: RecyclerView
   private lateinit var btCallClient: AppCompatButton
@@ -453,12 +453,13 @@ class ApplicationFragment (private val appId: Int): Fragment()
         btEnrollRefuse.isEnabled = false
       }
 
-      if (app != null && app.state == PAYED_STATE) {
+      if (app != null && app.state >= READY_TO_PAY && porter?.pivot?.payed != true) {
         tvEnrolled.textSize = 26.0f
         tvEnrolled.text = Html.fromHtml(getString(
           R.string.app_payed,
           porter?.pivot?.workHours,
-          porter?.pivot?.money
+          porter?.pivot?.money,
+          porter?.pivot?.commission
         ))
         btCallClient.isEnabled = false
       }
@@ -592,7 +593,8 @@ class ApplicationFragment (private val appId: Int): Fragment()
     tvEnrolled = view.findViewById(R.id.tv_app_enrolled)
     tvAddress = view.findViewById(R.id.tv_app_address)
     tvTime = view.findViewById(R.id.tv_app_time)
-    tvIncome = view.findViewById(R.id.tv_app_worker_income)
+    tvMoney = view.findViewById(R.id.tv_app_money)
+    tvCommission = view.findViewById(R.id.tv_app_commission)
     tvDescription = view.findViewById(R.id.tv_app_description)
     tvPayMethod = view.findViewById(R.id.tv_app_pay_method)
     tvPortersCount = view.findViewById(R.id.tv_app_porters)
@@ -621,8 +623,12 @@ class ApplicationFragment (private val appId: Int): Fragment()
         " " + getString(R.string.hourly_suffix)
       else
         getString(R.string.daily_suffix)
-      val income = "${appItem.priceForWorker}$suffix"
-      tvIncome.text = Html.fromHtml(getString(R.string.app_worker_income, income))
+      val money = "${appItem.price}$suffix"
+      tvMoney.text = Html.fromHtml(getString(R.string.app_money, money))
+
+      val comm = appItem.price - appItem.priceForWorker
+      val commission = "$comm$suffix"
+      tvCommission.text = Html.fromHtml(getString(R.string.app_commission, commission))
 
       tvDescription.text = Html.fromHtml(getString(R.string.app_description, appItem.whatToDo))
 

@@ -13,11 +13,9 @@ import android.widget.TextView
 import androidx.annotation.DrawableRes
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.core.content.ContextCompat
-import androidx.lifecycle.MutableLiveData
 import androidx.recyclerview.widget.ConcatAdapter
 import androidx.recyclerview.widget.DividerItemDecoration
 
@@ -361,7 +359,7 @@ class ApplicationsFragment: Fragment()
       }
       tvAddress.text = app.address
 
-      if (app.state == PAYED_STATE) {
+      if (app.state == READY_TO_PAY) {
         tvTime.setTextColor(Color.GRAY)
         tvAddress.setTextColor(Color.GRAY)
       }
