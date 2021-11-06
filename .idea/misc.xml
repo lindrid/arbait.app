@@ -8,7 +8,7 @@
         <entry key="app/src/main/res/drawable/border.xml" value="0.209375" />
         <entry key="app/src/main/res/drawable/divider.xml" value="0.209375" />
         <entry key="app/src/main/res/layout/activity_main.xml" value="0.19322916666666667" />
-        <entry key="app/src/main/res/layout/fragment_application.xml" value="0.33" />
+        <entry key="app/src/main/res/layout/fragment_application.xml" value="0.22" />
         <entry key="app/src/main/res/layout/fragment_applications.xml" value="0.33" />
         <entry key="app/src/main/res/layout/fragment_dialog_birth_date.xml" value="0.33" />
         <entry key="app/src/main/res/layout/fragment_dialog_debit_card.xml" value="0.22" />
@@ -22,7 +22,7 @@
         <entry key="app/src/main/res/layout/list_item_app_header.xml" value="0.25" />
         <entry key="app/src/main/res/layout/list_item_debit_card.xml" value="0.19322916666666667" />
         <entry key="app/src/main/res/layout/list_item_header.xml" value="0.19322916666666667" />
-        <entry key="app/src/main/res/layout/list_item_porter.xml" value="0.9" />
+        <entry key="app/src/main/res/layout/list_item_porter.xml" value="0.33" />
         <entry key="app/src/main/res/layout/list_item_taken_app.xml" value="0.25" />
         <entry key="app/src/main/res/menu/login_menu.xml" value="0.19322916666666667" />
         <entry key="app/src/main/res/menu/main_menu.xml" value="0.19322916666666667" />

@@ -139,5 +139,6 @@
     <string name="df_are_you_sure">Вы уверены?</string>
     <string name="app_you_were_deleted">Вы были удалены с заявки (или сама заявка была удалена)</string>
     <string name="reg_user_data_agreement">Нажимая кнопку Готово вы соглашаетесь на предоставление введенных данных</string>
+    <string name="app_write_to_client">Написать</string>
 
 </resources>
