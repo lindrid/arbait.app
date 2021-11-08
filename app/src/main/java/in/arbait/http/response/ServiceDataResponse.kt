@@ -21,6 +21,9 @@ class ServiceDataResponse (var response: Response = Response()) {
   @SerializedName("m")
   var maxPorterRating: Int? = null
 
+  @SerializedName("c")
+  var commission: Int? = null
+
   init {
     if (response.noResult)
       openApps = emptyList()

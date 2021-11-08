@@ -12,6 +12,8 @@ import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.annotation.DrawableRes
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.widget.AppCompatButton
+import androidx.appcompat.widget.AppCompatTextView
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -46,6 +48,9 @@ class ApplicationsFragment: Fragment()
   private lateinit var rvOpenApps: RecyclerView
   private lateinit var rvTakenApps: RecyclerView
   private lateinit var llTakenApps: LinearLayout
+  private lateinit var tvUserCannot: AppCompatTextView
+  private lateinit var tvCommission: AppCompatTextView
+  private lateinit var btPayCommission: AppCompatButton
 
   private val vm: PollServerViewModel by lazy {
     val mainActivity = requireActivity() as MainActivity
@@ -58,6 +63,7 @@ class ApplicationsFragment: Fragment()
   {
     val view = inflater.inflate(R.layout.fragment_applications, container, false)
     rootView = view
+
 
     llTakenApps = view.findViewById(R.id.app_linear_layout)
     rvOpenApps = view.findViewById(R.id.rv_app_list)
@@ -73,34 +79,15 @@ class ApplicationsFragment: Fragment()
     rvOpenApps.addItemDecoration(DividerItemDecoration(context, DividerItemDecoration.VERTICAL))
     rvOpenApps.addItemDecoration(divider)
 
+    tvUserCannot = view.findViewById(R.id.tv_apps_cannot)
+    tvCommission = view.findViewById(R.id.tv_apps_commission)
+    btPayCommission = view.findViewById(R.id.bt_apps_pay_commission)
+
     vm.rootView = rootView
-    vm.doOnOpenAppsChange = {
-      val openApps = vm.openAppsLvdList.value
-      openApps?.let {
-        Log.i(TAG, "Open apps size is ${it.size}")
-        Log.i(TAG, "openApps is $it")
-        setTodayAndTomorrowApps(it)
-        showTomorrowApps = todayApps.isEmpty()
-        updateOpenAppsUI(it)
-      }
-    }
-    vm.doOnOpenAppsChange()
 
-    vm.doOnTakenAppsChange = {
-      val takenApps = vm.takenAppsLvdList.value
-      takenApps?.let {
-        Log.i(TAG, "Taken apps size is ${it.size}")
-        Log.i(TAG, "takenApps is $it")
-        updateTakenAppsUI(it)
-
-        if (it.isEmpty() && llTakenApps.visibility == View.VISIBLE)
-          llTakenApps.visibility = View.INVISIBLE
-
-        if (it.isNotEmpty() && llTakenApps.visibility == View.INVISIBLE)
-          llTakenApps.visibility = View.VISIBLE
-      }
-    }
-    vm.doOnTakenAppsChange()
+    doOnOpenAppsChange()
+    doOnTakenAppsChange()
+    doOnCommissionChange()
 
     // заявки считываются с сервера нашим бесконечным PollService'ом
     vm.serviceDoAction(Action.START)
@@ -156,6 +143,57 @@ class ApplicationsFragment: Fragment()
     rvOpenApps.adapter = getConcatOpenAdapter(openApps)
   }
 
+
+  private fun doOnCommissionChange() {
+    vm.doOnCommissionChange = {
+      val commission = vm.commissionLvd.value
+      commission?.let {
+        tvUserCannot.visibility = View.VISIBLE
+        tvCommission.visibility = View.VISIBLE
+        btPayCommission.visibility = View.VISIBLE
+        tvCommission.text = getString(R.string.apps_commission, commission)
+      }
+
+      if (commission == null) {
+        tvUserCannot.visibility = View.INVISIBLE
+        tvCommission.visibility = View.INVISIBLE
+        btPayCommission.visibility = View.INVISIBLE
+      }
+    }
+    vm.doOnCommissionChange()
+  }
+
+  private fun doOnTakenAppsChange() {
+    vm.doOnTakenAppsChange = {
+      val takenApps = vm.takenAppsLvdList.value
+      takenApps?.let {
+        Log.i(TAG, "Taken apps size is ${it.size}")
+        Log.i(TAG, "takenApps is $it")
+        updateTakenAppsUI(it)
+
+        if (it.isEmpty() && llTakenApps.visibility == View.VISIBLE)
+          llTakenApps.visibility = View.INVISIBLE
+
+        if (it.isNotEmpty() && llTakenApps.visibility == View.INVISIBLE)
+          llTakenApps.visibility = View.VISIBLE
+      }
+    }
+    vm.doOnTakenAppsChange()
+  }
+
+  private fun doOnOpenAppsChange() {
+    vm.doOnOpenAppsChange = {
+      val openApps = vm.openAppsLvdList.value
+      openApps?.let {
+        Log.i(TAG, "Open apps size is ${it.size}")
+        Log.i(TAG, "openApps is $it")
+        setTodayAndTomorrowApps(it)
+        showTomorrowApps = todayApps.isEmpty()
+        updateOpenAppsUI(it)
+      }
+    }
+    vm.doOnOpenAppsChange()
+  }
 
   private fun setSound(soundOff: Boolean, item: MenuItem, @DrawableRes iconRes: Int) {
     App.dbUser?.let { user->

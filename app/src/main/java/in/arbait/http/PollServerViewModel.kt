@@ -1,7 +1,6 @@
 package `in`.arbait.http
 
 import `in`.arbait.*
-import `in`.arbait.http.*
 import `in`.arbait.http.poll_service.*
 import `in`.arbait.http.items.ApplicationItem
 import `in`.arbait.http.response.*
@@ -32,11 +31,14 @@ class PollServerViewModel: ViewModel(), Serializable
   lateinit var rootView: View
   lateinit var doOnOpenAppsChange: () -> Unit
   lateinit var doOnTakenAppsChange: () -> Unit
+  lateinit var doOnCommissionChange: () -> Unit
 
   /* ******************************* */
 
   var pollService: PollService? = null
   var serviceIsBound: Boolean? = null
+
+  var commissionLvd: MutableLiveData<Int> = MutableLiveData()
 
   var openAppsLvdList: MutableLiveData<List<ApplicationItem>> = MutableLiveData()
   val openAppsLvdItems = mutableMapOf<Int, MutableLiveData<ApplicationItem>>()
@@ -57,9 +59,11 @@ class PollServerViewModel: ViewModel(), Serializable
         appsResponse = it.dataResponse
         openAppsLvdList = it.openAppsLvdList
         takenAppsLvdList = it.takenAppsLvdList
+        commissionLvd = it.commissionLvd
       }
       setAppsResponseObserver()
       setAppsObservers()
+      setCommissionObserver()
     }
 
     override fun onServiceDisconnected(arg0: ComponentName) {
@@ -129,12 +133,6 @@ class PollServerViewModel: ViewModel(), Serializable
     openAppsLvdList.observe(viewLifecycleOwner,
       Observer { openApps ->
         Log.i (TAG, "openApps list changed")
-        /*val prevApps = this@PollServerViewModel.openAppsLvdList.value
-        var goneApps = listOf<ApplicationItem>()
-        prevApps?.let {
-          // closed or deleted apps
-          goneApps = appsFromANotInB(it, openApps)
-        }*/
         setOpenAppsLvdItems(openApps)
         doOnOpenAppsChange()
       }
@@ -145,6 +143,15 @@ class PollServerViewModel: ViewModel(), Serializable
         Log.i (TAG, "takenApps list changed")
         setTakenAppsLvdItems(takenApps)
         doOnTakenAppsChange()
+      }
+    )
+  }
+
+  private fun setCommissionObserver() {
+    commissionLvd.observe(viewLifecycleOwner,
+      Observer {
+        Log.i (TAG, "commission changed")
+        doOnCommissionChange()
       }
     )
   }

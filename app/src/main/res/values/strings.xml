@@ -141,7 +141,7 @@
     <string name="reg_user_data_agreement">Нажимая кнопку Готово вы соглашаетесь на предоставление введенных данных</string>
     <string name="app_write_to_client">Написать</string>
     <string name="apps_cannot">Вы не можете брать заявки</string>
-    <string name="apps_commission">Комиссия</string>
+    <string name="apps_commission">Комиссия: %1d</string>
     <string name="apps_pay">Оплатить</string>
 
 </resources>

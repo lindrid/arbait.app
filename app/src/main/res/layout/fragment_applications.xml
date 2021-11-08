@@ -51,7 +51,7 @@
     </LinearLayout>
 
     <androidx.appcompat.widget.AppCompatTextView
-        android:id="@+id/gt_apps_cannot"
+        android:id="@+id/tv_apps_cannot"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:gravity="left"
@@ -59,11 +59,12 @@
         android:text="@string/apps_cannot"
         android:textColor="@color/red"
         android:textSize="20sp"
-        app:layout_constraintBottom_toTopOf="@+id/gt_apps_commission"
+        android:visibility="invisible"
+        app:layout_constraintBottom_toTopOf="@+id/tv_apps_commission"
         tools:layout_editor_absoluteX="2dp" />
 
     <androidx.appcompat.widget.AppCompatTextView
-        android:id="@+id/gt_apps_commission"
+        android:id="@+id/tv_apps_commission"
         android:layout_width="match_parent"
         android:layout_height="35dp"
         android:gravity="left"
@@ -71,14 +72,16 @@
         android:text="@string/apps_commission"
         android:textColor="@color/red"
         android:textSize="20sp"
+        android:visibility="invisible"
         app:layout_constraintBottom_toBottomOf="@+id/rv_app_list"
         tools:layout_editor_absoluteX="0dp" />
 
     <androidx.appcompat.widget.AppCompatButton
-        android:id="@+id/bt_pay_commission"
+        android:id="@+id/bt_apps_pay_commission"
         android:layout_width="wrap_content"
         android:layout_height="45dp"
         android:text="@string/apps_pay"
+        android:visibility="invisible"
         app:layout_constraintBottom_toBottomOf="@+id/rv_app_list"
         app:layout_constraintEnd_toEndOf="parent" />
 
