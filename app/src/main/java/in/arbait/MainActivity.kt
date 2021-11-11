@@ -1,5 +1,6 @@
 package `in`.arbait
 
+import `in`.arbait.commission.CommissionFragment
 import `in`.arbait.database.User
 import `in`.arbait.http.PollServerViewModel
 import `in`.arbait.http.poll_service.APP_NO_ID
@@ -99,6 +100,10 @@ class MainActivity : AppCompatActivity()
       }
       "Applications" -> ApplicationsFragment()
       "Login" -> LoginFragment()
+      "Commission" -> {
+        val commission = args.getInt(COMMISSION_ARG)
+        CommissionFragment(commission)
+      }
        else -> RegistrationFragment()
     }
 

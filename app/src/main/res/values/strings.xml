@@ -5,6 +5,8 @@
     <string name="yes">Да</string>
     <string name="no">Нет</string>
 
+    <string name="copy">Копировать</string>
+
     <string name="unknown_server_error">Ошибка от сервера: %1$s</string>
     <string name="internet_is_not_available">Соединение с интернетом отсутствует!</string>
     <string name="system_error">Произошла системная ошибка: %1$s</string>
@@ -20,6 +22,8 @@
     <string name="collapse">Свернуть</string>
 
     <string name="done">Готово</string>
+    <string name="back">Назад</string>
+
 
     <string name="empty_phone">Укажите номер телефона!</string>
     <string name="wrong_phone">Задайте корректный российский номер телефона!</string>
@@ -62,6 +66,7 @@
     <string name="reg_wrong_last_name">Фамилия должна состоять ТОЛЬКО из русских букв, пробелы не допускаются</string>
     <string name="reg_wrong_first_name_length">Имя должно быть не короче %1$d символов и не длиннее %2$d</string>
     <string name="reg_wrong_last_name_length">Фамиля должна быть не короче %1$d символов и не длиннее %2$d</string>
+    <string name="reg_user_data_agreement">Нажимая кнопку Готово вы соглашаетесь на предоставление введенных данных</string>
 
     <!-- Фрагмент подтвержденя телефона -->
     <string name="phone_conf_tv_incoming_call">Нажмите кнопку "Получить код" и к вам поступит звонок.
@@ -85,8 +90,10 @@
     <string name="apps_closed">Закрытые</string>
     <string name="apps_finished">Завершенные</string>
     <string name="apps_action_bar_title">Заявки</string>
-
-    <string name="panel_title">Взятые заявки</string>
+    <string name="apps_cannot">Вы не можете брать заявки</string>
+    <string name="apps_commission">Комиссия: %1d</string>
+    <string name="apps_pay">Оплатить</string>
+    <string name="apps_panel_title">Взятые заявки</string>
 
     <!-- Poll service -->
     <string name="poll_service_channel_id">Поиск заявок</string>
@@ -106,7 +113,6 @@
     <string name="app_enroll">Записаться</string>
     <string name="app_refuse">Отказаться</string>
     <string name="app_call_client">Позвонить заказчику</string>
-    <string name="app_back">Назад</string>
     <string name="app_action_bar_title">Заявка</string>
     <string name="app_you_are_enrolled">Вы записаны</string>
     <string name="app_no_card">без карты</string>
@@ -118,6 +124,8 @@
 
     <string name="app_payed"><![CDATA[Заявка завершена <br> Часов отработано: %1$d <br> Денег получено: %2$d <br> Комиссия: %3$d]]></string>
     <string name="app_is_gone">Заявка собрана или удалена</string>
+    <string name="app_you_were_deleted">Вы были удалены с заявки (или сама заявка была удалена)</string>
+    <string name="app_write_to_client">Написать</string>
 
     <!-- LoginFragment -->
     <string name="log_login">Войти</string>
@@ -137,11 +145,25 @@
 
     <!-- ApplicationRefuseDialog -->
     <string name="df_are_you_sure">Вы уверены?</string>
-    <string name="app_you_were_deleted">Вы были удалены с заявки (или сама заявка была удалена)</string>
-    <string name="reg_user_data_agreement">Нажимая кнопку Готово вы соглашаетесь на предоставление введенных данных</string>
-    <string name="app_write_to_client">Написать</string>
-    <string name="apps_cannot">Вы не можете брать заявки</string>
-    <string name="apps_commission">Комиссия: %1d</string>
-    <string name="apps_pay">Оплатить</string>
+
+    <!-- CommissionFragment -->
+    <string name="com_sberbank">На сбербанк</string>
+    <string name="com_balance">На баланс</string>
+
+    <!-- SberbankFragment -->
+    <string name="comsber_tel">Телефон, привязанный к карте: %s</string>
+    <string name="comsber_card">Номер карты: %s</string>
+    <string name="comsber_initials">Инициалы: Людмила Николаевна Ф.</string>
+    <string name="comsber_sber_transfer">Перевод без комиссии: %s</string>
+    <string name="comsber_bank_transfer">С комиссией (другой банк): %s</string>
+    <string name="comsber_transfer">После перевода нажмите кнопку \"Оплатил\". Не нажимайте, если вы не оплатили, оплату проверяет человек</string>
+    <string name="comsber_payed">Оплатил</string>
+
+    <!-- BalanceFragment -->
+    <string name="combal_desc">Пополнить баланс мегафона</string>
+    <string name="combal_tel">Номер телефона: %s</string>
+    <string name="combal_without_commission">Пополнение без комиссии: %s</string>
+    <string name="combal_atm">С комиссией (банкомат): %s</string>
+    <string name="combal_fill_in">После пополнения нажмите кнопку \"Оплатил\". Не нажимайте, если вы не оплатили, оплату проверяет человек</string>
 
 </resources>

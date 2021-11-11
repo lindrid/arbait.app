@@ -25,6 +25,9 @@ const val DATE_FORMAT = "yyyy-MM-dd"
 const val DATE_TIME_FORMAT = "yyyy-MM-dd HH:mm:ss"
 const val APP_ID_ARG = "applicationId"
 const val APPLICATION_FRAGMENT_NAME = "Application"
+const val COMMISSION_FRAGMENT_NAME = "Commission"
+
+const val COMMISSION_ARG = "commission"
 
 private const val TAG = "ApplicationsFragment"
 val OPEN_HEADER_COLOR = Color.parseColor("#2E8B57")
@@ -94,6 +97,7 @@ class ApplicationsFragment: Fragment()
     vm.bindService()
 
     setHasOptionsMenu(true)
+    setBtPayCommissionClickListener()
 
     return view
   }
@@ -143,6 +147,18 @@ class ApplicationsFragment: Fragment()
     rvOpenApps.adapter = getConcatOpenAdapter(openApps)
   }
 
+
+  private fun setBtPayCommissionClickListener() {
+    btPayCommission.setOnClickListener {
+      vm.commissionLvd.value?.let { commission ->
+        val args = Bundle().apply {
+          putInt(COMMISSION_ARG, commission)
+        }
+        val mainActivity = context as MainActivity
+        mainActivity.replaceOnFragment(COMMISSION_FRAGMENT_NAME, args)
+      }
+    }
+  }
 
   private fun doOnCommissionChange() {
     vm.doOnCommissionChange = {
