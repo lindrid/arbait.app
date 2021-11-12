@@ -1,6 +1,8 @@
 package `in`.arbait
 
 import `in`.arbait.http.items.ApplicationItem
+import android.content.ClipData
+import android.content.ClipboardManager
 import android.content.Context
 import android.content.res.ColorStateList
 import android.graphics.Color
@@ -9,6 +11,7 @@ import android.os.Build
 import android.util.Log
 import android.view.View
 import android.widget.EditText
+import androidx.core.content.ContextCompat
 import com.google.i18n.phonenumbers.NumberParseException
 import com.google.i18n.phonenumbers.PhoneNumberUtil
 import com.google.i18n.phonenumbers.Phonenumber
@@ -111,6 +114,11 @@ fun phoneNumberIsValid (phoneNumber: String?, countryCode: String?, logTag: Stri
     Log.i (logTag, "NumberParseException was thrown: $e")
   }
   return false
+}
+
+fun copyToClipboard(text: CharSequence, context: Context) {
+  val clipboard = ContextCompat.getSystemService(context, ClipboardManager::class.java)
+  clipboard?.setPrimaryClip(ClipData.newPlainText("", text))
 }
 
 fun appsFromANotInB (a: List<ApplicationItem>, b: List<ApplicationItem>): List<ApplicationItem> {

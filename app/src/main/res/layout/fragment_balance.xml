@@ -81,7 +81,7 @@
         app:layout_constraintTop_toBottomOf="@+id/tv_combal_desc" />
 
     <androidx.appcompat.widget.AppCompatButton
-        android:id="@+id/bt_copy"
+        android:id="@+id/bt_combal_copy"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="15dp"

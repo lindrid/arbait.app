@@ -2,6 +2,7 @@ package `in`.arbait.commission
 
 import `in`.arbait.MainActivity
 import `in`.arbait.R
+import `in`.arbait.copyToClipboard
 import android.os.Bundle
 import android.view.*
 import androidx.appcompat.widget.AppCompatButton
@@ -16,6 +17,8 @@ class BalanceFragment(private val commission: Int): Fragment()
   private lateinit var tvTel: AppCompatTextView
   private lateinit var tvPayWithoutCommission: AppCompatTextView
   private lateinit var tvPayInAtm: AppCompatTextView
+
+  private lateinit var btCopyTel: AppCompatButton
   private lateinit var btPayed: AppCompatButton
   private lateinit var btBack: AppCompatButton
 
@@ -26,12 +29,6 @@ class BalanceFragment(private val commission: Int): Fragment()
     rootView = view
 
     setViews(view)
-
-    btBack.setOnClickListener {
-      val mainActivity = context as MainActivity
-      mainActivity.replaceOnFragment("Applications")
-    }
-
     setHasOptionsMenu(true)
 
     return view
@@ -41,6 +38,8 @@ class BalanceFragment(private val commission: Int): Fragment()
     tvTel = view.findViewById(R.id.tv_combal_tel)
     tvPayWithoutCommission = view.findViewById(R.id.tv_combal_without_commission)
     tvPayInAtm = view.findViewById(R.id.tv_combal_atm)
+
+    btCopyTel = view.findViewById(R.id.bt_combal_copy)
     btPayed = view.findViewById(R.id.bt_combal_payed)
     btBack = view.findViewById(R.id.bt_combal_back)
 
@@ -51,5 +50,16 @@ class BalanceFragment(private val commission: Int): Fragment()
 
     val s2 = "${commission + 50} р."
     tvPayInAtm.text = getString(R.string.combal_atm, s2)
+
+    btBack.setOnClickListener {
+      val mainActivity = context as MainActivity
+      mainActivity.replaceOnFragment("Applications")
+    }
+
+    btCopyTel.setOnClickListener {
+      context?.let {
+        copyToClipboard(TEL_NUMBER, it)
+      }
+    }
   }
 }
