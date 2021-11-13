@@ -156,7 +156,8 @@
     <string name="comsber_initials">Инициалы: Людмила Николаевна Ф.</string>
     <string name="comsber_sber_transfer">Перевод без комиссии: %s</string>
     <string name="comsber_bank_transfer">С комиссией (другой банк): %s</string>
-    <string name="comsber_transfer">После перевода нажмите кнопку \"Оплатил\". Не нажимайте, если вы не оплатили, оплату проверяет человек</string>
+    <string name="comsber_transfer">После перевода нажмите кнопку \"Оплатил\" и укажите время операции</string>
+    <string name="comsber_time">Запомните/запишите время операции, указанное в чеке: час:минута:секунда</string>
     <string name="comsber_payed">Оплатил</string>
 
     <!-- BalanceFragment -->
@@ -164,6 +165,7 @@
     <string name="combal_tel">Номер телефона: %s</string>
     <string name="combal_without_commission">Пополнение без комиссии: %s</string>
     <string name="combal_atm">С комиссией (банкомат): %s</string>
-    <string name="combal_fill_in">После пополнения нажмите кнопку \"Оплатил\". Не нажимайте, если вы не оплатили, оплату проверяет человек</string>
+    <string name="combal_fill_in">После пополнения нажмите кнопку \"Оплатил\" и укажите время операции</string>
+    <string name="combal_time">Запомните/запишите время операции, указанное в чеке: час:минута:секунда</string>
 
 </resources>
