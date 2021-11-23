@@ -19,6 +19,9 @@ data class User (
   var notificationsOff: Boolean = false,
   var soundOff: Boolean = false,
 
+  var sberFio: String = "",
+  var anotherBank4Digits: String = "",
+
   var createdAt: Date = Date(),
   var updatedAt: Date = Date(),
 ): Serializable {}

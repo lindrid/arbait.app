@@ -9,9 +9,11 @@ import androidx.appcompat.widget.AppCompatButton
 import androidx.appcompat.widget.AppCompatTextView
 import androidx.fragment.app.Fragment
 
-private const val TAG = "CommissionFragment"
-const val TEL_NUMBER = "+79240078897"
-const val CARD_NUMBER = "4232 5000 3456 7890"
+const val SBER_TEL_NUMBER = "+79240078897"
+const val SBER_CARD_NUMBER = "4232 5000 3456 7890"
+const val SBER_PAY_TYPE = 0
+
+private const val TAG = "SberbankFragment"
 
 class SberbankFragment(private val commission: Int): Fragment()
 {
@@ -49,14 +51,23 @@ class SberbankFragment(private val commission: Int): Fragment()
     btPayed = view.findViewById(R.id.bt_comsber_payed)
     btBack = view.findViewById(R.id.bt_comsber_back)
 
-    tvTel.text = getString(R.string.comsber_tel, TEL_NUMBER)
-    tvCard.text = getString(R.string.comsber_card, CARD_NUMBER)
+    tvTel.text = getString(R.string.comsber_tel, SBER_TEL_NUMBER)
+    tvCard.text = getString(R.string.comsber_card, SBER_CARD_NUMBER)
 
     val s1 = "$commission р."
     tvSberTransfer.text = getString(R.string.comsber_sber_transfer, s1)
 
     val s2 = "${commission + 30} р."
     tvBankTransfer.text = getString(R.string.comsber_bank_transfer, s2)
+
+    btPayed.setOnClickListener {
+      val mainActivity = context as MainActivity
+      val args = Bundle().apply {
+        putInt(COMMISSION_ARG, commission)
+        putInt(PAY_TYPE_ARG, SBER_PAY_TYPE)
+      }
+      mainActivity.replaceOnFragment("PayConfirmation", args)
+    }
 
     btBack.setOnClickListener {
       val mainActivity = context as MainActivity
@@ -65,13 +76,13 @@ class SberbankFragment(private val commission: Int): Fragment()
 
     btCopyTel.setOnClickListener {
       context?.let {
-        copyToClipboard(TEL_NUMBER, it)
+        copyToClipboard(SBER_TEL_NUMBER, it)
       }
     }
 
     btCopyCard.setOnClickListener {
       context?.let {
-        copyToClipboard(CARD_NUMBER, it)
+        copyToClipboard(SBER_CARD_NUMBER, it)
       }
     }
   }

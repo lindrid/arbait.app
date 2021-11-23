@@ -1,6 +1,7 @@
 package `in`.arbait.http
 
 import `in`.arbait.http.response.ApplicationResponse
+import `in`.arbait.http.response.Response
 import `in`.arbait.http.response.ServiceDataResponse
 import `in`.arbait.http.response.UserResponse
 import retrofit2.Call
@@ -46,4 +47,10 @@ interface ServerApi {
   fun getData (@HeaderMap headers: Map<String, String>,
                @Path("v") version: String,
                @Path("c") cache: Int): Call<ServiceDataResponse>
+
+  @POST("/api/commission/confirm/pay")
+  fun commissionPayed ( @HeaderMap headers: Map<String, String>,
+                        @Query("str") str: String,
+                        @Query("commission") commission: Int,
+                        @Query("pay_type") payType: Int): Call<String>
 }

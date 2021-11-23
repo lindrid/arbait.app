@@ -11,6 +11,9 @@ import androidx.fragment.app.Fragment
 
 private const val TAG = "CommissionFragment"
 
+const val BALANCE_TEL_NUMBER = "+79240078897"
+const val BALANCE_PAY_TYPE = 1
+
 class BalanceFragment(private val commission: Int): Fragment()
 {
   private lateinit var rootView: View
@@ -43,13 +46,22 @@ class BalanceFragment(private val commission: Int): Fragment()
     btPayed = view.findViewById(R.id.bt_combal_payed)
     btBack = view.findViewById(R.id.bt_combal_back)
 
-    tvTel.text = getString(R.string.combal_tel, "+79240078897")
+    tvTel.text = getString(R.string.combal_tel, BALANCE_TEL_NUMBER)
 
     val s1 = "$commission р."
     tvPayWithoutCommission.text = getString(R.string.combal_without_commission, s1)
 
     val s2 = "${commission + 50} р."
     tvPayInAtm.text = getString(R.string.combal_atm, s2)
+
+    btPayed.setOnClickListener {
+      val mainActivity = context as MainActivity
+      val args = Bundle().apply {
+        putInt(COMMISSION_ARG, commission)
+        putInt(PAY_TYPE_ARG, BALANCE_PAY_TYPE)
+      }
+      mainActivity.replaceOnFragment("PayConfirmation", args)
+    }
 
     btBack.setOnClickListener {
       val mainActivity = context as MainActivity
@@ -58,7 +70,7 @@ class BalanceFragment(private val commission: Int): Fragment()
 
     btCopyTel.setOnClickListener {
       context?.let {
-        copyToClipboard(TEL_NUMBER, it)
+        copyToClipboard(SBER_TEL_NUMBER, it)
       }
     }
   }

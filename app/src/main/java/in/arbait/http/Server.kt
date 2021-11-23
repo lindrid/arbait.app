@@ -89,6 +89,14 @@ class Server (private val context: Context)
     )
   }
 
+  fun commissionPayed (s: String, commission: Int, payType: Int,
+                       onResult: (`in`.arbait.http.response.Response) -> Unit)
+  {
+    serverApi.commissionPayed(headers, s, commission, payType).enqueue(
+      getCallbackObjectShort("commissionPayed", onResult)
+    )
+  }
+
   fun changeDebitCard ( appId: Int, debitCardId: Int?, debitCard: String?,
                         onResult: (ApplicationResponse) -> Unit)
   {

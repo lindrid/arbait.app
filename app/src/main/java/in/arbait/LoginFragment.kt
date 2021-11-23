@@ -136,8 +136,7 @@ class LoginFragment: Fragment()
   {
     override fun doOnServerOkResult() {
       if (App.dbUser == null) {
-        App.dbUser = User(0, "", true, isConfirmed = false, false, false,
-        false, false, false, Date())
+        App.dbUser = User(0, "")
         App.dbUser?.let { user ->
           App.repository.addUser(user)
         }

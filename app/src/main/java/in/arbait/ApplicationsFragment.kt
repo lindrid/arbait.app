@@ -1,5 +1,6 @@
 package `in`.arbait
 
+import `in`.arbait.commission.COMMISSION_ARG
 import `in`.arbait.http.PollServerViewModel
 import `in`.arbait.http.poll_service.*
 import `in`.arbait.http.items.ApplicationItem
@@ -26,10 +27,10 @@ const val DATE_TIME_FORMAT = "yyyy-MM-dd HH:mm:ss"
 const val APP_ID_ARG = "applicationId"
 const val APPLICATION_FRAGMENT_NAME = "Application"
 const val COMMISSION_FRAGMENT_NAME = "Commission"
+const val MAIN_HEADER_TEXT_SIZE = 28f
+const val HEADER_TEXT_SIZE = 24f
+const val TEXT_SIZE = 18f
 
-const val COMMISSION_ARG = "commission"
-
-private const val TAG = "ApplicationsFragment"
 val OPEN_HEADER_COLOR = Color.parseColor("#2E8B57")
 
 /* Headers and messages (those that are instead of applications) */
@@ -37,9 +38,7 @@ private const val MAIN_HEADER = 0
 private const val DAY_HEADER = 1
 private const val TEXT = 2
 
-const val MAIN_HEADER_TEXT_SIZE = 28f
-const val HEADER_TEXT_SIZE = 24f
-const val TEXT_SIZE = 18f
+private const val TAG = "ApplicationsFragment"
 
 class ApplicationsFragment: Fragment()
 {

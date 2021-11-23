@@ -28,6 +28,9 @@
     <string name="empty_phone">Укажите номер телефона!</string>
     <string name="wrong_phone">Задайте корректный российский номер телефона!</string>
 
+    <string name="sber">Сбербанк</string>
+    <string name="another_bank">Другой банк</string>
+
     <!-- Месяцы -->
     <string name="month_jan">янв</string>
     <string name="month_feb">фев</string>
@@ -153,11 +156,11 @@
     <!-- SberbankFragment -->
     <string name="comsber_tel">Телефон, привязанный к карте: %s</string>
     <string name="comsber_card">Номер карты: %s</string>
-    <string name="comsber_initials">Инициалы: Людмила Николаевна Ф.</string>
+    <string name="comsber_initials">Получатель: Людмила Николаевна Ф.</string>
     <string name="comsber_sber_transfer">Перевод без комиссии: %s</string>
     <string name="comsber_bank_transfer">С комиссией (другой банк): %s</string>
-    <string name="comsber_transfer">После перевода нажмите кнопку \"Оплатил\" и укажите время операции</string>
-    <string name="comsber_time">Запомните/запишите время операции, указанное в чеке: час:минута:секунда</string>
+    <string name="comsber_transfer">После перевода нажмите кнопку \"Оплатил\",
+        выберите банк и укажите ФИО отправителя или последние 4 цифры карты (если перевод с другого банка)</string>
     <string name="comsber_payed">Оплатил</string>
 
     <!-- BalanceFragment -->
@@ -167,5 +170,14 @@
     <string name="combal_atm">С комиссией (банкомат): %s</string>
     <string name="combal_fill_in">После пополнения нажмите кнопку \"Оплатил\" и укажите время операции</string>
     <string name="combal_time">Запомните/запишите время операции, указанное в чеке: час:минута:секунда</string>
+    <string name="conf_main">Подтверждение оплаты</string>
+    <string name="conf_date">Дата</string>
+    <string name="conf_confirm">Подтвердить</string>
+    <string name="conf_time">Час:минута:секунда</string>
+    <string name="conf_fio">Имя Отчество Ф.</string>
+    <string name="conf_card">последние 4 цифры</string>
+    <string name="conf_empty_fio">Введите Имя Отчество Фамилию (сокращенно)</string>
+    <string name="conf_wrong_card">Введите последние 4 цифры вашей карты</string>
+    <string name="conf_wrong_time">Введите час, минуту, секунду как указано в чеке. Пример, 02:15:09</string>
 
 </resources>

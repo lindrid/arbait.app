@@ -1,6 +1,9 @@
 package `in`.arbait
 
+import `in`.arbait.commission.COMMISSION_ARG
 import `in`.arbait.commission.CommissionFragment
+import `in`.arbait.commission.ConfirmationFragment
+import `in`.arbait.commission.PAY_TYPE_ARG
 import `in`.arbait.database.User
 import `in`.arbait.http.PollServerViewModel
 import `in`.arbait.http.poll_service.APP_NO_ID
@@ -68,15 +71,6 @@ class MainActivity : AppCompatActivity()
           if (s == "thisIsNotificationIntent") {
             fragment = ApplicationsFragment()
           }
-          /*val appId = intent.getIntExtra(APP_ID_ARG, APP_NO_ID)
-          val notificationWasTapped = appId != APP_NO_ID
-
-          if (notificationWasTapped) {
-            fragment = ApplicationFragment(appId)
-            pollServerViewModel.rootView = View(baseContext)
-            pollServerViewModel.serviceDoAction(Action.START)
-            pollServerViewModel.bindService()
-          }*/
         }
 
         supportFragmentManager
@@ -104,7 +98,12 @@ class MainActivity : AppCompatActivity()
         val commission = args.getInt(COMMISSION_ARG)
         CommissionFragment(commission)
       }
-       else -> RegistrationFragment()
+      "PayConfirmation" -> {
+        val commission = args.getInt(COMMISSION_ARG)
+        val payType = args.getInt(PAY_TYPE_ARG)
+        ConfirmationFragment(commission, payType)
+      }
+      else -> RegistrationFragment()
     }
 
     supportFragmentManager
