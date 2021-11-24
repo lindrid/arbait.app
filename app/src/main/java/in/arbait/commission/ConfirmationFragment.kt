@@ -40,7 +40,6 @@ class ConfirmationFragment( private val commission: Int,
   private lateinit var server: Server
 
   private val lvdBankPos = MutableLiveData<Int>(0)
-  private var btConfirmIsClicked = false
 
   override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
     savedInstanceState: Bundle?): View?

@@ -31,7 +31,6 @@ class PollServerViewModel: ViewModel(), Serializable
   lateinit var rootView: View
   lateinit var doOnOpenAppsChange: () -> Unit
   lateinit var doOnTakenAppsChange: () -> Unit
-  lateinit var doOnCommissionChange: () -> Unit
 
   /* ******************************* */
 
@@ -59,11 +58,9 @@ class PollServerViewModel: ViewModel(), Serializable
         appsResponse = it.dataResponse
         openAppsLvdList = it.openAppsLvdList
         takenAppsLvdList = it.takenAppsLvdList
-        commissionLvd = it.commissionLvd
       }
       setAppsResponseObserver()
       setAppsObservers()
-      setCommissionObserver()
     }
 
     override fun onServiceDisconnected(arg0: ComponentName) {
@@ -147,15 +144,6 @@ class PollServerViewModel: ViewModel(), Serializable
     )
   }
 
-  private fun setCommissionObserver() {
-    commissionLvd.observe(viewLifecycleOwner,
-      Observer {
-        Log.i (TAG, "commission changed")
-        doOnCommissionChange()
-      }
-    )
-  }
-
 
   private inner class PollServerReaction (response: Response):
     ReactionOnResponse (TAG, context, rootView, response)
@@ -221,5 +209,37 @@ class PollServerViewModel: ViewModel(), Serializable
         takenAppsLvdItems[appId]?.value = null
       }
     }*/
+  }
+
+  fun calcCommissions(takenApps: List<ApplicationItem>): Pair<Int, Int> {
+    var commission = 0
+    var notConfirmedCommission = 0
+
+    App.userItem?.let { user ->
+      for (i in takenApps.indices) {
+        takenApps[i].porters?.let { porters ->
+          for (j in porters.indices) {
+            if (user.id == porters[j].user.id) {
+              val pivot = porters[j].pivot
+              if (!pivot.payed) {
+                val add =
+                  if (pivot.residue > 0)
+                    pivot.residue
+                  else
+                    pivot.commission
+
+                commission += add
+              }
+              else if (!pivot.confirmed) {
+                notConfirmedCommission += pivot.commission
+              }
+              break
+            }
+          }
+        }
+      }
+    }
+
+    return Pair(commission, notConfirmedCommission)
   }
 }

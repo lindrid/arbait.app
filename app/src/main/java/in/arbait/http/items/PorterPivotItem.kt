@@ -9,7 +9,9 @@ data class PorterPivotItem (
   @SerializedName("work_hours") val workHours: Int,
   @SerializedName("money") val money: Int,
   @SerializedName("commission") val commission: Int,
-  @SerializedName("porter_payed") val payed: Boolean
+  @SerializedName("residue") val residue: Int,
+  @SerializedName("porter_payed") val payed: Boolean,
+  @SerializedName("pay_is_confirmed") val confirmed: Boolean
 ): Serializable {}
 
 /*

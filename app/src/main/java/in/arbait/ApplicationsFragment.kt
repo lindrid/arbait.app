@@ -15,6 +15,7 @@ import androidx.annotation.DrawableRes
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.AppCompatButton
 import androidx.appcompat.widget.AppCompatTextView
+import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -52,6 +53,7 @@ class ApplicationsFragment: Fragment()
   private lateinit var llTakenApps: LinearLayout
   private lateinit var tvUserCannot: AppCompatTextView
   private lateinit var tvCommission: AppCompatTextView
+  private lateinit var tvCommissionConfirmation: AppCompatTextView
   private lateinit var btPayCommission: AppCompatButton
 
   private val vm: PollServerViewModel by lazy {
@@ -65,7 +67,6 @@ class ApplicationsFragment: Fragment()
   {
     val view = inflater.inflate(R.layout.fragment_applications, container, false)
     rootView = view
-
 
     llTakenApps = view.findViewById(R.id.app_linear_layout)
     rvOpenApps = view.findViewById(R.id.rv_app_list)
@@ -83,13 +84,13 @@ class ApplicationsFragment: Fragment()
 
     tvUserCannot = view.findViewById(R.id.tv_apps_cannot)
     tvCommission = view.findViewById(R.id.tv_apps_commission)
+    tvCommissionConfirmation = view.findViewById(R.id.tv_apps_commission_confirmation)
     btPayCommission = view.findViewById(R.id.bt_apps_pay_commission)
 
     vm.rootView = rootView
 
     doOnOpenAppsChange()
     doOnTakenAppsChange()
-    doOnCommissionChange()
 
     // заявки считываются с сервера нашим бесконечным PollService'ом
     vm.serviceDoAction(Action.START)
@@ -159,23 +160,70 @@ class ApplicationsFragment: Fragment()
     }
   }
 
-  private fun doOnCommissionChange() {
-    vm.doOnCommissionChange = {
-      val commission = vm.commissionLvd.value
-      commission?.let {
-        tvUserCannot.visibility = View.VISIBLE
-        tvCommission.visibility = View.VISIBLE
-        btPayCommission.visibility = View.VISIBLE
-        tvCommission.text = getString(R.string.apps_commission, commission)
-      }
+  private fun updateCommissionUI (takenApps: List<ApplicationItem>) {
+    val commissions = vm.calcCommissions(takenApps)
+    val commission = commissions.first
+    val notConfirmedCommission = commissions.second
 
-      if (commission == null) {
-        tvUserCannot.visibility = View.INVISIBLE
-        tvCommission.visibility = View.INVISIBLE
-        btPayCommission.visibility = View.INVISIBLE
+    if (commission == 0) {
+      setCommissionUiVisibility (View.INVISIBLE, View.INVISIBLE,
+        View.INVISIBLE, View.INVISIBLE)
+
+      if (notConfirmedCommission > 0) {
+        tvCommissionConfirmation.text = getString(R.string.apps_commission_confirmation, notConfirmedCommission)
+        setCommissionConfirmationToTakenAppsTop()
+        setUserCannotToConfirmationTop()
+        tvUserCannot.visibility = View.VISIBLE
+        tvCommissionConfirmation.visibility = View.VISIBLE
       }
     }
-    vm.doOnCommissionChange()
+    else {
+      tvCommission.text = getString(R.string.apps_commission, commission)
+      setCommissionUiVisibility (View.VISIBLE, View.VISIBLE,
+        View.VISIBLE, View.VISIBLE)
+
+      if (notConfirmedCommission > 0) {
+        setUserCannotToConfirmationTop()
+        setCommissionConfirmationToCommissionTop()
+      }
+      else {
+        setUserCannotToCommissionTop()
+        tvCommissionConfirmation.visibility = View.INVISIBLE
+      }
+    }
+  }
+
+  private fun setUserCannotToCommissionTop() {
+    val lp = tvUserCannot.layoutParams as ConstraintLayout.LayoutParams
+    lp.bottomToTop = tvCommission.id
+    tvUserCannot.layoutParams = lp
+  }
+
+  private fun setUserCannotToConfirmationTop() {
+    val lp = tvUserCannot.layoutParams as ConstraintLayout.LayoutParams
+    lp.bottomToTop = tvCommissionConfirmation.id
+    tvUserCannot.layoutParams = lp
+  }
+
+  private fun setCommissionConfirmationToCommissionTop() {
+    val lp = tvCommissionConfirmation.layoutParams as ConstraintLayout.LayoutParams
+    lp.bottomToTop = tvCommission.id
+    tvCommissionConfirmation.layoutParams = lp
+  }
+
+  private fun setCommissionConfirmationToTakenAppsTop() {
+    val lp = tvCommissionConfirmation.layoutParams as ConstraintLayout.LayoutParams
+    lp.bottomToTop = llTakenApps.id
+    tvCommissionConfirmation.layoutParams = lp
+  }
+
+  private fun setCommissionUiVisibility(userCantVis: Int, commissionVis: Int,
+                                        commConfirmationVis: Int, btPayVis: Int)
+  {
+    tvUserCannot.visibility = userCantVis
+    tvCommission.visibility = commissionVis
+    tvCommissionConfirmation.visibility = commConfirmationVis
+    btPayCommission.visibility = btPayVis
   }
 
   private fun doOnTakenAppsChange() {
@@ -185,6 +233,7 @@ class ApplicationsFragment: Fragment()
         Log.i(TAG, "Taken apps size is ${it.size}")
         Log.i(TAG, "takenApps is $it")
         updateTakenAppsUI(it)
+        updateCommissionUI(it)
 
         if (it.isEmpty() && llTakenApps.visibility == View.VISIBLE)
           llTakenApps.visibility = View.INVISIBLE

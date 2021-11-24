@@ -97,6 +97,7 @@
     <string name="apps_commission">Комиссия: %1d</string>
     <string name="apps_pay">Оплатить</string>
     <string name="apps_panel_title">Взятые заявки</string>
+    <string name="apps_commission_confirmation">Комиссия: %1d ...подтверждение...</string>
 
     <!-- Poll service -->
     <string name="poll_service_channel_id">Поиск заявок</string>

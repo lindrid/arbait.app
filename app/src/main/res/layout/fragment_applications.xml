@@ -64,6 +64,19 @@
         tools:layout_editor_absoluteX="2dp" />
 
     <androidx.appcompat.widget.AppCompatTextView
+        android:id="@+id/tv_apps_commission_confirmation"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="left"
+        android:paddingLeft="5dp"
+        android:text="@string/apps_cannot"
+        android:textColor="@color/red"
+        android:textSize="20sp"
+        android:visibility="invisible"
+        app:layout_constraintBottom_toTopOf="@+id/tv_apps_commission"
+        tools:layout_editor_absoluteX="16dp" />
+
+    <androidx.appcompat.widget.AppCompatTextView
         android:id="@+id/tv_apps_commission"
         android:layout_width="match_parent"
         android:layout_height="35dp"
