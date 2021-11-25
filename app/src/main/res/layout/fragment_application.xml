@@ -36,6 +36,36 @@
                 app:layout_constraintTop_toTopOf="parent" />
 
             <androidx.appcompat.widget.AppCompatTextView
+                android:id="@+id/tv_app_status"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/app_you_are_enrolled"
+                android:textAlignment="center"
+                android:textColor="@color/royalblue"
+                android:textSize="25sp"
+                android:textStyle="bold"
+                android:visibility="invisible"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintHorizontal_bias="0.502"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/tv_app_enrolled" />
+
+            <androidx.appcompat.widget.AppCompatTextView
+                android:id="@+id/tv_app_status_commission"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/app_you_are_enrolled"
+                android:textAlignment="center"
+                android:textColor="@color/red"
+                android:textSize="25sp"
+                android:textStyle="bold"
+                android:visibility="invisible"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintHorizontal_bias="0.503"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/tv_app_status" />
+
+            <androidx.appcompat.widget.AppCompatTextView
                 android:id="@+id/tv_app_address"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
@@ -137,6 +167,16 @@
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@+id/tv_app_porters" />
 
+            <androidx.appcompat.widget.AppCompatButton
+                android:id="@+id/bt_app_pay"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/pay"
+                android:visibility="invisible"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/tv_app_status_commission" />
+
         </androidx.constraintlayout.widget.ConstraintLayout>
         >
 
@@ -170,10 +210,10 @@
         android:text="@string/app_call_client"
         app:layout_constraintBottom_toTopOf="@+id/bt_app_enroll_refuse"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toStartOf="@+id/bt_client_whatsapp" />
+        app:layout_constraintEnd_toStartOf="@+id/bt_app_client_whatsapp" />
 
     <androidx.appcompat.widget.AppCompatButton
-        android:id="@+id/bt_client_whatsapp"
+        android:id="@+id/bt_app_client_whatsapp"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginBottom="20dp"

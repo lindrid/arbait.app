@@ -24,6 +24,7 @@
     <string name="done">Готово</string>
     <string name="back">Назад</string>
 
+    <string name="pay">Оплатить</string>
 
     <string name="empty_phone">Укажите номер телефона!</string>
     <string name="wrong_phone">Задайте корректный российский номер телефона!</string>
@@ -95,9 +96,8 @@
     <string name="apps_action_bar_title">Заявки</string>
     <string name="apps_cannot">Вы не можете брать заявки</string>
     <string name="apps_commission">Комиссия: %1d</string>
-    <string name="apps_pay">Оплатить</string>
     <string name="apps_panel_title">Взятые заявки</string>
-    <string name="apps_commission_confirmation">Комиссия: %1d ...подтверждение...</string>
+    <string name="apps_commission_confirmation">Комиссия: %1d, подтверждение...</string>
 
     <!-- Poll service -->
     <string name="poll_service_channel_id">Поиск заявок</string>
@@ -126,7 +126,11 @@
     <string name="app_could_not_enroll_cause_refuses">Нельзя записаться: частая запись/отмена заявок</string>
     <string name="app_could_not_enroll_cause_unknown">Нельзя записаться: неизвестная проблема</string>
 
-    <string name="app_payed"><![CDATA[Заявка завершена <br> Часов отработано: %1$d <br> Денег получено: %2$d <br> Комиссия: %3$d]]></string>
+    <string name="app_end">Заявка завершена</string>
+    <string name="app_status"><![CDATA[Часов отработано: %1$d <br> Денег получено: %2$d]]></string>
+    <string name="app_status_commission">Комиссия: %1$d</string>
+    <string name="app_status_commission_confirmation">Комиссия: %1$d, оплачена, ждите подтверждения...</string>
+    <string name="app_status_commission_payed">Комиссия: %1$d, оплачена</string>
     <string name="app_is_gone">Заявка собрана или удалена</string>
     <string name="app_you_were_deleted">Вы были удалены с заявки (или сама заявка была удалена)</string>
     <string name="app_write_to_client">Написать</string>

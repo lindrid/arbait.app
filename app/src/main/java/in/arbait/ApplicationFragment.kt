@@ -11,6 +11,7 @@ import `in`.arbait.http.items.PorterItem
 import `in`.arbait.http.response.*
 import android.content.Intent
 import android.graphics.Color
+import android.graphics.Color.blue
 import android.net.Uri
 import android.os.Bundle
 import android.text.Html
@@ -74,6 +75,9 @@ class ApplicationFragment (private val appId: Int): Fragment()
   private lateinit var supportFragmentManager: FragmentManager
 
   private lateinit var tvEnrolled: AppCompatTextView
+  private lateinit var tvStatus: AppCompatTextView
+  private lateinit var tvStatusCommission: AppCompatTextView
+  private lateinit var btPay: AppCompatButton
   private lateinit var tvAddress: AppCompatTextView
   private lateinit var tvTime: AppCompatTextView
   private lateinit var tvMoney: AppCompatTextView
@@ -83,6 +87,7 @@ class ApplicationFragment (private val appId: Int): Fragment()
   private lateinit var tvPortersCount: AppCompatTextView
   private lateinit var rvPorters: RecyclerView
   private lateinit var btCallClient: AppCompatButton
+  private lateinit var btClientWhatsapp: AppCompatButton
   private lateinit var btEnrollRefuse: AppCompatButton
   private lateinit var btBack: AppCompatButton
   private lateinit var nsvApp: NestedScrollView
@@ -452,15 +457,47 @@ class ApplicationFragment (private val appId: Int): Fragment()
         btEnrollRefuse.isEnabled = false
       }
 
-      if (app != null && app.state >= READY_TO_PAY && porter?.pivot?.payed != true) {
-        tvEnrolled.textSize = 26.0f
-        tvEnrolled.text = Html.fromHtml(getString(
-          R.string.app_payed,
-          porter?.pivot?.workHours,
-          porter?.pivot?.money,
-          porter?.pivot?.commission
-        ))
+      if (app != null && app.state >= READY_TO_PAY) {
+        tvEnrolled.text = getString(R.string.app_end)
+        porter?.pivot?.let { pivot ->
+          tvStatus.text = Html.fromHtml(getString(R.string.app_status,
+            pivot.workHours,
+            pivot.money
+          ))
+          if (pivot.payed) {
+            if (pivot.confirmed) {
+              tvStatusCommission.text = getString(R.string.app_status_commission_payed,
+                pivot.commission
+              )
+              tvStatusCommission.setTextColor(resources.getColor(R.color.emerald))
+            }
+            else {
+              tvStatusCommission.text = getString(R.string.app_status_commission_confirmation,
+                pivot.commission
+              )
+              tvStatusCommission.setTextColor(resources.getColor(R.color.emerald))
+            }
+            btPay.visibility = View.INVISIBLE
+          }
+          else {
+            btPay.visibility = View.VISIBLE
+            tvStatusCommission.text = getString(R.string.app_status_commission,
+              pivot.commission
+            )
+            tvStatusCommission.setTextColor(resources.getColor(R.color.red))
+          }
+
+          tvStatus.visibility = View.VISIBLE
+          tvStatusCommission.visibility = View.VISIBLE
+
+          val ap = tvAddress.layoutParams as ConstraintLayout.LayoutParams
+          ap.topToTop = ConstraintLayout.LayoutParams.UNSET
+          ap.topToBottom = btPay.id
+          tvAddress.layoutParams = ap
+        }
+
         btCallClient.isEnabled = false
+        btClientWhatsapp.isEnabled = false
       }
 
       lvdAppItem.value?.let { app ->
@@ -590,6 +627,9 @@ class ApplicationFragment (private val appId: Int): Fragment()
 
   private fun setViews(view: View) {
     tvEnrolled = view.findViewById(R.id.tv_app_enrolled)
+    tvStatus = view.findViewById(R.id.tv_app_status)
+    tvStatusCommission = view.findViewById(R.id.tv_app_status_commission)
+    btPay = view.findViewById(R.id.bt_app_pay)
     tvAddress = view.findViewById(R.id.tv_app_address)
     tvTime = view.findViewById(R.id.tv_app_time)
     tvMoney = view.findViewById(R.id.tv_app_money)
@@ -599,6 +639,7 @@ class ApplicationFragment (private val appId: Int): Fragment()
     tvPortersCount = view.findViewById(R.id.tv_app_porters)
     rvPorters = view.findViewById(R.id.rv_app_porters)
     btCallClient = view.findViewById(R.id.bt_app_call_client)
+    btClientWhatsapp = view.findViewById(R.id.bt_app_client_whatsapp)
     btEnrollRefuse = view.findViewById(R.id.bt_app_enroll_refuse)
     btBack = view.findViewById(R.id.bt_app_back)
     nsvApp = view.findViewById(R.id.nsv_app)

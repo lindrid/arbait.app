@@ -150,12 +150,16 @@ class ApplicationsFragment: Fragment()
 
   private fun setBtPayCommissionClickListener() {
     btPayCommission.setOnClickListener {
-      vm.commissionLvd.value?.let { commission ->
-        val args = Bundle().apply {
-          putInt(COMMISSION_ARG, commission)
+      vm.takenAppsLvdList.value?.let { takenApps ->
+        vm.calcCommissions(takenApps).also {
+          val commission = it.first
+
+          val args = Bundle().apply {
+            putInt(COMMISSION_ARG, commission)
+          }
+          val mainActivity = context as MainActivity
+          mainActivity.replaceOnFragment(COMMISSION_FRAGMENT_NAME, args)
         }
-        val mainActivity = context as MainActivity
-        mainActivity.replaceOnFragment(COMMISSION_FRAGMENT_NAME, args)
       }
     }
   }
@@ -183,6 +187,8 @@ class ApplicationsFragment: Fragment()
         View.VISIBLE, View.VISIBLE)
 
       if (notConfirmedCommission > 0) {
+        tvCommissionConfirmation.text = getString(R.string.apps_commission_confirmation,
+          notConfirmedCommission)
         setUserCannotToConfirmationTop()
         setCommissionConfirmationToCommissionTop()
       }
