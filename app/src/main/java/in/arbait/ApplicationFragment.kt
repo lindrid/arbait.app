@@ -1,5 +1,6 @@
 package `in`.arbait
 
+import `in`.arbait.commission.COMMISSION_ARG
 import `in`.arbait.database.AppState
 import `in`.arbait.database.EnrollingPermission
 import `in`.arbait.http.PollServerViewModel
@@ -48,6 +49,8 @@ private const val MIN_TIME_RANGE_BETWEEN_APPS = 60 * 60 * 1000    // 1 hour
 
 private const val CAUSE_FREQUENT_APP_REFUSING = 0
 private const val CAUSE_SMALL_TIME_INTERVAL = 1
+private const val CAUSE_COMMISSION_IS_NOT_PAYED = 2
+private const val CAUSE_PAY_IS_NOT_CONFIRMED = 3
 
 const val ENROLL_REFUSE_WITHOUT_PENALTY_MAX_AMOUNT = 2
 
@@ -132,6 +135,8 @@ class ApplicationFragment (private val appId: Int): Fragment()
       onCallClientBtnClick()
     }
 
+    setBtPayClickListener()
+
     return view
   }
 
@@ -152,6 +157,22 @@ class ApplicationFragment (private val appId: Int): Fragment()
     actionBar?.title = "$appName"
   }
 
+
+  private fun setBtPayClickListener() {
+    btPay.setOnClickListener {
+      vm.takenAppsLvdList.value?.let { takenApps ->
+        vm.calcCommissions(takenApps).also {
+          val commission = it.first
+
+          val args = Bundle().apply {
+            putInt(COMMISSION_ARG, commission)
+          }
+          val mainActivity = context as MainActivity
+          mainActivity.replaceOnFragment(COMMISSION_FRAGMENT_NAME, args)
+        }
+      }
+    }
+  }
 
   private fun setAppItem(): Boolean {
     vm.openAppsLvdItems[appId]?.let {
@@ -186,7 +207,6 @@ class ApplicationFragment (private val appId: Int): Fragment()
       }
     }
   }
-
 
   private fun onEnrollRefuseBtnClick() {
     val porterWantToEnroll = !porterIsEnrolled
@@ -405,8 +425,30 @@ class ApplicationFragment (private val appId: Int): Fragment()
         val takenApps = vm.takenAppsLvdItems
         val thisAppTimeStr = lvdAppItem.value?.time
 
-        for (i in takenApps.keys)
-        {
+        for (i in takenApps.keys) {
+
+          takenApps[i]?.value?.let {
+            it.porters?.let { porters->
+               for (j in porters.indices) {
+                 if (porters[j].user.id == App.userItem?.id) {
+                   val pivot = porters[j].pivot
+                   if (!pivot.payed) {
+                     couldEnroll = false
+                     couldNotEnrollCause = CAUSE_COMMISSION_IS_NOT_PAYED
+                     break
+                   }
+                   if (!pivot.confirmed) {
+                     couldEnroll = false
+                     couldNotEnrollCause = CAUSE_PAY_IS_NOT_CONFIRMED
+                     break
+                   }
+                 }
+               }
+            }
+          }
+
+          if (!couldEnroll) break
+
           if (takenApps[i] != null && takenApps[i]?.value != null)
             if (takenApps[i]?.value?.id == lvdAppItem.value?.id)
               continue
@@ -439,6 +481,8 @@ class ApplicationFragment (private val appId: Int): Fragment()
           tvEnrolled.text = when (couldNotEnrollCause) {
             CAUSE_FREQUENT_APP_REFUSING -> getString(R.string.app_could_not_enroll_cause_refuses)
             CAUSE_SMALL_TIME_INTERVAL -> getString(R.string.app_could_not_enroll_cause_interval)
+            CAUSE_COMMISSION_IS_NOT_PAYED -> getString(R.string.app_could_not_enroll_cause_commission)
+            CAUSE_PAY_IS_NOT_CONFIRMED -> getString(R.string.app_could_not_enroll_cause_not_confirmed_pay)
             else -> getString(R.string.app_could_not_enroll_cause_unknown)
           }
           tvEnrolled.textSize = 26.0f
@@ -481,7 +525,8 @@ class ApplicationFragment (private val appId: Int): Fragment()
           }
           else {
             btPay.visibility = View.VISIBLE
-            tvStatusCommission.text = getString(R.string.app_status_commission,
+            tvStatusCommission.text = if (pivot.residue > 0) getString(R.string.app_residue, pivot.residue)
+              else getString(R.string.app_status_commission,
               pivot.commission
             )
             tvStatusCommission.setTextColor(resources.getColor(R.color.red))
@@ -492,7 +537,8 @@ class ApplicationFragment (private val appId: Int): Fragment()
 
           val ap = tvAddress.layoutParams as ConstraintLayout.LayoutParams
           ap.topToTop = ConstraintLayout.LayoutParams.UNSET
-          ap.topToBottom = btPay.id
+          ap.topToBottom = if (btPay.visibility == View.VISIBLE) btPay.id
+            else tvStatusCommission.id
           tvAddress.layoutParams = ap
         }
 

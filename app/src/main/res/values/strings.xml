@@ -184,5 +184,8 @@
     <string name="conf_empty_fio">Введите Имя Отчество Фамилию (сокращенно)</string>
     <string name="conf_wrong_card">Введите последние 4 цифры вашей карты</string>
     <string name="conf_wrong_time">Введите час, минуту, секунду как указано в чеке. Пример, 02:15:09</string>
+    <string name="app_residue">Остаток комиссии: %d</string>
+    <string name="app_could_not_enroll_cause_commission">Нельзя записаться: комиссия не оплачена</string>
+    <string name="app_could_not_enroll_cause_not_confirmed_pay">Нельзя записаться: оплата комиссии не подтверждена</string>
 
 </resources>
