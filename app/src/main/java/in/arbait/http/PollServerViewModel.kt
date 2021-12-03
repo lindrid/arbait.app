@@ -176,7 +176,38 @@ class PollServerViewModel: ViewModel(), Serializable
     }
   }
 
-  fun setOpenAppsLvdItems(openApps: List<ApplicationItem>) {
+  fun calcCommissions(takenApps: List<ApplicationItem>): Pair<Int, Int> {
+    var commission = 0
+    var notConfirmedCommission = 0
+
+    App.userItem?.let { user ->
+      for (i in takenApps.indices) {
+        val appIsEnded = takenApps[i].state > CLOSED_STATE
+        if (appIsEnded) {
+          takenApps[i].porters?.let { porters ->
+            for (j in porters.indices) {
+              if (user.id == porters[j].user.id) {
+                val pivot = porters[j].pivot
+                if (!pivot.payed) {
+                  commission += if (pivot.residue > 0) pivot.residue
+                  else pivot.commission
+                } else if (!pivot.confirmed) {
+                  notConfirmedCommission += if (pivot.residue > 0) pivot.residue
+                  else pivot.commission
+                }
+                break
+              }
+            }
+          }
+        }
+      }
+    }
+
+    return Pair(commission, notConfirmedCommission)
+  }
+
+
+  private fun setOpenAppsLvdItems(openApps: List<ApplicationItem>) {
     for (i in openApps.indices) {
       val appId = openApps[i].id
       if (openAppsLvdItems.containsKey(appId))
@@ -184,16 +215,13 @@ class PollServerViewModel: ViewModel(), Serializable
       else
         openAppsLvdItems[appId] = MutableLiveData(openApps[i])
     }
-
-    /*if (goneApps.isNotEmpty()) {
-      for (i in goneApps.indices) {
-        val appId = goneApps[i].id
-        openAppsLvdItems[appId]?.value = null
-      }
-    }*/
   }
 
-  fun setTakenAppsLvdItems(takenApps: List<ApplicationItem>) {
+  private fun setTakenAppsLvdItems(takenApps: List<ApplicationItem>) {
+    if (takenApps.isEmpty()) {
+      takenAppsLvdItems.clear()
+    }
+
     for (i in takenApps.indices) {
       val appId = takenApps[i].id
       if (takenAppsLvdItems.containsKey(appId))
@@ -202,44 +230,5 @@ class PollServerViewModel: ViewModel(), Serializable
         takenAppsLvdItems[appId] = MutableLiveData(takenApps[i])
       Log.i ("setLiveDataTakenApps", "lvdAppItem=${takenAppsLvdItems[appId]}, ${takenAppsLvdItems[appId]?.value}")
     }
-/*
-    if (goneApps.isNotEmpty()) {
-      for (i in goneApps.indices) {
-        val appId = goneApps[i].id
-        takenAppsLvdItems[appId]?.value = null
-      }
-    }*/
-  }
-
-  fun calcCommissions(takenApps: List<ApplicationItem>): Pair<Int, Int> {
-    var commission = 0
-    var notConfirmedCommission = 0
-
-    App.userItem?.let { user ->
-      for (i in takenApps.indices) {
-        takenApps[i].porters?.let { porters ->
-          for (j in porters.indices) {
-            if (user.id == porters[j].user.id) {
-              val pivot = porters[j].pivot
-              if (!pivot.payed) {
-                val add =
-                  if (pivot.residue > 0)
-                    pivot.residue
-                  else
-                    pivot.commission
-
-                commission += add
-              }
-              else if (!pivot.confirmed) {
-                notConfirmedCommission += pivot.commission
-              }
-              break
-            }
-          }
-        }
-      }
-    }
-
-    return Pair(commission, notConfirmedCommission)
   }
 }

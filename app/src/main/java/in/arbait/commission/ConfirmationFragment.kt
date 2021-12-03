@@ -50,7 +50,9 @@ class ConfirmationFragment( private val commission: Int,
 
     setViews(view)
     setHasOptionsMenu(true)
-    setBanksObserver()
+
+    if (payType == SBER_PAY_TYPE)
+      setBanksObserver()
 
     return view
   }

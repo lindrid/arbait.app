@@ -238,7 +238,7 @@ class ApplicationsFragment: Fragment()
       takenApps?.let {
         Log.i(TAG, "Taken apps size is ${it.size}")
         Log.i(TAG, "takenApps is $it")
-        updateTakenAppsUI(it)
+        updateTakenAppsUI(it.toMutableList())
         updateCommissionUI(it)
 
         if (it.isEmpty() && llTakenApps.visibility == View.VISIBLE)
@@ -283,7 +283,13 @@ class ApplicationsFragment: Fragment()
     item.setIcon(iconRes)
   }
 
-  private fun updateTakenAppsUI(takenApps: List<ApplicationItem>) {
+  private fun updateTakenAppsUI(takenApps: MutableList<ApplicationItem>) {
+    takenApps.sortWith(Comparator { lhs, rhs ->
+      // -1 - less than, 1 - greater than, 0 - equal, all inversed for descending
+      if (lhs.date > rhs.date) 1
+      else if (lhs.date == rhs.date && lhs.time > rhs.time) 1
+      else -1
+    })
     rvTakenApps.adapter = TakenAppAdapter(takenApps)
   }
 

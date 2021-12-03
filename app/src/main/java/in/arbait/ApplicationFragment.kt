@@ -123,20 +123,6 @@ class ApplicationFragment (private val appId: Int): Fragment()
     setAppObserver()
     setVisibilityToViews(porterIsEnrolled, view)
 
-    btEnrollRefuse.setOnClickListener {
-      onEnrollRefuseBtnClick()
-    }
-
-    btBack.setOnClickListener {
-      vm.mainActivity.replaceOnFragment("Applications")
-    }
-
-    btCallClient.setOnClickListener {
-      onCallClientBtnClick()
-    }
-
-    setBtPayClickListener()
-
     return view
   }
 
@@ -428,22 +414,25 @@ class ApplicationFragment (private val appId: Int): Fragment()
         for (i in takenApps.keys) {
 
           takenApps[i]?.value?.let {
-            it.porters?.let { porters->
-               for (j in porters.indices) {
-                 if (porters[j].user.id == App.userItem?.id) {
-                   val pivot = porters[j].pivot
-                   if (!pivot.payed) {
-                     couldEnroll = false
-                     couldNotEnrollCause = CAUSE_COMMISSION_IS_NOT_PAYED
-                     break
-                   }
-                   if (!pivot.confirmed) {
-                     couldEnroll = false
-                     couldNotEnrollCause = CAUSE_PAY_IS_NOT_CONFIRMED
-                     break
-                   }
-                 }
-               }
+            val appIsEnded = it.state > CLOSED_STATE
+            if (appIsEnded) {
+              it.porters?.let { porters ->
+                for (j in porters.indices) {
+                  if (porters[j].user.id == App.userItem?.id) {
+                    val pivot = porters[j].pivot
+                    if (!pivot.payed) {
+                      couldEnroll = false
+                      couldNotEnrollCause = CAUSE_COMMISSION_IS_NOT_PAYED
+                      break
+                    }
+                    if (!pivot.confirmed) {
+                      couldEnroll = false
+                      couldNotEnrollCause = CAUSE_PAY_IS_NOT_CONFIRMED
+                      break
+                    }
+                  }
+                }
+              }
             }
           }
 
@@ -508,27 +497,23 @@ class ApplicationFragment (private val appId: Int): Fragment()
             pivot.workHours,
             pivot.money
           ))
+          val commission = if (pivot.residue > 0) pivot.residue else pivot.commission
           if (pivot.payed) {
             if (pivot.confirmed) {
-              tvStatusCommission.text = getString(R.string.app_status_commission_payed,
-                pivot.commission
-              )
+              tvStatusCommission.text = getString(R.string.app_status_commission_payed, pivot.commission)
               tvStatusCommission.setTextColor(resources.getColor(R.color.emerald))
             }
             else {
               tvStatusCommission.text = getString(R.string.app_status_commission_confirmation,
-                pivot.commission
-              )
+                commission)
               tvStatusCommission.setTextColor(resources.getColor(R.color.emerald))
             }
             btPay.visibility = View.INVISIBLE
           }
           else {
             btPay.visibility = View.VISIBLE
-            tvStatusCommission.text = if (pivot.residue > 0) getString(R.string.app_residue, pivot.residue)
-              else getString(R.string.app_status_commission,
-              pivot.commission
-            )
+            tvStatusCommission.text = if (pivot.residue > 0) getString(R.string.app_residue,
+              pivot.residue) else getString(R.string.app_status_commission, pivot.commission)
             tvStatusCommission.setTextColor(resources.getColor(R.color.red))
           }
 
@@ -600,6 +585,7 @@ class ApplicationFragment (private val appId: Int): Fragment()
 
       rvPorters.visibility = View.VISIBLE
       btCallClient.visibility = View.VISIBLE
+      btClientWhatsapp.visibility = View.VISIBLE
       tvWhenCall.visibility = View.VISIBLE
       setLayoutConstraints(tvEnrolledIsVisible = true, view)
     }
@@ -607,6 +593,7 @@ class ApplicationFragment (private val appId: Int): Fragment()
       tvEnrolled.visibility = View.INVISIBLE
       rvPorters.visibility = View.INVISIBLE
       btCallClient.visibility = View.INVISIBLE
+      btClientWhatsapp.visibility = View.INVISIBLE
       tvWhenCall.visibility = View.INVISIBLE
       setLayoutConstraints(tvEnrolledIsVisible = false, view)
     }
@@ -690,6 +677,26 @@ class ApplicationFragment (private val appId: Int): Fragment()
     btBack = view.findViewById(R.id.bt_app_back)
     nsvApp = view.findViewById(R.id.nsv_app)
     tvWhenCall = view.findViewById(R.id.tv_app_when_call)
+
+    btClientWhatsapp.setOnClickListener {
+      lvdAppItem.value?.let { appItem ->
+        openWhatsappContact(appItem.clientPhoneNumber)
+      }
+    }
+
+    btEnrollRefuse.setOnClickListener {
+      onEnrollRefuseBtnClick()
+    }
+
+    btBack.setOnClickListener {
+      vm.mainActivity.replaceOnFragment("Applications")
+    }
+
+    btCallClient.setOnClickListener {
+      onCallClientBtnClick()
+    }
+
+    setBtPayClickListener()
   }
 
   private fun setViewsTexts() {
@@ -766,13 +773,6 @@ class ApplicationFragment (private val appId: Int): Fragment()
         openWhatsappContact(phoneWhatsapp)
       }
     }
-
-    private fun openWhatsappContact(number: String) {
-      Log.i ("openWhatsappContact", "https://wa.me/$number")
-      val uri = Uri.parse("https://wa.me/$number")
-      val intent = Intent(Intent.ACTION_VIEW, uri)
-      startActivity(intent)
-    }
   }
 
   private inner class PortersAdapter (porters: List<PorterItem>):
@@ -801,5 +801,12 @@ class ApplicationFragment (private val appId: Int): Fragment()
     override fun onBindViewHolder(holder: PorterHolder, position: Int) {
       holder.bind(porters[position].user.name, porters[position].user.phones)
     }
+  }
+
+  private fun openWhatsappContact(number: String) {
+    Log.i ("openWhatsappContact", "https://wa.me/$number")
+    val uri = Uri.parse("https://wa.me/$number")
+    val intent = Intent(Intent.ACTION_VIEW, uri)
+    startActivity(intent)
   }
 }
