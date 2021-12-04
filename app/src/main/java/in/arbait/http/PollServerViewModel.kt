@@ -37,7 +37,7 @@ class PollServerViewModel: ViewModel(), Serializable
   var pollService: PollService? = null
   var serviceIsBound: Boolean? = null
 
-  var commissionLvd: MutableLiveData<Int> = MutableLiveData()
+  var lvdDispatcherWhatsapp = MutableLiveData<String>()
 
   var openAppsLvdList: MutableLiveData<List<ApplicationItem>> = MutableLiveData()
   val openAppsLvdItems = mutableMapOf<Int, MutableLiveData<ApplicationItem>>()
@@ -58,6 +58,7 @@ class PollServerViewModel: ViewModel(), Serializable
         appsResponse = it.dataResponse
         openAppsLvdList = it.openAppsLvdList
         takenAppsLvdList = it.takenAppsLvdList
+        lvdDispatcherWhatsapp = it.lvdDispatcherWhatsapp
       }
       setAppsResponseObserver()
       setAppsObservers()

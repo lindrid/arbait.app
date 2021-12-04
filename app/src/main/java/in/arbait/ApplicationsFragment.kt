@@ -126,6 +126,12 @@ class ApplicationsFragment: Fragment()
   }
 
   override fun onOptionsItemSelected(item: MenuItem): Boolean {
+    if (item.itemId == R.id.bt_menu_whatsapp) {
+      vm.lvdDispatcherWhatsapp.value?.let { phone ->
+        openWhatsappContact(requireActivity(), phone)
+      }
+    }
+
     if (item.itemId == R.id.bt_menu_sound) {
       if (App.dbUser?.soundOff == false)
         setSound(true, item, R.drawable.outline_volume_off_24)
@@ -472,7 +478,7 @@ class ApplicationsFragment: Fragment()
       }
       tvAddress.text = app.address
 
-      if (app.state == READY_TO_PAY) {
+      if (app.state > CLOSED_STATE) {
         tvTime.setTextColor(Color.GRAY)
         tvAddress.setTextColor(Color.GRAY)
       }

@@ -21,8 +21,8 @@ class ServiceDataResponse (var response: Response = Response()) {
   @SerializedName("m")
   var maxPorterRating: Int? = null
 
-  @SerializedName("c")
-  var commission: Int? = null
+  @SerializedName("w")
+  var dispatcherWhatsapp: String? = null
 
   init {
     if (response.noResult)

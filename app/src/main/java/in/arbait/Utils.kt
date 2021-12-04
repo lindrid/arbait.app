@@ -1,11 +1,14 @@
 package `in`.arbait
 
 import `in`.arbait.http.items.ApplicationItem
+import android.app.Activity
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
+import android.content.Intent
 import android.content.res.ColorStateList
 import android.graphics.Color
+import android.net.Uri
 import android.os.Build
 
 import android.util.Log
@@ -91,6 +94,13 @@ fun versionIsNineOrGreater(): Boolean {
   }
 
   return false
+}
+
+fun openWhatsappContact(activity: Activity, number: String) {
+  Log.i ("openWhatsappContact", "https://wa.me/$number")
+  val uri = Uri.parse("https://wa.me/$number")
+  val intent = Intent(Intent.ACTION_VIEW, uri)
+  activity.startActivity(intent)
 }
 
 fun debitCardIsValid (debitCard: String, logTag: String): Boolean {

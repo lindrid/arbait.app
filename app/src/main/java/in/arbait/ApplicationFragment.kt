@@ -17,9 +17,7 @@ import android.net.Uri
 import android.os.Bundle
 import android.text.Html
 import android.util.Log
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
+import android.view.*
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
@@ -118,21 +116,13 @@ class ApplicationFragment (private val appId: Int): Fragment()
     setAppItem()
     setPorter()
     updateUI()
+    setHasOptionsMenu(true)
 
     rvPorters.layoutManager = LinearLayoutManager(context)
     setAppObserver()
     setVisibilityToViews(porterIsEnrolled, view)
 
     return view
-  }
-
-  private fun onCallClientBtnClick() {
-    lvdAppItem.value?.let { appItem ->
-      val intent = Intent(Intent.ACTION_DIAL)
-      val uriStr = "tel:${appItem.clientPhoneNumber}"
-      intent.data = Uri.parse(uriStr)
-      context?.startActivity(intent)
-    }
   }
 
   override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -143,6 +133,31 @@ class ApplicationFragment (private val appId: Int): Fragment()
     actionBar?.title = "$appName"
   }
 
+  override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
+    inflater.inflate(R.menu.app_card_menu, menu)
+    
+    super.onCreateOptionsMenu(menu, inflater)
+  }
+
+  override fun onOptionsItemSelected(item: MenuItem): Boolean {
+    if (item.itemId == R.id.bt_menu_whatsapp) {
+      vm.lvdDispatcherWhatsapp.value?.let { phone ->
+        openWhatsappContact(requireActivity(), phone)
+      }
+    }
+
+    return super.onOptionsItemSelected(item)
+  }
+
+
+  private fun onCallClientBtnClick() {
+    lvdAppItem.value?.let { appItem ->
+      val intent = Intent(Intent.ACTION_DIAL)
+      val uriStr = "tel:${appItem.clientPhoneNumber}"
+      intent.data = Uri.parse(uriStr)
+      context?.startActivity(intent)
+    }
+  }
 
   private fun setBtPayClickListener() {
     btPay.setOnClickListener {
@@ -680,7 +695,7 @@ class ApplicationFragment (private val appId: Int): Fragment()
 
     btClientWhatsapp.setOnClickListener {
       lvdAppItem.value?.let { appItem ->
-        openWhatsappContact(appItem.clientPhoneNumber)
+        openWhatsappContact(requireActivity(), appItem.clientPhoneNumber)
       }
     }
 
@@ -770,7 +785,7 @@ class ApplicationFragment (private val appId: Int): Fragment()
       }
 
       ivWhatsapp.setOnClickListener {
-        openWhatsappContact(phoneWhatsapp)
+        openWhatsappContact(requireActivity(), phoneWhatsapp)
       }
     }
   }
@@ -803,10 +818,10 @@ class ApplicationFragment (private val appId: Int): Fragment()
     }
   }
 
-  private fun openWhatsappContact(number: String) {
+  /*private fun openWhatsappContact(number: String) {
     Log.i ("openWhatsappContact", "https://wa.me/$number")
     val uri = Uri.parse("https://wa.me/$number")
     val intent = Intent(Intent.ACTION_VIEW, uri)
     startActivity(intent)
-  }
+  }*/
 }

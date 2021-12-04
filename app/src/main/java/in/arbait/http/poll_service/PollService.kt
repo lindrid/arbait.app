@@ -54,7 +54,7 @@ class PollService : LifecycleService(), Serializable
   var serviceIsStarted = false
     private set
 
-  val commissionLvd: MutableLiveData<Int> = MutableLiveData()
+  val lvdDispatcherWhatsapp: MutableLiveData<String> = MutableLiveData()
   val openAppsLvdList: MutableLiveData<List<ApplicationItem>> = MutableLiveData()
   val takenAppsLvdList: MutableLiveData<List<ApplicationItem>> = MutableLiveData()
 
@@ -105,8 +105,8 @@ class PollService : LifecycleService(), Serializable
               log("App.userItem = $user")
             }
 
-            it.commission?.let { commission ->
-              commissionLvd.value = commission
+            it.dispatcherWhatsapp?.let { phone ->
+              lvdDispatcherWhatsapp.value = phone
             }
 
             Log.i(TAG, "appsFromANotInB(openAppsFromServer, $openApps)")
