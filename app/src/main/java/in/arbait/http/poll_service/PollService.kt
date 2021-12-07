@@ -157,13 +157,18 @@ class PollService : LifecycleService(), Serializable
             if (it.takenApps == null)
               this.takenApps = mutableListOf()
 
+            var takenAppsWasChanged = false
             it.takenApps?.let { takenAppsFromServer ->
               val refusedApps = appsFromANotInB(takenApps, takenAppsFromServer)
-              setTakenApps(takenAppsFromServer, refusedApps)
+              takenAppsWasChanged = setTakenApps(takenAppsFromServer, refusedApps)
             }
 
             openAppsLvdList.value = openApps
-            takenAppsLvdList.value = takenApps
+            if (takenAppsWasChanged) {
+              takenAppsLvdList.value = takenApps
+            }
+
+            Log.i (TAG, "takenApps = ${takenAppsLvdList.value}")
 
             if (closedApps.isNotEmpty()) {
               for (j in closedApps.indices) {
@@ -176,6 +181,10 @@ class PollService : LifecycleService(), Serializable
         }
       }
     )
+  }
+
+  private fun needToNotifyPorterAboutTakenApp(): Boolean {
+    return true
   }
 
   override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -248,9 +257,13 @@ class PollService : LifecycleService(), Serializable
   }
 
   private fun setTakenApps(takenAppsFromServer: List<ApplicationItem>,
-                           refusedApps: List<ApplicationItem>) {
+                           refusedApps: List<ApplicationItem>): Boolean
+  {
+    var takenAppsWasChanged = false
+
     if (takenApps.isEmpty()) {
       takenApps = takenAppsFromServer.toMutableList()
+      takenAppsWasChanged = true
     }
     else {
       for (i in takenAppsFromServer.indices) {
@@ -262,6 +275,7 @@ class PollService : LifecycleService(), Serializable
             takenAppsContainThisApp = true
             if (appIsNewOrUpdated) {
               takenApps[j] = takenAppsFromServer[i]
+              takenAppsWasChanged = true
             }
           }
         }
@@ -276,12 +290,15 @@ class PollService : LifecycleService(), Serializable
         for (i in refusedApps.indices) {
           if (app.id == refusedApps[i].id) {
             appIsDeletedOrPorterIsRefused = true
+            takenAppsWasChanged = true
             break
           }
         }
         appIsDeletedOrPorterIsRefused
       }
     }
+
+    return takenAppsWasChanged
   }
 
   private fun logApps(newApps: List<ApplicationItem>, closedApps: List<ApplicationItem>) {
