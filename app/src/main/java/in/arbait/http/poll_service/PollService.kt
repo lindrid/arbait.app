@@ -36,6 +36,7 @@ private const val MAX_PORTER_RATING_BY_DEFAULT = 5
 
 private const val ONE_HOUR = 60 * 60 * 1000
 private const val MINUTE = 60 * 1000
+private const val TWO_HOURS_AND_FIVE_MINUTES = 2 * ONE_HOUR + 5 * MINUTE
 private const val APP_MILLISECONDS_ADDITION_BY_DEFAULT = 2 * ONE_HOUR
 
 private const val SERVICE_NOTIFICATION_ID = 1
@@ -116,9 +117,11 @@ class PollService : LifecycleService(), Serializable
 
             setOpenApps(openAppsFromServer, closedApps)
 
+            var serverDate = Date()
             var serverTime = Date().time
             it.serverTime?.let { serverTimeStr ->
               strToDate(serverTimeStr, DATE_TIME_FORMAT)?.let { time ->
+                serverDate = time
                 serverTime = time.time
               }
             }
@@ -166,6 +169,21 @@ class PollService : LifecycleService(), Serializable
             openAppsLvdList.value = openApps
             if (takenAppsWasChanged) {
               takenAppsLvdList.value = takenApps
+            }
+
+            for (i in takenApps.indices) {
+              if (takenApps[i].state > CLOSED_STATE)
+                continue
+
+              val notificationHasNotShown = !(takenApps[i].notificationHasShown)
+              if (notificationHasNotShown) {
+                if (needToConfirmTakenApp(takenApps[i], serverDate)) {
+                  takenApps[i].needToConfirm = true
+                  val n = createConfirmationNotification(takenApps[i].id)
+                  showNotification(takenApps[i].id, n)
+                  takenApps[i].notificationHasShown = true
+                }
+              }
             }
 
             Log.i (TAG, "takenApps = ${takenAppsLvdList.value}")
@@ -434,6 +452,27 @@ class PollService : LifecycleService(), Serializable
                                 text,
                                 channelId,
                                 newApp.id)
+  }
+
+  private fun createConfirmationNotification (appId: Int): Notification {
+    val title = getString(R.string.poll_confirmation_notification)
+    val text = getString(R.string.poll_confirmation_notification_text)
+
+    var channelId = NEW_APP_CHANNEL_ID
+
+    if (App.dbUser?.soundOff == true) {
+      channelId = NEW_APP_WITHOUT_SOUND_CHANNEL_ID
+    }
+
+    Log.i (TAG, "channelId = $channelId")
+
+    return createNotification ( channelId,
+      IMPORTANCE_HIGH,
+      true,
+      title,
+      text,
+      channelId,
+      appId)
   }
 
   private fun createNotification (notificationChannelId: String,

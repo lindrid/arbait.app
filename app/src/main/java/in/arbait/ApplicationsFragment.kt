@@ -482,6 +482,10 @@ class ApplicationsFragment: Fragment()
         tvTime.setTextColor(Color.GRAY)
         tvAddress.setTextColor(Color.GRAY)
       }
+      else if (app.needToConfirm) {
+        tvTime.setTextColor(Color.RED)
+        tvAddress.setTextColor(Color.RED)
+      }
     }
 
     override fun onClick(v: View?) {

@@ -187,5 +187,7 @@
     <string name="app_residue">Остаток комиссии: %d</string>
     <string name="app_could_not_enroll_cause_commission">Нельзя записаться: комиссия не оплачена</string>
     <string name="app_could_not_enroll_cause_not_confirmed_pay">Нельзя записаться: оплата комиссии не подтверждена</string>
+    <string name="poll_confirmation_notification">Подтвердите свой выход</string>
+    <string name="poll_confirmation_notification_text">на заявку</string>
 
 </resources>

@@ -319,3 +319,30 @@ fun getCalendar (date: Date?): Calendar {
   cal.time = date!!
   return cal
 }
+
+fun needToConfirmTakenApp(takenApp: ApplicationItem, serverDate: Date): Boolean
+{
+  val serverCal = getCalendar(serverDate)
+
+  strToDate(takenApp.createdAt, DATE_TIME_FORMAT)?.let { createdAt ->
+    val createdAtCal = getCalendar(createdAt)
+    if (serverCal[Calendar.DAY_OF_MONTH] == createdAtCal[Calendar.DAY_OF_MONTH])
+      return false
+  }
+
+  val hours = takenApp.time.substring (0, takenApp.time.indexOf(':')).toInt()
+  val minutes = takenApp.time.substring (takenApp.time.indexOf(':') + 1).toInt()
+
+  Log.i ("calendar", "hours = $hours, minutes = $minutes")
+  var diffHours = hours - serverCal[Calendar.HOUR]
+  val diffMinutes = if (minutes < serverCal[Calendar.MINUTE]) {
+    diffHours--
+    60 + minutes - serverCal[Calendar.MINUTE]
+  }
+  else {
+    minutes - serverCal[Calendar.MINUTE]
+  }
+
+  return  (diffHours == 2 && diffMinutes <= 5) ||
+          (diffHours == 1 && diffMinutes > 50)
+}

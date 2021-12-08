@@ -191,7 +191,7 @@ class ApplicationFragment (private val appId: Int): Fragment()
     lvdAppItem = MutableLiveData(
       ApplicationItem(0,"","","","",
       0,"",0,0,true,0,0,
-    1,0, true, listOf<PorterItem>()))
+    1,0, "", "", listOf<PorterItem>(), true))
     lastAppItem?.let {
       lvdAppItem.value = it
     }
