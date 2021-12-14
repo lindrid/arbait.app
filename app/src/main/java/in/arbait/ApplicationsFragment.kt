@@ -117,10 +117,10 @@ class ApplicationsFragment: Fragment()
     val notificationsItem = menu.findItem(R.id.bt_menu_notifications)
 
     if (App.dbUser?.soundOff == true)
-      soundItem.setIcon(R.drawable.outline_volume_off_24)
+      soundItem.setIcon(R.drawable.outline_volume_off_black_24)
 
     if (App.dbUser?.notificationsOff == true)
-      notificationsItem.setIcon(R.drawable.outline_notifications_off_24)
+      notificationsItem.setIcon(R.drawable.outline_notifications_off_black_24)
 
     super.onCreateOptionsMenu(menu, inflater)
   }
@@ -134,16 +134,16 @@ class ApplicationsFragment: Fragment()
 
     if (item.itemId == R.id.bt_menu_sound) {
       if (App.dbUser?.soundOff == false)
-        setSound(true, item, R.drawable.outline_volume_off_24)
+        setSound(true, item, R.drawable.outline_volume_off_black_24)
       else if (App.dbUser?.soundOff == true)
-        setSound(false, item, R.drawable.outline_volume_up_24)
+        setSound(false, item, R.drawable.outline_volume_up_black_24)
     }
 
     if (item.itemId == R.id.bt_menu_notifications) {
       if (App.dbUser?.notificationsOff == false)
-        setNotifications(true, item, R.drawable.outline_notifications_off_24)
+        setNotifications(true, item, R.drawable.outline_notifications_off_black_24)
       else if (App.dbUser?.notificationsOff == true)
-        setNotifications(false, item, R.drawable.outline_notifications_active_24)
+        setNotifications(false, item, R.drawable.outline_notifications_active_black_24)
     }
 
     return super.onOptionsItemSelected(item)

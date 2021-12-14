@@ -9,10 +9,10 @@ import `in`.arbait.http.Server
 import `in`.arbait.http.items.ApplicationItem
 import `in`.arbait.http.items.PhoneItem
 import `in`.arbait.http.items.PorterItem
+import `in`.arbait.http.poll_service.removeNotification
 import `in`.arbait.http.response.*
 import android.content.Intent
 import android.graphics.Color
-import android.graphics.Color.blue
 import android.net.Uri
 import android.os.Bundle
 import android.text.Html
@@ -37,6 +37,8 @@ import kotlin.math.abs
 
 
 private const val TAG = "ApplicationFragment"
+private const val REFUSE_DIALOG_TAG = "REFUSE_DIALOG"
+
 
 const val CLOSED_STATE = 2
 const val READY_TO_PAY = 4
@@ -75,9 +77,9 @@ class ApplicationFragment (private val appId: Int): Fragment()
   private lateinit var server: Server
   private lateinit var supportFragmentManager: FragmentManager
 
-  private lateinit var tvEnrolled: AppCompatTextView
   private lateinit var tvStatus: AppCompatTextView
-  private lateinit var tvStatusCommission: AppCompatTextView
+  private lateinit var tvEndStatus: AppCompatTextView
+  private lateinit var tvCommissionStatus: AppCompatTextView
   private lateinit var btPay: AppCompatButton
   private lateinit var tvAddress: AppCompatTextView
   private lateinit var tvTime: AppCompatTextView
@@ -93,6 +95,9 @@ class ApplicationFragment (private val appId: Int): Fragment()
   private lateinit var btBack: AppCompatButton
   private lateinit var nsvApp: NestedScrollView
   private lateinit var tvWhenCall: AppCompatTextView
+
+  private lateinit var btAppConfirm: AppCompatButton
+  private lateinit var tvAppConfirm: AppCompatTextView
 
   private val vm: PollServerViewModel by lazy {
     val mainActivity = requireActivity() as MainActivity
@@ -251,8 +256,15 @@ class ApplicationFragment (private val appId: Int): Fragment()
         if (porterWantToEnroll)
           enrollPorter(enrollingPermission, newEnrollingPermission)
 
-        if (porterWantToRefuse)
-          refuseFromApp(enrollingPermission, newEnrollingPermission, changeStateCount)
+        if (porterWantToRefuse) {
+          val refuseDialog = ApplicationRefuseDialog()
+          refuseDialog.show(supportFragmentManager, REFUSE_DIALOG_TAG)
+          supportFragmentManager.setFragmentResultListener(OK_KEY, viewLifecycleOwner)
+          { _, bundle ->
+            Log.i (TAG, "Dialog OK, refuse from app")
+            refuseFromApp(enrollingPermission, newEnrollingPermission, changeStateCount)
+          }
+        }
       }
     }
   }
@@ -343,7 +355,7 @@ class ApplicationFragment (private val appId: Int): Fragment()
         Log.i(TAG, "coefficient=$coefficient")
 
         newEp.enableClickTime = now + coefficient * DISABLE_BTN_BASE_RANGE
-        btEnrollRefuse.isEnabled = false
+        //btEnrollRefuse.isEnabled = false
       }
 
       Log.i (TAG, "newEnrollingPermission = $newEp")
@@ -374,21 +386,20 @@ class ApplicationFragment (private val appId: Int): Fragment()
           val anotherPorterTakeApp = setAppItem()
           youWereDeletedFromApp = !anotherPorterTakeApp
           if (youWereDeletedFromApp) {
-            tvEnrolled.text = if (porterIsEnrolled)
+            val statusText = if (porterIsEnrolled)
               getString(R.string.app_you_were_deleted)
             else
               getString(R.string.app_is_gone)
 
+            changeStatusToError(statusText)
+
             rvPorters.visibility = View.INVISIBLE
-            tvEnrolled.textSize = 26.0f
-            tvEnrolled.setTextColor(Color.RED)
-            tvEnrolled.visibility = View.VISIBLE
             btCallClient.isEnabled = false
             setLayoutConstraints(tvEnrolledIsVisible = true, btEnrollRefuse, withoutPorters = true)
             lvdAppItem.value?.let {
               it.workerCount--
               updateUI()
-              btEnrollRefuse.isEnabled = false
+              //btEnrollRefuse.isEnabled = false
             }
           }
           if (anotherPorterTakeApp) {
@@ -406,6 +417,21 @@ class ApplicationFragment (private val appId: Int): Fragment()
     )
   }
 
+
+  private fun changeStatusToError(statusText: String) {
+    tvStatus.text = statusText
+    tvStatus.textSize = 26.0f
+    tvStatus.setTextColor(Color.RED)
+    tvStatus.visibility = View.VISIBLE
+  }
+
+  private fun changeStatusToEnrolled() {
+    tvStatus.visibility = View.VISIBLE
+    tvStatus.textSize = 34.0f
+    tvStatus.text = getString(R.string.app_you_are_enrolled)
+    tvStatus.setTextColor(resources.getColor(R.color.emerald))
+  }
+
   private fun updateUI() {
     Log.i ("track", "updateUI")
     setViewsTexts()
@@ -413,6 +439,13 @@ class ApplicationFragment (private val appId: Int): Fragment()
 
     if (youWereDeletedFromApp)
       return
+
+    lvdAppItem.value?.let { app ->
+      if (porterIsEnrolled && app.needToConfirm)
+        showConfirmationInfo()
+      else
+        hideConfirmationInfo()
+    }
 
     GlobalScope.launch(Dispatchers.Main)
     {
@@ -477,23 +510,23 @@ class ApplicationFragment (private val appId: Int): Fragment()
         }
 
         if (couldEnroll) {
-          tvEnrolled.visibility = View.INVISIBLE
+          tvStatus.visibility = View.INVISIBLE
           btEnrollRefuse.isEnabled = true
           setLayoutConstraints(tvEnrolledIsVisible = false, btEnrollRefuse)
         }
         else {
-          tvEnrolled.text = when (couldNotEnrollCause) {
+          couldEnroll = true
+          /*
+          val statusText = when (couldNotEnrollCause) {
             CAUSE_FREQUENT_APP_REFUSING -> getString(R.string.app_could_not_enroll_cause_refuses)
             CAUSE_SMALL_TIME_INTERVAL -> getString(R.string.app_could_not_enroll_cause_interval)
             CAUSE_COMMISSION_IS_NOT_PAYED -> getString(R.string.app_could_not_enroll_cause_commission)
             CAUSE_PAY_IS_NOT_CONFIRMED -> getString(R.string.app_could_not_enroll_cause_not_confirmed_pay)
             else -> getString(R.string.app_could_not_enroll_cause_unknown)
           }
-          tvEnrolled.textSize = 26.0f
-          tvEnrolled.setTextColor(Color.RED)
-          tvEnrolled.visibility = View.VISIBLE
+          changeStatusToError(statusText)
           btEnrollRefuse.isEnabled = false
-          setLayoutConstraints(tvEnrolledIsVisible = true, btEnrollRefuse, withoutPorters = true)
+          setLayoutConstraints(tvEnrolledIsVisible = true, btEnrollRefuse, withoutPorters = true)*/
         }
       }
       else {
@@ -502,43 +535,44 @@ class ApplicationFragment (private val appId: Int): Fragment()
 
       val app = lvdAppItem.value
       if (app != null && app.state > CLOSED_STATE) {
-        btEnrollRefuse.isEnabled = false
+        //btEnrollRefuse.isEnabled = false
       }
 
       if (app != null && app.state >= READY_TO_PAY) {
-        tvEnrolled.text = getString(R.string.app_end)
+        tvStatus.text = getString(R.string.app_end)
         porter?.pivot?.let { pivot ->
-          tvStatus.text = Html.fromHtml(getString(R.string.app_status,
+          tvEndStatus.text = Html.fromHtml(getString(R.string.app_status,
             pivot.workHours,
             pivot.money
           ))
           val commission = if (pivot.residue > 0) pivot.residue else pivot.commission
           if (pivot.payed) {
             if (pivot.confirmed) {
-              tvStatusCommission.text = getString(R.string.app_status_commission_payed, pivot.commission)
-              tvStatusCommission.setTextColor(resources.getColor(R.color.emerald))
+              tvCommissionStatus.text = getString(R.string.app_status_commission_payed, pivot.commission)
+              tvCommissionStatus.setTextColor(resources.getColor(R.color.emerald))
             }
             else {
-              tvStatusCommission.text = getString(R.string.app_status_commission_confirmation,
+              tvCommissionStatus.text = getString(R.string.app_status_commission_confirmation,
                 commission)
-              tvStatusCommission.setTextColor(resources.getColor(R.color.emerald))
+              tvCommissionStatus.setTextColor(resources.getColor(R.color.emerald))
             }
             btPay.visibility = View.INVISIBLE
           }
           else {
             btPay.visibility = View.VISIBLE
-            tvStatusCommission.text = if (pivot.residue > 0) getString(R.string.app_residue,
-              pivot.residue) else getString(R.string.app_status_commission, pivot.commission)
-            tvStatusCommission.setTextColor(resources.getColor(R.color.red))
+            tvCommissionStatus.text = if (pivot.residue > 0) getString(R.string.app_residue,
+              pivot.residue)
+              else getString(R.string.app_status_commission, pivot.commission)
+            tvCommissionStatus.setTextColor(resources.getColor(R.color.red))
           }
 
-          tvStatus.visibility = View.VISIBLE
-          tvStatusCommission.visibility = View.VISIBLE
+          tvEndStatus.visibility = View.VISIBLE
+          tvCommissionStatus.visibility = View.VISIBLE
 
           val ap = tvAddress.layoutParams as ConstraintLayout.LayoutParams
           ap.topToTop = ConstraintLayout.LayoutParams.UNSET
           ap.topToBottom = if (btPay.visibility == View.VISIBLE) btPay.id
-            else tvStatusCommission.id
+            else tvCommissionStatus.id
           tvAddress.layoutParams = ap
         }
 
@@ -547,10 +581,38 @@ class ApplicationFragment (private val appId: Int): Fragment()
       }
 
       lvdAppItem.value?.let { app ->
-        if (app.id == 0)
-          btEnrollRefuse.isEnabled = false
+        //if (app.id == 0)
+          // btEnrollRefuse.isEnabled = false
       }
     }
+  }
+
+  private fun showConfirmationInfo() {
+    val dp = nsvApp.layoutParams as ConstraintLayout.LayoutParams
+    dp.bottomToTop = btAppConfirm.id
+    nsvApp.layoutParams = dp
+
+    btAppConfirm.visibility = View.VISIBLE
+    tvAppConfirm.visibility = View.VISIBLE
+    tvAppConfirm.setTextColor(Color.RED)
+
+    btCallClient.isEnabled = false
+    btClientWhatsapp.isEnabled = false
+    tvWhenCall.visibility = View.INVISIBLE
+
+    changeStatusToError(getString(R.string.app_status_need_confirm))
+  }
+
+  private fun hideConfirmationInfo() {
+    val dp = nsvApp.layoutParams as ConstraintLayout.LayoutParams
+    dp.bottomToTop = btCallClient.id
+    nsvApp.layoutParams = dp
+
+    btAppConfirm.visibility = View.INVISIBLE
+    tvAppConfirm.visibility = View.INVISIBLE
+
+    btCallClient.isEnabled = true
+    btClientWhatsapp.isEnabled = true
   }
 
   private fun updatePorters() {
@@ -577,7 +639,7 @@ class ApplicationFragment (private val appId: Int): Fragment()
           couldNotEnrollCause = -1
         }
         else {
-          btEnrollRefuse.isEnabled = (now >= ep.enableClickTime)
+          //btEnrollRefuse.isEnabled = (now >= ep.enableClickTime)
           if (now >= ep.enableClickTime) {
             couldEnroll = true
             couldNotEnrollCause = -1
@@ -593,10 +655,7 @@ class ApplicationFragment (private val appId: Int): Fragment()
 
   private fun setVisibilityToViews(porterIsEnrolled: Boolean, view: View) {
     if (porterIsEnrolled) {
-      tvEnrolled.visibility = View.VISIBLE
-      tvEnrolled.textSize = 34.0f
-      tvEnrolled.text = getString(R.string.app_you_are_enrolled)
-      tvEnrolled.setTextColor(resources.getColor(R.color.emerald))
+      changeStatusToEnrolled()
 
       rvPorters.visibility = View.VISIBLE
       btCallClient.visibility = View.VISIBLE
@@ -605,7 +664,7 @@ class ApplicationFragment (private val appId: Int): Fragment()
       setLayoutConstraints(tvEnrolledIsVisible = true, view)
     }
     else {
-      tvEnrolled.visibility = View.INVISIBLE
+      tvStatus.visibility = View.INVISIBLE
       rvPorters.visibility = View.INVISIBLE
       btCallClient.visibility = View.INVISIBLE
       btClientWhatsapp.visibility = View.INVISIBLE
@@ -620,7 +679,7 @@ class ApplicationFragment (private val appId: Int): Fragment()
     if (tvEnrolledIsVisible) {
       val ap = tvAddress.layoutParams as ConstraintLayout.LayoutParams
       ap.topToTop = ConstraintLayout.LayoutParams.UNSET
-      ap.topToBottom = tvEnrolled.id
+      ap.topToBottom = tvStatus.id
       tvAddress.layoutParams = ap
 
       if (withoutPorters) {
@@ -674,9 +733,9 @@ class ApplicationFragment (private val appId: Int): Fragment()
 
 
   private fun setViews(view: View) {
-    tvEnrolled = view.findViewById(R.id.tv_app_enrolled)
     tvStatus = view.findViewById(R.id.tv_app_status)
-    tvStatusCommission = view.findViewById(R.id.tv_app_status_commission)
+    tvEndStatus = view.findViewById(R.id.tv_app_end_status)
+    tvCommissionStatus = view.findViewById(R.id.tv_app_status_commission)
     btPay = view.findViewById(R.id.bt_app_pay)
     tvAddress = view.findViewById(R.id.tv_app_address)
     tvTime = view.findViewById(R.id.tv_app_time)
@@ -692,6 +751,13 @@ class ApplicationFragment (private val appId: Int): Fragment()
     btBack = view.findViewById(R.id.bt_app_back)
     nsvApp = view.findViewById(R.id.nsv_app)
     tvWhenCall = view.findViewById(R.id.tv_app_when_call)
+    btAppConfirm = view.findViewById(R.id.bt_app_confirm)
+    tvAppConfirm = view.findViewById(R.id.tv_app_confirm)
+
+
+    btAppConfirm.setOnClickListener {
+      confirmYourParticipation(appId)
+    }
 
     btClientWhatsapp.setOnClickListener {
       lvdAppItem.value?.let { appItem ->
@@ -818,10 +884,26 @@ class ApplicationFragment (private val appId: Int): Fragment()
     }
   }
 
-  /*private fun openWhatsappContact(number: String) {
-    Log.i ("openWhatsappContact", "https://wa.me/$number")
-    val uri = Uri.parse("https://wa.me/$number")
-    val intent = Intent(Intent.ACTION_VIEW, uri)
-    startActivity(intent)
-  }*/
+  private fun confirmYourParticipation(appId: Int) {
+    server.confirmParticipation(appId) { response ->
+      when (response.type) {
+        SERVER_OK     -> ConfirmReaction(response).doOnServerOkResult()
+        SYSTEM_ERROR  -> ConfirmReaction(response).doOnSystemError()
+        SERVER_ERROR  -> ConfirmReaction(response).doOnServerError()
+      }
+    }
+  }
+
+  private inner class ConfirmReaction (val response: Response):
+    ReactionOnResponse(TAG, requireContext(), vm.rootView, response)
+  {
+    override fun doOnServerOkResult() {
+      changeStatusToEnrolled()
+      hideConfirmationInfo()
+      removeNotification(requireContext(), appId)
+    }
+
+    override fun doOnServerFieldValidationError(response: Response) {}
+    override fun doOnEndSessionError() {}
+  }
 }

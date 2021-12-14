@@ -4,8 +4,13 @@
 
     <string name="yes">Да</string>
     <string name="no">Нет</string>
-
+    <string name="confirm">Подтвердить</string>
     <string name="copy">Копировать</string>
+    <string name="show">Показать</string>
+    <string name="collapse">Свернуть</string>
+    <string name="done">Готово</string>
+    <string name="back">Назад</string>
+    <string name="pay">Оплатить</string>
 
     <string name="unknown_server_error">Ошибка от сервера: %1$s</string>
     <string name="internet_is_not_available">Соединение с интернетом отсутствует!</string>
@@ -17,14 +22,6 @@
     <string name="tomorrow">Завтра</string>
     <string name="hourly_suffix"> р/ч</string>
     <string name="daily_suffix"> за 8ч</string>
-
-    <string name="show">Показать</string>
-    <string name="collapse">Свернуть</string>
-
-    <string name="done">Готово</string>
-    <string name="back">Назад</string>
-
-    <string name="pay">Оплатить</string>
 
     <string name="empty_phone">Укажите номер телефона!</string>
     <string name="wrong_phone">Задайте корректный российский номер телефона!</string>
@@ -121,7 +118,7 @@
     <string name="app_you_are_enrolled">Вы записаны</string>
     <string name="app_no_card">без карты</string>
 
-    <string name="app_when_call">Звонить по приезду!</string>
+    <string name="app_when_call">Звонить(писать) только по приезду!</string>
     <string name="app_could_not_enroll_cause_interval">Нельзя записаться: между заявками меньше часа</string>
     <string name="app_could_not_enroll_cause_refuses">Нельзя записаться: частая запись/отмена заявок</string>
     <string name="app_could_not_enroll_cause_unknown">Нельзя записаться: неизвестная проблема</string>
@@ -189,5 +186,7 @@
     <string name="app_could_not_enroll_cause_not_confirmed_pay">Нельзя записаться: оплата комиссии не подтверждена</string>
     <string name="poll_confirmation_notification">Подтвердите свой выход</string>
     <string name="poll_confirmation_notification_text">на заявку</string>
+    <string name="app_confirm">свой выход на заявку</string>
+    <string name="app_status_need_confirm">Подтвердите свой выход</string>
 
 </resources>

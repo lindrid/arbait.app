@@ -22,7 +22,7 @@
             android:layout_height="wrap_content">
 
             <androidx.appcompat.widget.AppCompatTextView
-                android:id="@+id/tv_app_enrolled"
+                android:id="@+id/tv_app_status"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/app_you_are_enrolled"
@@ -36,10 +36,10 @@
                 app:layout_constraintTop_toTopOf="parent" />
 
             <androidx.appcompat.widget.AppCompatTextView
-                android:id="@+id/tv_app_status"
+                android:id="@+id/tv_app_end_status"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="@string/app_you_are_enrolled"
+                android:text=""
                 android:textAlignment="center"
                 android:textColor="@color/royalblue"
                 android:textSize="25sp"
@@ -48,13 +48,13 @@
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintHorizontal_bias="0.502"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/tv_app_enrolled" />
+                app:layout_constraintTop_toBottomOf="@+id/tv_app_status" />
 
             <androidx.appcompat.widget.AppCompatTextView
                 android:id="@+id/tv_app_status_commission"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="@string/app_you_are_enrolled"
+                android:text=""
                 android:textAlignment="center"
                 android:textColor="@color/red"
                 android:textSize="25sp"
@@ -63,7 +63,7 @@
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintHorizontal_bias="0.503"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/tv_app_status" />
+                app:layout_constraintTop_toBottomOf="@+id/tv_app_end_status" />
 
             <androidx.appcompat.widget.AppCompatTextView
                 android:id="@+id/tv_app_address"
@@ -234,5 +234,29 @@
         app:layout_constraintBottom_toTopOf="@+id/bt_app_enroll_refuse"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent" />
+
+    <androidx.appcompat.widget.AppCompatButton
+        android:id="@+id/bt_app_confirm"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="20dp"
+        android:text="@string/confirm"
+        android:visibility="invisible"
+        app:layout_constraintBottom_toTopOf="@+id/bt_app_call_client"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toStartOf="@+id/tv_app_confirm" />
+
+    <androidx.appcompat.widget.AppCompatTextView
+        android:id="@+id/tv_app_confirm"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="30dp"
+        android:text="@string/app_confirm"
+        android:textColor="@color/emerald"
+        android:textSize="18sp"
+        android:visibility="invisible"
+        app:layout_constraintBottom_toTopOf="@+id/bt_app_call_client"
+        app:layout_constraintStart_toEndOf="@+id/bt_app_confirm"
+        app:layout_constraintEnd_toEndOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

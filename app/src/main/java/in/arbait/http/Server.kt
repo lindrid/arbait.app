@@ -89,6 +89,14 @@ class Server (private val context: Context)
     )
   }
 
+  fun confirmParticipation (appId: Int,
+                            onResult: (`in`.arbait.http.response.Response) -> Unit)
+  {
+    serverApi.confirmParticipation(headers, appId).enqueue(
+      getCallbackObjectShort("confirmParticipation", onResult)
+    )
+  }
+
   fun commissionPayed (s: String, commission: Int, payType: Int,
                        onResult: (`in`.arbait.http.response.Response) -> Unit)
   {

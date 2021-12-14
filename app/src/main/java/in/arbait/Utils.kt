@@ -1,6 +1,7 @@
 package `in`.arbait
 
 import `in`.arbait.http.items.ApplicationItem
+import `in`.arbait.http.participationIsConfirmed
 import android.app.Activity
 import android.content.ClipData
 import android.content.ClipboardManager
@@ -299,7 +300,10 @@ fun getDiffYears (first: Date?, last: Date?): Int {
   return diff
 }
 
-fun strToDate (dateStr: String, dateFormat: String): Date? {
+fun strToDate (dateStr: String?, dateFormat: String): Date? {
+  if (dateStr == null)
+    return null
+
   var date: Date? = null
   val sdf: DateFormat = SimpleDateFormat(dateFormat)
 
@@ -322,6 +326,10 @@ fun getCalendar (date: Date?): Calendar {
 
 fun needToConfirmTakenApp(takenApp: ApplicationItem, serverDate: Date): Boolean
 {
+  if (participationIsConfirmed(takenApp)) {
+    return false
+  }
+
   val serverCal = getCalendar(serverDate)
 
   strToDate(takenApp.createdAt, DATE_TIME_FORMAT)?.let { createdAt ->
@@ -333,8 +341,7 @@ fun needToConfirmTakenApp(takenApp: ApplicationItem, serverDate: Date): Boolean
   val hours = takenApp.time.substring (0, takenApp.time.indexOf(':')).toInt()
   val minutes = takenApp.time.substring (takenApp.time.indexOf(':') + 1).toInt()
 
-  Log.i ("calendar", "hours = $hours, minutes = $minutes")
-  var diffHours = hours - serverCal[Calendar.HOUR]
+  var diffHours = hours - serverCal[Calendar.HOUR_OF_DAY]
   val diffMinutes = if (minutes < serverCal[Calendar.MINUTE]) {
     diffHours--
     60 + minutes - serverCal[Calendar.MINUTE]
@@ -342,6 +349,11 @@ fun needToConfirmTakenApp(takenApp: ApplicationItem, serverDate: Date): Boolean
   else {
     minutes - serverCal[Calendar.MINUTE]
   }
+
+  Log.i ("calendar", "server date: $serverDate")
+  Log.i ("calendar", "server: hours = ${serverCal[Calendar.HOUR_OF_DAY]}, minutes = ${serverCal[Calendar.MINUTE]}")
+  Log.i ("calendar", "hours = $hours, minutes = $minutes")
+  Log.i ("calendar", "diffHours = $diffHours, diffMinutes = $diffMinutes")
 
   return  (diffHours == 2 && diffMinutes <= 5) ||
           (diffHours == 1 && diffMinutes > 50)

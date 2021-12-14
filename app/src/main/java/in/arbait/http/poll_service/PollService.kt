@@ -151,7 +151,7 @@ class PollService : LifecycleService(), Serializable
                   Log.i (TAG, "notificationsOff = ${App.dbUser?.notificationsOff}")
                   if (App.dbUser?.notificationsOff == false && !firstTime) {
                     val n = createNewAppNotification(openApps[i])
-                    showNotification(openApps[i].id, n)
+                    showNotification(applicationContext, openApps[i].id, n)
                   }
                 }
               }
@@ -171,17 +171,25 @@ class PollService : LifecycleService(), Serializable
               takenAppsLvdList.value = takenApps
             }
 
-            for (i in takenApps.indices) {
-              if (takenApps[i].state > CLOSED_STATE)
-                continue
+            takenAppsLvdList.value?.let { takenApps ->
+              for (i in takenApps.indices) {
+                if (takenApps[i].state > CLOSED_STATE)
+                  continue
 
-              val notificationHasNotShown = !(takenApps[i].notificationHasShown)
-              if (notificationHasNotShown) {
-                if (needToConfirmTakenApp(takenApps[i], serverDate)) {
-                  takenApps[i].needToConfirm = true
-                  val n = createConfirmationNotification(takenApps[i].id)
-                  showNotification(takenApps[i].id, n)
-                  takenApps[i].notificationHasShown = true
+                if (takenApps[i].address != null) {
+                  if (needToConfirmTakenApp(takenApps[i], serverDate)) {
+                    takenApps[i].needToConfirm = true
+
+                    val notificationHasNotShown = !(takenApps[i].notificationHasShown)
+                    if (notificationHasNotShown && App.dbUser?.notificationsOff == false) {
+                      val n = createConfirmationNotification(takenApps[i].id)
+                      showNotification(applicationContext, takenApps[i].id, n)
+                      takenApps[i].notificationHasShown = true
+                    }
+                  }
+                  else {
+                    takenApps[i].needToConfirm = false
+                  }
                 }
               }
             }
@@ -190,7 +198,7 @@ class PollService : LifecycleService(), Serializable
 
             if (closedApps.isNotEmpty()) {
               for (j in closedApps.indices) {
-                removeNotification(closedApps[j].id)
+                removeNotification(applicationContext, closedApps[j].id)
               }
             }
 
@@ -292,6 +300,7 @@ class PollService : LifecycleService(), Serializable
           if (takenApps[j].id == takenAppsFromServer[i].id) {
             takenAppsContainThisApp = true
             if (appIsNewOrUpdated) {
+              Log.i ("PEREZAPIS", "takenAppsFromServer[i] = ${takenAppsFromServer[i]}")
               takenApps[j] = takenAppsFromServer[i]
               takenAppsWasChanged = true
             }
@@ -299,7 +308,9 @@ class PollService : LifecycleService(), Serializable
         }
 
         if (!takenAppsContainThisApp) {
-          takenApps.add(takenAppsFromServer[i])
+          val appIsNewOrUpdated = (takenAppsFromServer[i].address != null)
+          if (appIsNewOrUpdated)
+            takenApps.add(takenAppsFromServer[i])
         }
       }
 
@@ -370,18 +381,16 @@ class PollService : LifecycleService(), Serializable
     setServiceState(this, ServiceState.STOPPED)
   }
 
-
-
-  private fun showNotification(id: Int, notification: Notification) {
+  /*private fun showNotification(id: Int, notification: Notification) {
     val notificationManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
     notificationManager.notify(id, notification)
   }
 
-  private fun removeNotification(id: Int) {
+   private fun removeNotification(id: Int) {
     val notificationManager =
       applicationContext.getSystemService(NOTIFICATION_SERVICE) as NotificationManager
     notificationManager.cancel(id)
-  }
+  } */
 
 
   private fun getAppWaitingTime(newApp: ApplicationItem, serverTime: Long, maxRating: Int): Long
