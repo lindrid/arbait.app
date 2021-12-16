@@ -54,7 +54,7 @@ interface ServerApi {
                         @Query("commission") commission: Int,
                         @Query("pay_type") payType: Int): Call<String>
 
-  @POST("/api/participation/confirm")
-  fun confirmParticipation (  @HeaderMap headers: Map<String, String>,
-                              @Query("app_id") appId: Int): Call<String>
+  @POST("/api/application/participation/confirm")
+  fun confirmParticipationInApp (@HeaderMap headers: Map<String, String>,
+                                 @Query("app_id") appId: Int): Call<String>
 }

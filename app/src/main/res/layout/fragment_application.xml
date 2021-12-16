@@ -51,6 +51,21 @@
                 app:layout_constraintTop_toBottomOf="@+id/tv_app_status" />
 
             <androidx.appcompat.widget.AppCompatTextView
+                android:id="@+id/tv_app_confirm_status"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/app_sub_status_need_confirm"
+                android:textAlignment="center"
+                android:textColor="@color/red"
+                android:textSize="25sp"
+                android:textStyle="bold"
+                android:visibility="invisible"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintHorizontal_bias="0.502"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/tv_app_status" />
+
+            <androidx.appcompat.widget.AppCompatTextView
                 android:id="@+id/tv_app_status_commission"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"

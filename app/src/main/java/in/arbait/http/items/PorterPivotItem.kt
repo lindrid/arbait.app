@@ -12,7 +12,7 @@ data class PorterPivotItem (
   @SerializedName("residue") val residue: Int,
   @SerializedName("porter_payed") val payed: Boolean,
   @SerializedName("pay_is_confirmed") val confirmed: Boolean,
-  @SerializedName("is_confirmed") val participationIsConfirmed: Boolean
+  @SerializedName("is_confirmed") val appIsConfirmed: Boolean
 ): Serializable {}
 
 /*

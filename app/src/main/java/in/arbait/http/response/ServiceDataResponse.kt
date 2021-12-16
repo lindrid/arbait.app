@@ -24,6 +24,9 @@ class ServiceDataResponse (var response: Response = Response()) {
   @SerializedName("w")
   var dispatcherWhatsapp: String? = null
 
+  @SerializedName("c")
+  var dispatcherPhoneCall: String? = null
+
   init {
     if (response.noResult)
       openApps = emptyList()

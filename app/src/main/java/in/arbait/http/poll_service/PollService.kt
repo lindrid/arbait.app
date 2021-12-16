@@ -5,6 +5,7 @@ import `in`.arbait.http.items.ApplicationItem
 import `in`.arbait.http.response.ServiceDataResponse
 import `in`.arbait.http.response.SERVER_OK
 import `in`.arbait.http.Server
+import `in`.arbait.http.appIsConfirmed
 import android.app.*
 import android.app.NotificationManager.*
 import android.content.Context
@@ -56,6 +57,8 @@ class PollService : LifecycleService(), Serializable
     private set
 
   val lvdDispatcherWhatsapp: MutableLiveData<String> = MutableLiveData()
+  val lvdDispatcherPhoneCall: MutableLiveData<String> = MutableLiveData()
+
   val openAppsLvdList: MutableLiveData<List<ApplicationItem>> = MutableLiveData()
   val takenAppsLvdList: MutableLiveData<List<ApplicationItem>> = MutableLiveData()
 
@@ -108,6 +111,10 @@ class PollService : LifecycleService(), Serializable
 
             it.dispatcherWhatsapp?.let { phone ->
               lvdDispatcherWhatsapp.value = phone
+            }
+
+            it.dispatcherPhoneCall?.let { phone ->
+              lvdDispatcherPhoneCall.value = phone
             }
 
             Log.i(TAG, "appsFromANotInB(openAppsFromServer, $openApps)")
@@ -167,31 +174,18 @@ class PollService : LifecycleService(), Serializable
             }
 
             openAppsLvdList.value = openApps
+
+            val takenAppsFromServer = takenApps
             if (takenAppsWasChanged) {
-              takenAppsLvdList.value = takenApps
+              doThingsIfItsTimeToConfirmApp(takenAppsFromServer, serverDate)
+              takenAppsLvdList.value = takenAppsFromServer
             }
-
-            takenAppsLvdList.value?.let { takenApps ->
-              for (i in takenApps.indices) {
-                if (takenApps[i].state > CLOSED_STATE)
-                  continue
-
-                if (takenApps[i].address != null) {
-                  if (needToConfirmTakenApp(takenApps[i], serverDate)) {
-                    takenApps[i].needToConfirm = true
-
-                    val notificationHasNotShown = !(takenApps[i].notificationHasShown)
-                    if (notificationHasNotShown && App.dbUser?.notificationsOff == false) {
-                      val n = createConfirmationNotification(takenApps[i].id)
-                      showNotification(applicationContext, takenApps[i].id, n)
-                      takenApps[i].notificationHasShown = true
-                    }
-                  }
-                  else {
-                    takenApps[i].needToConfirm = false
-                  }
-                }
+            else {
+              val mList = takenAppsLvdList.value?.toMutableList()
+              mList?.let { list ->
+                doThingsIfItsTimeToConfirmApp(list, serverDate)
               }
+              takenAppsLvdList.value = if (mList == null) emptyList() else mList
             }
 
             Log.i (TAG, "takenApps = ${takenAppsLvdList.value}")
@@ -207,10 +201,6 @@ class PollService : LifecycleService(), Serializable
         }
       }
     )
-  }
-
-  private fun needToNotifyPorterAboutTakenApp(): Boolean {
-    return true
   }
 
   override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -239,6 +229,33 @@ class PollService : LifecycleService(), Serializable
     log("The service has been destroyed".toUpperCase())
   }
 
+
+  private fun doThingsIfItsTimeToConfirmApp(takenApps: MutableList<ApplicationItem>,
+                                            serverDate: Date)
+  {
+    for (i in takenApps.indices) {
+      if (takenApps[i].state > CLOSED_STATE)
+        continue
+
+      if (takenApps[i].needToConfirm) {
+        if (!appIsConfirmed(takenApps[i])) {
+          if (itIsTimeToConfirmApp(takenApps[i], serverDate)) {
+            takenApps[i].itIsTimeToConfirm = true
+
+            val notificationHasNotShown = !(takenApps[i].notificationHasShown)
+            if (notificationHasNotShown && App.dbUser?.notificationsOff == false) {
+              val n = createConfirmationNotification(takenApps[i].id)
+              showNotification(applicationContext, takenApps[i].id, n)
+              takenApps[i].notificationHasShown = true
+            }
+          }
+          else {
+            takenApps[i].itIsTimeToConfirm = false
+          }
+        }
+      }
+    }
+  }
 
   private fun setOpenApps(openAppsFromServer: List<ApplicationItem>,
                           closedApps: List<ApplicationItem>)

@@ -17,12 +17,12 @@ fun sessionIsAlive(lastCreatedUserDatetime: Date): Boolean {
   return false
 }
 
-fun participationIsConfirmed(takenApp: ApplicationItem): Boolean {
+fun appIsConfirmed(takenApp: ApplicationItem): Boolean {
   App.userItem?.let { user ->
     takenApp.porters?.let { porters ->
       for (i in porters.indices) {
         if (porters[i].user.id == user.id) {
-          if (porters[i].pivot.participationIsConfirmed)
+          if (porters[i].pivot.appIsConfirmed)
             return true
         }
       }

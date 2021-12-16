@@ -188,5 +188,6 @@
     <string name="poll_confirmation_notification_text">на заявку</string>
     <string name="app_confirm">свой выход на заявку</string>
     <string name="app_status_need_confirm">Подтвердите свой выход</string>
+    <string name="app_sub_status_need_confirm">За 2 часа до начала подтвердите заявку! (появится кнопка в заявке)</string>
 
 </resources>

@@ -19,12 +19,13 @@ data class ApplicationItem (
   @SerializedName("price_for_worker") val priceForWorker: Int,
   val state: Int,
   @SerializedName("dispatcher_id") val dispatcherId: Int,
+  @SerializedName("need_to_confirm") val needToConfirm: Boolean,
   @SerializedName("created_at") val createdAt: String,
   @SerializedName("updated_at") val updatedAt: String,
   @SerializedName("porters") val porters: List<PorterItem>?,
 
   var expanded: Boolean = true,
-  var needToConfirm: Boolean = false,
+  var itIsTimeToConfirm: Boolean = false,
   var hideUntilTime: Long = -1L,
   var notificationHasShown: Boolean = false
 ): Serializable {}

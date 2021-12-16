@@ -89,11 +89,11 @@ class Server (private val context: Context)
     )
   }
 
-  fun confirmParticipation (appId: Int,
-                            onResult: (`in`.arbait.http.response.Response) -> Unit)
+  fun confirmParticipationInApp (appId: Int,
+                                 onResult: (`in`.arbait.http.response.Response) -> Unit)
   {
-    serverApi.confirmParticipation(headers, appId).enqueue(
-      getCallbackObjectShort("confirmParticipation", onResult)
+    serverApi.confirmParticipationInApp(headers, appId).enqueue(
+      getCallbackObjectShort("confirmParticipationInApp", onResult)
     )
   }
 

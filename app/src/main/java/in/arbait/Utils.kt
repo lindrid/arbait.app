@@ -1,7 +1,6 @@
 package `in`.arbait
 
 import `in`.arbait.http.items.ApplicationItem
-import `in`.arbait.http.participationIsConfirmed
 import android.app.Activity
 import android.content.ClipData
 import android.content.ClipboardManager
@@ -95,6 +94,13 @@ fun versionIsNineOrGreater(): Boolean {
   }
 
   return false
+}
+
+fun phoneCall(context: Context?, phone: String) {
+  val intent = Intent(Intent.ACTION_DIAL)
+  val uriStr = "tel:$phone"
+  intent.data = Uri.parse(uriStr)
+  context?.startActivity(intent)
 }
 
 fun openWhatsappContact(activity: Activity, number: String) {
@@ -324,12 +330,8 @@ fun getCalendar (date: Date?): Calendar {
   return cal
 }
 
-fun needToConfirmTakenApp(takenApp: ApplicationItem, serverDate: Date): Boolean
+fun itIsTimeToConfirmApp(takenApp: ApplicationItem, serverDate: Date): Boolean
 {
-  if (participationIsConfirmed(takenApp)) {
-    return false
-  }
-
   val serverCal = getCalendar(serverDate)
 
   strToDate(takenApp.createdAt, DATE_TIME_FORMAT)?.let { createdAt ->
@@ -356,5 +358,5 @@ fun needToConfirmTakenApp(takenApp: ApplicationItem, serverDate: Date): Boolean
   Log.i ("calendar", "diffHours = $diffHours, diffMinutes = $diffMinutes")
 
   return  (diffHours == 2 && diffMinutes <= 5) ||
-          (diffHours == 1 && diffMinutes > 50)
+          (diffHours == 1 && diffMinutes >= 50)
 }

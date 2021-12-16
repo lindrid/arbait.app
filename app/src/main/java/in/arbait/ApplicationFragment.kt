@@ -6,6 +6,7 @@ import `in`.arbait.database.EnrollingPermission
 import `in`.arbait.http.PollServerViewModel
 import `in`.arbait.http.ReactionOnResponse
 import `in`.arbait.http.Server
+import `in`.arbait.http.appIsConfirmed
 import `in`.arbait.http.items.ApplicationItem
 import `in`.arbait.http.items.PhoneItem
 import `in`.arbait.http.items.PorterItem
@@ -39,6 +40,7 @@ import kotlin.math.abs
 private const val TAG = "ApplicationFragment"
 private const val REFUSE_DIALOG_TAG = "REFUSE_DIALOG"
 
+const val DISPATCHER_PHONE = "+79240078897"
 
 const val CLOSED_STATE = 2
 const val READY_TO_PAY = 4
@@ -80,6 +82,7 @@ class ApplicationFragment (private val appId: Int): Fragment()
   private lateinit var tvStatus: AppCompatTextView
   private lateinit var tvEndStatus: AppCompatTextView
   private lateinit var tvCommissionStatus: AppCompatTextView
+  private lateinit var tvConfirmationStatus: AppCompatTextView
   private lateinit var btPay: AppCompatButton
   private lateinit var tvAddress: AppCompatTextView
   private lateinit var tvTime: AppCompatTextView
@@ -151,16 +154,19 @@ class ApplicationFragment (private val appId: Int): Fragment()
       }
     }
 
+    if (item.itemId == R.id.bt_menu_phone) {
+      vm.lvdDispatcherPhoneCall.value?.let { phone ->
+        phoneCall(requireContext(), phone)
+      }
+    }
+
     return super.onOptionsItemSelected(item)
   }
 
 
   private fun onCallClientBtnClick() {
     lvdAppItem.value?.let { appItem ->
-      val intent = Intent(Intent.ACTION_DIAL)
-      val uriStr = "tel:${appItem.clientPhoneNumber}"
-      intent.data = Uri.parse(uriStr)
-      context?.startActivity(intent)
+      phoneCall(requireContext(), appItem.clientPhoneNumber)
     }
   }
 
@@ -196,7 +202,7 @@ class ApplicationFragment (private val appId: Int): Fragment()
     lvdAppItem = MutableLiveData(
       ApplicationItem(0,"","","","",
       0,"",0,0,true,0,0,
-    1,0, "", "", listOf<PorterItem>(), true))
+    1,0, false,"", "", listOf<PorterItem>(), true))
     lastAppItem?.let {
       lvdAppItem.value = it
     }
@@ -361,6 +367,8 @@ class ApplicationFragment (private val appId: Int): Fragment()
       Log.i (TAG, "newEnrollingPermission = $newEp")
       addOrUpdateEnrollPermission(ep, newEp)
       porterIsEnrolled = false
+      hideConfirmationStatus()
+      hideConfirmationInfo()
 
       btEnrollRefuse.text = getString(R.string.app_enroll)
       setVisibilityToViews(false, vm.rootView)
@@ -411,6 +419,7 @@ class ApplicationFragment (private val appId: Int): Fragment()
           if (appItem.porters != null)
             porter = getThisUserPorter(it)
           Log.i (TAG, "porter is $porter")
+
           updateUI()
         }
       }
@@ -434,6 +443,7 @@ class ApplicationFragment (private val appId: Int): Fragment()
 
   private fun updateUI() {
     Log.i ("track", "updateUI")
+
     setViewsTexts()
     updatePorters()
 
@@ -441,10 +451,19 @@ class ApplicationFragment (private val appId: Int): Fragment()
       return
 
     lvdAppItem.value?.let { app ->
-      if (porterIsEnrolled && app.needToConfirm)
-        showConfirmationInfo()
-      else
-        hideConfirmationInfo()
+      if (porterIsEnrolled) {
+        if (app.needToConfirm) {
+          if (!appIsConfirmed(app)) {
+            hideConfirmationInfo()
+            hideConfirmationStatus()
+
+            if (app.itIsTimeToConfirm)
+              showConfirmationInfo()
+            else
+              showConfirmationStatus()
+          }
+        }
+      }
     }
 
     GlobalScope.launch(Dispatchers.Main)
@@ -587,6 +606,22 @@ class ApplicationFragment (private val appId: Int): Fragment()
     }
   }
 
+  private fun showConfirmationStatus() {
+    val dp = tvAddress.layoutParams as ConstraintLayout.LayoutParams
+    dp.topToBottom = tvConfirmationStatus.id
+    tvAddress.layoutParams = dp
+
+    tvConfirmationStatus.visibility = View.VISIBLE
+  }
+
+  private fun hideConfirmationStatus() {
+    val dp = tvAddress.layoutParams as ConstraintLayout.LayoutParams
+    dp.topToBottom = ConstraintLayout.LayoutParams.UNSET
+    tvAddress.layoutParams = dp
+
+    tvConfirmationStatus.visibility = View.INVISIBLE
+  }
+
   private fun showConfirmationInfo() {
     val dp = nsvApp.layoutParams as ConstraintLayout.LayoutParams
     dp.bottomToTop = btAppConfirm.id
@@ -601,6 +636,10 @@ class ApplicationFragment (private val appId: Int): Fragment()
     tvWhenCall.visibility = View.INVISIBLE
 
     changeStatusToError(getString(R.string.app_status_need_confirm))
+
+    val lp = tvAddress.layoutParams as ConstraintLayout.LayoutParams
+    lp.topToBottom = tvStatus.id
+    tvAddress.layoutParams = lp
   }
 
   private fun hideConfirmationInfo() {
@@ -608,8 +647,16 @@ class ApplicationFragment (private val appId: Int): Fragment()
     dp.bottomToTop = btCallClient.id
     nsvApp.layoutParams = dp
 
+    val lp = tvAddress.layoutParams as ConstraintLayout.LayoutParams
+    if (porterIsEnrolled)
+      lp.topToBottom = tvStatus.id
+    else
+      lp.topToBottom = ConstraintLayout.LayoutParams.UNSET
+    tvAddress.layoutParams = lp
+
     btAppConfirm.visibility = View.INVISIBLE
     tvAppConfirm.visibility = View.INVISIBLE
+    tvWhenCall.visibility = View.VISIBLE
 
     btCallClient.isEnabled = true
     btClientWhatsapp.isEnabled = true
@@ -735,6 +782,7 @@ class ApplicationFragment (private val appId: Int): Fragment()
   private fun setViews(view: View) {
     tvStatus = view.findViewById(R.id.tv_app_status)
     tvEndStatus = view.findViewById(R.id.tv_app_end_status)
+    tvConfirmationStatus = view.findViewById(R.id.tv_app_confirm_status)
     tvCommissionStatus = view.findViewById(R.id.tv_app_status_commission)
     btPay = view.findViewById(R.id.bt_app_pay)
     tvAddress = view.findViewById(R.id.tv_app_address)
@@ -885,7 +933,7 @@ class ApplicationFragment (private val appId: Int): Fragment()
   }
 
   private fun confirmYourParticipation(appId: Int) {
-    server.confirmParticipation(appId) { response ->
+    server.confirmParticipationInApp(appId) { response ->
       when (response.type) {
         SERVER_OK     -> ConfirmReaction(response).doOnServerOkResult()
         SYSTEM_ERROR  -> ConfirmReaction(response).doOnSystemError()
