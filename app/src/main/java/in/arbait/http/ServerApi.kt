@@ -1,7 +1,6 @@
 package `in`.arbait.http
 
 import `in`.arbait.http.response.ApplicationResponse
-import `in`.arbait.http.response.Response
 import `in`.arbait.http.response.ServiceDataResponse
 import `in`.arbait.http.response.UserResponse
 import retrofit2.Call
@@ -16,7 +15,8 @@ interface ServerApi {
   fun register (@HeaderMap headers: Map<String, String>, @Body userData: User): Call<String>
 
   @POST("/api/auth/android/login")
-  fun login (@HeaderMap headers: Map<String, String>,  @Query("phone") phone: String): Call<String>
+  fun login (@HeaderMap headers: Map<String, String>,  @Query("phone") phone: String):
+      Call<String>
 
   @POST("/api/send_ver_request")
   fun sendVerRequest (@HeaderMap headers: Map<String, String>): Call<String>

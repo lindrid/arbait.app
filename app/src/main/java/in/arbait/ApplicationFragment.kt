@@ -32,7 +32,10 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import kotlinx.coroutines.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.async
+import kotlinx.coroutines.launch
 import java.util.*
 import kotlin.math.abs
 
@@ -361,7 +364,7 @@ class ApplicationFragment (private val appId: Int): Fragment()
         Log.i(TAG, "coefficient=$coefficient")
 
         newEp.enableClickTime = now + coefficient * DISABLE_BTN_BASE_RANGE
-        //btEnrollRefuse.isEnabled = false
+        btEnrollRefuse.isEnabled = false
       }
 
       Log.i (TAG, "newEnrollingPermission = $newEp")
@@ -407,7 +410,7 @@ class ApplicationFragment (private val appId: Int): Fragment()
             lvdAppItem.value?.let {
               it.workerCount--
               updateUI()
-              //btEnrollRefuse.isEnabled = false
+              btEnrollRefuse.isEnabled = false
             }
           }
           if (anotherPorterTakeApp) {
@@ -535,7 +538,6 @@ class ApplicationFragment (private val appId: Int): Fragment()
         }
         else {
           couldEnroll = true
-          /*
           val statusText = when (couldNotEnrollCause) {
             CAUSE_FREQUENT_APP_REFUSING -> getString(R.string.app_could_not_enroll_cause_refuses)
             CAUSE_SMALL_TIME_INTERVAL -> getString(R.string.app_could_not_enroll_cause_interval)
@@ -545,7 +547,7 @@ class ApplicationFragment (private val appId: Int): Fragment()
           }
           changeStatusToError(statusText)
           btEnrollRefuse.isEnabled = false
-          setLayoutConstraints(tvEnrolledIsVisible = true, btEnrollRefuse, withoutPorters = true)*/
+          setLayoutConstraints(tvEnrolledIsVisible = true, btEnrollRefuse, withoutPorters = true)
         }
       }
       else {
@@ -554,7 +556,7 @@ class ApplicationFragment (private val appId: Int): Fragment()
 
       val app = lvdAppItem.value
       if (app != null && app.state > CLOSED_STATE) {
-        //btEnrollRefuse.isEnabled = false
+        btEnrollRefuse.isEnabled = false
       }
 
       if (app != null && app.state >= READY_TO_PAY) {
@@ -600,8 +602,8 @@ class ApplicationFragment (private val appId: Int): Fragment()
       }
 
       lvdAppItem.value?.let { app ->
-        //if (app.id == 0)
-          // btEnrollRefuse.isEnabled = false
+        if (app.id == 0)
+           btEnrollRefuse.isEnabled = false
       }
     }
   }
@@ -686,7 +688,7 @@ class ApplicationFragment (private val appId: Int): Fragment()
           couldNotEnrollCause = -1
         }
         else {
-          //btEnrollRefuse.isEnabled = (now >= ep.enableClickTime)
+          btEnrollRefuse.isEnabled = (now >= ep.enableClickTime)
           if (now >= ep.enableClickTime) {
             couldEnroll = true
             couldNotEnrollCause = -1

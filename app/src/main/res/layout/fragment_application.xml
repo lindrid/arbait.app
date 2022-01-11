@@ -224,19 +224,19 @@
         android:layout_marginBottom="20dp"
         android:text="@string/app_call_client"
         app:layout_constraintBottom_toTopOf="@+id/bt_app_enroll_refuse"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toStartOf="@+id/bt_app_client_whatsapp" />
+        app:layout_constraintEnd_toStartOf="@+id/bt_app_client_whatsapp"
+        app:layout_constraintStart_toStartOf="parent" />
 
     <androidx.appcompat.widget.AppCompatButton
         android:id="@+id/bt_app_client_whatsapp"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginBottom="20dp"
+        android:drawableRight="@drawable/baseline_whatsapp_green_24"
         android:text="@string/app_write_to_client"
         app:layout_constraintBottom_toTopOf="@+id/bt_app_enroll_refuse"
-        app:layout_constraintStart_toEndOf="@id/bt_app_call_client"
         app:layout_constraintEnd_toEndOf="parent"
-        android:drawableRight="@drawable/baseline_whatsapp_green_24" />
+        app:layout_constraintStart_toEndOf="@id/bt_app_call_client" />
 
     <androidx.appcompat.widget.AppCompatTextView
         android:id="@+id/tv_app_when_call"
@@ -258,8 +258,8 @@
         android:text="@string/confirm"
         android:visibility="invisible"
         app:layout_constraintBottom_toTopOf="@+id/bt_app_call_client"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toStartOf="@+id/tv_app_confirm" />
+        app:layout_constraintEnd_toStartOf="@+id/tv_app_confirm"
+        app:layout_constraintStart_toStartOf="parent" />
 
     <androidx.appcompat.widget.AppCompatTextView
         android:id="@+id/tv_app_confirm"
@@ -271,7 +271,7 @@
         android:textSize="18sp"
         android:visibility="invisible"
         app:layout_constraintBottom_toTopOf="@+id/bt_app_call_client"
-        app:layout_constraintStart_toEndOf="@+id/bt_app_confirm"
-        app:layout_constraintEnd_toEndOf="parent" />
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/bt_app_confirm" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

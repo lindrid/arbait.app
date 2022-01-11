@@ -1,10 +1,9 @@
 package `in`.arbait
 
-import `in`.arbait.database.User
-import `in`.arbait.http.*
+import `in`.arbait.http.ReactionOnResponse
+import `in`.arbait.http.Server
 import `in`.arbait.http.response.*
 import android.os.Bundle
-import androidx.fragment.app.Fragment
 import android.text.method.PasswordTransformationMethod
 import android.util.Log
 import android.view.LayoutInflater
@@ -12,6 +11,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.EditText
+import androidx.fragment.app.Fragment
 
 private const val TAG = "PhoneConfirmation"
 private const val CODE_LENGTH = 4
@@ -63,13 +63,6 @@ class PhoneConfirmationFragment(private val confirmationForLogin: Boolean = fals
 
 
   private fun onClickDoneButton() {
-    App.dbUser?.let { user ->
-      if (!user.callReceived) {
-        showErrorBalloon(requireContext(), rootView, R.string.phone_conf_not_requested_call)
-        return
-      }
-    }
-
     val code = etCode.text.toString()
     Log.i(TAG, "code: $code, code.isEmpty() = ${code.isEmpty()}")
 
