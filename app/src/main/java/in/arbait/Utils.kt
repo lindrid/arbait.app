@@ -10,7 +10,6 @@ import android.content.res.ColorStateList
 import android.graphics.Color
 import android.net.Uri
 import android.os.Build
-
 import android.util.Log
 import android.view.View
 import android.widget.EditText
@@ -22,7 +21,6 @@ import com.skydoves.balloon.BalloonAnimation
 import com.skydoves.balloon.BalloonSizeSpec
 import com.skydoves.balloon.createBalloon
 import java.io.IOException
-import java.lang.Exception
 import java.text.DateFormat
 import java.text.ParseException
 import java.text.SimpleDateFormat
@@ -332,13 +330,10 @@ fun getCalendar (date: Date?): Calendar {
 
 fun itIsTimeToConfirmApp(takenApp: ApplicationItem, serverDate: Date): Boolean
 {
-  val serverCal = getCalendar(serverDate)
+  if (!takenApp.needToConfirm)
+    return false
 
-  strToDate(takenApp.createdAt, DATE_TIME_FORMAT)?.let { createdAt ->
-    val createdAtCal = getCalendar(createdAt)
-    if (serverCal[Calendar.DAY_OF_MONTH] == createdAtCal[Calendar.DAY_OF_MONTH])
-      return false
-  }
+  val serverCal = getCalendar(serverDate)
 
   val hours = takenApp.time.substring (0, takenApp.time.indexOf(':')).toInt()
   val minutes = takenApp.time.substring (takenApp.time.indexOf(':') + 1).toInt()

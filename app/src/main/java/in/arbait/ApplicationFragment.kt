@@ -190,13 +190,13 @@ class ApplicationFragment (private val appId: Int): Fragment()
   }
 
   private fun setAppItem(): Boolean {
-    vm.openAppsLvdItems[appId]?.let {
+    vm.takenAppsLvdItems[appId]?.let {
       if (it.value != null) {
         lvdAppItem = it
         return true
       }
     }
-    vm.takenAppsLvdItems[appId]?.let {
+    vm.openAppsLvdItems[appId]?.let {
       if (it.value != null) {
         lvdAppItem = it
         return true

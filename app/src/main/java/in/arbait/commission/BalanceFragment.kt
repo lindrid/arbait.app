@@ -4,14 +4,16 @@ import `in`.arbait.MainActivity
 import `in`.arbait.R
 import `in`.arbait.copyToClipboard
 import android.os.Bundle
-import android.view.*
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
 import androidx.appcompat.widget.AppCompatButton
 import androidx.appcompat.widget.AppCompatTextView
 import androidx.fragment.app.Fragment
 
 private const val TAG = "CommissionFragment"
 
-const val BALANCE_TEL_NUMBER = "+79240078897"
+const val BALANCE_TEL_NUMBER = "+79240004030"
 const val BALANCE_PAY_TYPE = 1
 
 class BalanceFragment(private val commission: Int): Fragment()

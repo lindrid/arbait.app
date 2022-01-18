@@ -1,16 +1,19 @@
 package `in`.arbait.http.poll_service
 
 import `in`.arbait.*
-import `in`.arbait.http.items.ApplicationItem
-import `in`.arbait.http.response.ServiceDataResponse
-import `in`.arbait.http.response.SERVER_OK
 import `in`.arbait.http.Server
 import `in`.arbait.http.appIsConfirmed
+import `in`.arbait.http.items.ApplicationItem
+import `in`.arbait.http.response.SERVER_OK
+import `in`.arbait.http.response.ServiceDataResponse
 import android.app.*
 import android.app.NotificationManager.*
+import android.app.PendingIntent.FLAG_UPDATE_CURRENT
 import android.content.Context
 import android.content.Intent
 import android.graphics.Color
+import android.media.AudioAttributes
+import android.net.Uri
 import android.os.Binder
 import android.os.Build
 import android.os.IBinder
@@ -18,16 +21,10 @@ import android.os.PowerManager
 import android.util.Log
 import androidx.lifecycle.LifecycleService
 import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.Observer
 import kotlinx.coroutines.*
-import android.app.NotificationManager
-import android.app.PendingIntent
-
-import android.app.PendingIntent.FLAG_UPDATE_CURRENT
-import android.net.Uri
 import java.io.Serializable
-import android.media.AudioAttributes
-import androidx.lifecycle.MutableLiveData
 import java.util.*
 
 
@@ -193,7 +190,9 @@ class PollService : LifecycleService(), Serializable
             if (closedApps.isNotEmpty()) {
               for (j in closedApps.indices) {
                 removeNotification(applicationContext, closedApps[j].id)
+                removeOpenApp(closedApps[j].id)
               }
+              openAppsLvdList.value = openApps
             }
 
             if (firstTime) firstTime = false
@@ -201,6 +200,15 @@ class PollService : LifecycleService(), Serializable
         }
       }
     )
+  }
+
+  private fun removeOpenApp(id: Int) {
+    for (i in openApps.indices) {
+      if (openApps[i].id == id) {
+        openApps.removeAt(i)
+        break
+      }
+    }
   }
 
   override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
