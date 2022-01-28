@@ -15,6 +15,12 @@ class ServiceDataResponse (var response: Response = Response()) {
   @SerializedName("t")
   var takenApps: List<ApplicationItem>? = null
 
+  @SerializedName("d")
+  var deletedApps: List<ApplicationItem>? = null
+
+  @SerializedName("r")
+  var removedFromApps: List<ApplicationItem>? = null
+
   @SerializedName("n")
   var serverTime: String? = null
 

@@ -1,9 +1,15 @@
 package `in`.arbait.http
 
-import `in`.arbait.*
-import `in`.arbait.http.poll_service.*
+import `in`.arbait.App
+import `in`.arbait.CLOSED_STATE
+import `in`.arbait.MainActivity
 import `in`.arbait.http.items.ApplicationItem
-import `in`.arbait.http.response.*
+import `in`.arbait.http.poll_service.*
+import `in`.arbait.http.response.Response
+import `in`.arbait.http.response.SERVER_ERROR
+import `in`.arbait.http.response.SYSTEM_ERROR
+import `in`.arbait.http.response.ServiceDataResponse
+import `in`.arbait.showErrorBalloon
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
@@ -13,7 +19,6 @@ import android.os.IBinder
 import android.util.Log
 import android.view.View
 import androidx.lifecycle.*
-import androidx.lifecycle.Observer
 import java.io.Serializable
 
 private const val TAG = "PollServerViewModel"
@@ -46,6 +51,9 @@ class PollServerViewModel: ViewModel(), Serializable
   var takenAppsLvdList: MutableLiveData<List<ApplicationItem>> = MutableLiveData()
   val takenAppsLvdItems = mutableMapOf<Int, MutableLiveData<ApplicationItem>>()
 
+  var deletedAppsLvdList: MutableLiveData<List<ApplicationItem>> = MutableLiveData()
+  var removedFromAppsLvdList: MutableLiveData<List<ApplicationItem>> = MutableLiveData()
+
   private lateinit var appsResponse: LiveData<ServiceDataResponse>
 
   private val serviceConnection = object : ServiceConnection {
@@ -59,6 +67,8 @@ class PollServerViewModel: ViewModel(), Serializable
         appsResponse = it.dataResponse
         openAppsLvdList = it.openAppsLvdList
         takenAppsLvdList = it.takenAppsLvdList
+        deletedAppsLvdList = it.deletedAppsLvdList
+        removedFromAppsLvdList = it.removedFromAppsLvdList
         lvdDispatcherWhatsapp = it.lvdDispatcherWhatsapp
         lvdDispatcherPhoneCall = it.lvdDispatcherPhoneCall
       }

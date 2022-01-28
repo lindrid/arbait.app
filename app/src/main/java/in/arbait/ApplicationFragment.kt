@@ -70,7 +70,8 @@ const val PM_CASH = 2
 
 class ApplicationFragment (private val appId: Int): Fragment()
 {
-  private var youWereDeletedFromApp = false
+  private var removedFromApp = false
+  private var appWasDeleted = false
   private var couldEnroll = false
   private var couldNotEnrollCause = -1
 
@@ -133,6 +134,9 @@ class ApplicationFragment (private val appId: Int): Fragment()
     setAppObserver()
     setVisibilityToViews(porterIsEnrolled, view)
 
+    setDeletedAppObserver()
+    setRemovedFromAppObserver()
+
     return view
   }
 
@@ -167,6 +171,34 @@ class ApplicationFragment (private val appId: Int): Fragment()
   }
 
 
+  private fun setDeletedAppObserver() {
+    vm.deletedAppsLvdList.observe(viewLifecycleOwner,
+      Observer { deletedApps ->
+        deletedApps?.let {
+          for (i in deletedApps.indices) {
+            if (deletedApps[i].id == appId) {
+              setAppDeletedStatus()
+            }
+          }
+        }
+      }
+    )
+  }
+
+  private fun setRemovedFromAppObserver() {
+    vm.removedFromAppsLvdList.observe(viewLifecycleOwner,
+      Observer { removedFromApps ->
+        removedFromApps?.let {
+          for (i in removedFromApps.indices) {
+            if (removedFromApps[i].id == appId) {
+              setRemovedFromAppStatus()
+            }
+          }
+        }
+      }
+    )
+  }
+
   private fun onCallClientBtnClick() {
     lvdAppItem.value?.let { appItem ->
       phoneCall(requireContext(), appItem.clientPhoneNumber)
@@ -196,12 +228,14 @@ class ApplicationFragment (private val appId: Int): Fragment()
         return true
       }
     }
+
     vm.openAppsLvdItems[appId]?.let {
       if (it.value != null) {
         lvdAppItem = it
         return true
       }
     }
+
     lvdAppItem = MutableLiveData(
       ApplicationItem(0,"","","","",
       0,"",0,0,true,0,0,
@@ -393,40 +427,68 @@ class ApplicationFragment (private val appId: Int): Fragment()
     lvdAppItem.observe(viewLifecycleOwner,
       Observer { appItem ->
         Log.i (TAG, "lvdAppItem=$lvdAppItem, observer appItem is $appItem")
-        if (appItem == null) {
-          val anotherPorterTakeApp = setAppItem()
-          youWereDeletedFromApp = !anotherPorterTakeApp
-          if (youWereDeletedFromApp) {
-            val statusText = if (porterIsEnrolled)
-              getString(R.string.app_you_were_deleted)
-            else
-              getString(R.string.app_is_gone)
 
-            changeStatusToError(statusText)
-
-            rvPorters.visibility = View.INVISIBLE
-            btCallClient.isEnabled = false
-            setLayoutConstraints(tvEnrolledIsVisible = true, btEnrollRefuse, withoutPorters = true)
-            lvdAppItem.value?.let {
-              it.workerCount--
-              updateUI()
-              btEnrollRefuse.isEnabled = false
-            }
-          }
-          if (anotherPorterTakeApp) {
-            updateUI()
-          }
-        }
         appItem?.let {
           lastAppItem = it
           if (appItem.porters != null)
             porter = getThisUserPorter(it)
           Log.i (TAG, "porter is $porter")
 
-          updateUI()
+          porter?.let { porter ->
+            if (porter.pivot.removed) {
+              setRemovedFromAppStatus()
+            }
+            else {
+              updateUI()
+            }
+          }
         }
       }
     )
+  }
+
+  private fun setAppDeletedStatus() {
+    val statusText = getString(R.string.app_deleted)
+    changeStatusToError(statusText)
+
+    rvPorters.visibility = View.INVISIBLE
+
+    setLayoutConstraints(
+      tvEnrolledIsVisible = true,
+      btEnrollRefuse,
+      withoutPorters = true
+    )
+
+    btCallClient.isEnabled = false
+    btClientWhatsapp.isEnabled = false
+    btEnrollRefuse.isEnabled = false
+    appWasDeleted = true
+
+    lvdAppItem.value?.let {
+      updateUI()
+    }
+  }
+
+  private fun setRemovedFromAppStatus() {
+    val statusText = getString(R.string.app_you_were_removed)
+    changeStatusToError(statusText)
+
+    rvPorters.visibility = View.INVISIBLE
+    setLayoutConstraints(
+      tvEnrolledIsVisible = true,
+      btEnrollRefuse,
+      withoutPorters = true
+    )
+
+    btCallClient.isEnabled = false
+    btClientWhatsapp.isEnabled = false
+    btEnrollRefuse.isEnabled = false
+    removedFromApp = true
+
+    lvdAppItem.value?.let {
+      it.workerCount--
+      updateUI()
+    }
   }
 
 
@@ -450,7 +512,7 @@ class ApplicationFragment (private val appId: Int): Fragment()
     setViewsTexts()
     updatePorters()
 
-    if (youWereDeletedFromApp)
+    if (appWasDeleted || removedFromApp)
       return
 
     lvdAppItem.value?.let { app ->

@@ -101,6 +101,14 @@
     <string name="poll_new_app_channel_id">Новая заявка</string>
     <string name="poll_new_app_without_sound_channel_id">Новая заявка без звука</string>
 
+    <string name="poll_deleted_app_channel_id">Заявка удалена</string>
+    <string name="poll_deleted_app_without_sound_channel_id">Заявка удалена без звука</string>
+    <string name="poll_removed_from_app_channel_id">Вы удалены с заявки</string>
+    <string name="poll_removed_from_app_without_sound_channel_id">Вы удалены с заявки без звука</string>
+
+    <string name="poll_deleted_app">Заявка "%1s" была отменена</string>
+    <string name="poll_removed_from_app">Вы были удалены с заявки "%1s"</string>
+
     <!-- ApplicationFragment -->
     <string name="app_address"><![CDATA[<u>Адрес:</u> %s]]></string>
     <string name="app_time"><![CDATA[<u>Время:</u> %s]]></string>
@@ -129,7 +137,8 @@
     <string name="app_status_commission_confirmation">Комиссия: %1$d, оплачена, ждите подтверждения...</string>
     <string name="app_status_commission_payed">Комиссия: %1$d, оплачена</string>
     <string name="app_is_gone">Заявка собрана или удалена</string>
-    <string name="app_you_were_deleted">Вы были удалены с заявки (или сама заявка была удалена)</string>
+    <string name="app_you_were_removed">Вы были удалены с заявки</string>
+    <string name="app_deleted">Заявка была отменена</string>
     <string name="app_write_to_client">Написать</string>
 
     <!-- LoginFragment -->

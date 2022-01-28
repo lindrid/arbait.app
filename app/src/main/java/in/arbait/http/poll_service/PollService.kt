@@ -38,8 +38,10 @@ private const val TWO_HOURS_AND_FIVE_MINUTES = 2 * ONE_HOUR + 5 * MINUTE
 private const val APP_MILLISECONDS_ADDITION_BY_DEFAULT = 2 * ONE_HOUR
 
 private const val SERVICE_NOTIFICATION_ID = 1
+private const val SERVICE_DELETED_APP_NOTIFICATION_ID = 2
+private const val SERVICE_REMOVED_FROM_APP_NOTIFICATION_ID = 3
+private const val SERVICE_APP_CONFIRMATION_NOTIFICATION_ID = 4
 
-private val SERVICE_NOTIFICATION_CHANNEL_ID = App.res!!.getString(R.string.poll_service_channel_id)
 private val NEW_APP_CHANNEL_ID = App.res!!.getString(R.string.poll_new_app_channel_id)
 private val NEW_APP_WITHOUT_SOUND_CHANNEL_ID = App.res!!.getString(R.string.poll_new_app_without_sound_channel_id)
 
@@ -58,6 +60,8 @@ class PollService : LifecycleService(), Serializable
 
   val openAppsLvdList: MutableLiveData<List<ApplicationItem>> = MutableLiveData()
   val takenAppsLvdList: MutableLiveData<List<ApplicationItem>> = MutableLiveData()
+  val deletedAppsLvdList: MutableLiveData<List<ApplicationItem>> = MutableLiveData()
+  val removedFromAppsLvdList: MutableLiveData<List<ApplicationItem>> = MutableLiveData()
 
   private var openApps: MutableList<ApplicationItem> = mutableListOf()
   private var takenApps: MutableList<ApplicationItem> = mutableListOf()
@@ -83,7 +87,11 @@ class PollService : LifecycleService(), Serializable
     super.onCreate()
     log("The service has been created".toUpperCase())
     // уведомление о запуске сервиса - без звука и вибрации
-    val notification = createNotification (SERVICE_NOTIFICATION_CHANNEL_ID, IMPORTANCE_NONE)
+    val notification = createNotification (
+      getString(R.string.poll_service_channel_id),
+      Uri.EMPTY,
+      IMPORTANCE_NONE
+    )
     startForeground(SERVICE_NOTIFICATION_ID, notification)
 
     server = Server(this)
@@ -112,6 +120,28 @@ class PollService : LifecycleService(), Serializable
 
             it.dispatcherPhoneCall?.let { phone ->
               lvdDispatcherPhoneCall.value = phone
+            }
+
+            deletedAppsLvdList.value = null
+            it.deletedApps?.let { deletedApps ->
+              for (i in deletedApps.indices) {
+                if (App.dbUser?.notificationsOff == false) {
+                  val n = createDeletedAppNotification(deletedApps[i])
+                  showNotification(applicationContext, deletedApps[i].id, n)
+                }
+              }
+              deletedAppsLvdList.value = deletedApps
+            }
+
+            removedFromAppsLvdList.value = null
+            it.removedFromApps?.let { removedFromApps ->
+              for (i in removedFromApps.indices) {
+                if (App.dbUser?.notificationsOff == false) {
+                  val n = createRemovedFromAppNotification(removedFromApps[i])
+                  showNotification(applicationContext, removedFromApps[i].id, n)
+                }
+              }
+              removedFromAppsLvdList.value = removedFromApps
             }
 
             Log.i(TAG, "appsFromANotInB(openAppsFromServer, $openApps)")
@@ -154,8 +184,10 @@ class PollService : LifecycleService(), Serializable
 
                   Log.i (TAG, "notificationsOff = ${App.dbUser?.notificationsOff}")
                   if (App.dbUser?.notificationsOff == false && !firstTime) {
-                    val n = createNewAppNotification(openApps[i])
-                    showNotification(applicationContext, openApps[i].id, n)
+                    if (!justRefusedOrRemovedFromThisApp(openApps[i].id)) {
+                      val n = createNewAppNotification(openApps[i])
+                      showNotification(applicationContext, openApps[i].id, n)
+                    }
                   }
                 }
               }
@@ -200,6 +232,15 @@ class PollService : LifecycleService(), Serializable
         }
       }
     )
+  }
+
+  // срабатывает правильно ДО того, как takenApps = takenAppsFromServer
+  private fun justRefusedOrRemovedFromThisApp(id: Int): Boolean {
+    for (i in takenApps.indices)
+      if (takenApps[i].id == id)
+        return true
+
+    return false
   }
 
   private fun removeOpenApp(id: Int) {
@@ -430,11 +471,15 @@ class PollService : LifecycleService(), Serializable
     }
     val diffTime = appDateTime - serverTime
 
-    val interval: Int = if (diffTime <= 60 * MINUTE)
+    val interval: Int = if (diffTime <= 55 * MINUTE)
+      1 * MINUTE
+    else if (diffTime > 55 * MINUTE && diffTime <= 65 * MINUTE)
       3 * MINUTE
-    else if (diffTime > 60 * MINUTE && diffTime <= 75 * MINUTE)
+    else if (diffTime > 65 * MINUTE && diffTime <= 75 * MINUTE)
       5 * MINUTE
-    else if (diffTime > 75 * MINUTE && diffTime <= 135 * MINUTE)
+    else if (diffTime > 75 * MINUTE && diffTime <= 95 * MINUTE)
+      10 * MINUTE
+    else if (diffTime > 95 * MINUTE && diffTime <= 135 * MINUTE)
       15 * MINUTE
     else if (diffTime > 135 * MINUTE && diffTime <= 150 * MINUTE)
       20 * MINUTE
@@ -479,13 +524,75 @@ class PollService : LifecycleService(), Serializable
 
     Log.i (TAG, "channelId = $channelId")
 
-    return createNotification ( channelId,
-                                IMPORTANCE_HIGH,
-                                true,
-                                title,
-                                text,
-                                channelId,
-                                newApp.id)
+    val sound = Uri.parse(("android.resource://" + applicationContext.packageName) + "/"
+        + R.raw.horn)
+
+    return createNotification (
+      channelId,
+      sound,
+      IMPORTANCE_HIGH,
+      true,
+      title,
+      text,
+      channelId,
+      newApp.id
+    )
+  }
+
+  private fun createDeletedAppNotification (deletedApp: ApplicationItem): Notification {
+    val title = getString(R.string.poll_deleted_app, deletedApp.address ?: "Oops...")
+    val text = ""
+
+    var channelId = getString(R.string.poll_deleted_app_channel_id)
+
+    if (App.dbUser?.soundOff == true) {
+      channelId = getString(R.string.poll_deleted_app_without_sound_channel_id)
+    }
+
+    Log.i (TAG, "channelId = $channelId")
+
+    val sound = Uri.parse(("android.resource://" + applicationContext.packageName) + "/"
+        + R.raw.sad_trombon
+    )
+
+    return createNotification (
+      channelId,
+      sound,
+      IMPORTANCE_HIGH,
+      true,
+      title,
+      text,
+      channelId,
+      SERVICE_DELETED_APP_NOTIFICATION_ID
+    )
+  }
+
+  private fun createRemovedFromAppNotification (removedFromApp: ApplicationItem): Notification {
+    val title = getString(R.string.poll_removed_from_app, removedFromApp.address ?: "Oops...")
+    val text = ""
+
+    var channelId = getString(R.string.poll_removed_from_app_channel_id)
+
+    if (App.dbUser?.soundOff == true) {
+      channelId = getString(R.string.poll_removed_from_app_without_sound_channel_id)
+    }
+
+    Log.i (TAG, "channelId = $channelId")
+
+    val sound = Uri.parse(("android.resource://" + applicationContext.packageName) + "/"
+        + R.raw.suddenness
+    )
+
+    return createNotification (
+      channelId,
+      sound,
+      IMPORTANCE_HIGH,
+      true,
+      title,
+      text,
+      channelId,
+      SERVICE_REMOVED_FROM_APP_NOTIFICATION_ID
+    )
   }
 
   private fun createConfirmationNotification (appId: Int): Notification {
@@ -500,16 +607,23 @@ class PollService : LifecycleService(), Serializable
 
     Log.i (TAG, "channelId = $channelId")
 
-    return createNotification ( channelId,
+    val sound = Uri.parse(("android.resource://" + applicationContext.packageName) + "/"
+        + R.raw.horn)
+
+    return createNotification (
+      channelId,
+      sound,
       IMPORTANCE_HIGH,
       true,
       title,
       text,
       channelId,
-      appId)
+      SERVICE_APP_CONFIRMATION_NOTIFICATION_ID
+    )
   }
 
   private fun createNotification (notificationChannelId: String,
+                                  sound: Uri,
                                   importance: Int,
                                   vibration: Boolean = false,
                                   title: String = notificationChannelId,
@@ -532,8 +646,6 @@ class PollService : LifecycleService(), Serializable
           it.setSound(null, null)
         }
         else {
-          val sound = Uri.parse(("android.resource://" + applicationContext.packageName) + "/"
-              + R.raw.horn)
           val audioAttributes = AudioAttributes.Builder()
             .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
             .setUsage(AudioAttributes.USAGE_ALARM)
