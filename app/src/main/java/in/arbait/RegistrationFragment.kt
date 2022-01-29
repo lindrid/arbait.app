@@ -1,6 +1,8 @@
 package `in`.arbait
 
-import `in`.arbait.http.*
+import `in`.arbait.http.ReactionOnResponse
+import `in`.arbait.http.Server
+import `in`.arbait.http.User
 import `in`.arbait.http.response.Response
 import `in`.arbait.http.response.SERVER_ERROR
 import `in`.arbait.http.response.SERVER_OK
@@ -13,11 +15,10 @@ import android.widget.Button
 import android.widget.EditText
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.widget.AppCompatButton
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
 import java.util.*
-
-import androidx.appcompat.widget.AppCompatButton
 
 
 const val BIRTH_DATE_KEY = "birthDate"
@@ -114,32 +115,29 @@ class RegistrationFragment : Fragment() {
     Log.i (TAG, "manufacturer is $MANUFACTURER")
     Log.i (TAG, "Android version is $VERSION")
 
-    if (isSamsung() && versionIsNineOrGreater()) {
-      Log.i(TAG, "Manufacturer is samsung and version >= 9")
 
-      setBirthDateEditTextWhenDialogResult()
+    Log.i(TAG, "Manufacturer is samsung and version >= 9")
 
-      etBirthDate.setOnClickListener {
+    setBirthDateEditTextWhenDialogResult()
+
+    etBirthDate.setOnClickListener {
+      createBirthDateDialog()
+      setUnderlineColor(etBirthDate, DEFAULT_EDITTEXT_EMERALD_COLOR)
+    }
+
+    etBirthDate.setOnFocusChangeListener { _, hasFocus ->
+      if (hasFocus) {
         createBirthDateDialog()
         setUnderlineColor(etBirthDate, DEFAULT_EDITTEXT_EMERALD_COLOR)
       }
-
-      etBirthDate.setOnFocusChangeListener { _, hasFocus ->
-        if (hasFocus) {
-          createBirthDateDialog()
-          setUnderlineColor(etBirthDate, DEFAULT_EDITTEXT_EMERALD_COLOR)
-        }
-        else {
-          setUnderlineColor(etBirthDate, Color.BLACK)
-        }
+      else {
+        setUnderlineColor(etBirthDate, Color.BLACK)
       }
+    }
 
-      val withoutBirthDate = true
-      setRegistrationFieldsListeners(withoutBirthDate)
-    }
-    else {
-      setRegistrationFieldsListeners()
-    }
+    val withoutBirthDate = true
+    setRegistrationFieldsListeners(withoutBirthDate)
+
 
     setHasOptionsMenu(true)
 

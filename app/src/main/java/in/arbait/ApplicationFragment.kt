@@ -438,10 +438,8 @@ class ApplicationFragment (private val appId: Int): Fragment()
             if (porter.pivot.removed) {
               setRemovedFromAppStatus()
             }
-            else {
-              updateUI()
-            }
           }
+          updateUI()
         }
       }
     )

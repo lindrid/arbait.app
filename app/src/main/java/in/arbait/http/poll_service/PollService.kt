@@ -44,6 +44,8 @@ private const val SERVICE_APP_CONFIRMATION_NOTIFICATION_ID = 4
 
 private val NEW_APP_CHANNEL_ID = App.res!!.getString(R.string.poll_new_app_channel_id)
 private val NEW_APP_WITHOUT_SOUND_CHANNEL_ID = App.res!!.getString(R.string.poll_new_app_without_sound_channel_id)
+private val REMOVED_FROM_APP_WITHOUT_SOUND_CHANNEL_ID = App.res!!.getString(R.string.poll_removed_from_app_without_sound_channel_id)
+private val DELETED_APP_WITHOUT_SOUND_CHANNEL_ID = App.res!!.getString(R.string.poll_deleted_app_without_sound_channel_id)
 
 // https://robertohuertas.com/2019/06/29/android_foreground_services/
 // poll the server for applications
@@ -546,7 +548,7 @@ class PollService : LifecycleService(), Serializable
     var channelId = getString(R.string.poll_deleted_app_channel_id)
 
     if (App.dbUser?.soundOff == true) {
-      channelId = getString(R.string.poll_deleted_app_without_sound_channel_id)
+      channelId = DELETED_APP_WITHOUT_SOUND_CHANNEL_ID
     }
 
     Log.i (TAG, "channelId = $channelId")
@@ -574,7 +576,7 @@ class PollService : LifecycleService(), Serializable
     var channelId = getString(R.string.poll_removed_from_app_channel_id)
 
     if (App.dbUser?.soundOff == true) {
-      channelId = getString(R.string.poll_removed_from_app_without_sound_channel_id)
+      channelId = REMOVED_FROM_APP_WITHOUT_SOUND_CHANNEL_ID
     }
 
     Log.i (TAG, "channelId = $channelId")
@@ -629,7 +631,7 @@ class PollService : LifecycleService(), Serializable
                                   title: String = notificationChannelId,
                                   text: String = "",
                                   name: String = notificationChannelId,
-                                  appId: Int? = null ): Notification
+                                  notificationId: Int? = null ): Notification
   {
     // depending on the Android API that we're dealing with we will have
     // to use a specific method to create the notification
@@ -642,7 +644,10 @@ class PollService : LifecycleService(), Serializable
         name,
         importance
       ).let {
-        if (notificationChannelId == NEW_APP_WITHOUT_SOUND_CHANNEL_ID) {
+        if (notificationChannelId == NEW_APP_WITHOUT_SOUND_CHANNEL_ID ||
+            notificationChannelId == REMOVED_FROM_APP_WITHOUT_SOUND_CHANNEL_ID ||
+            notificationChannelId == DELETED_APP_WITHOUT_SOUND_CHANNEL_ID
+        ) {
           it.setSound(null, null)
         }
         else {
@@ -663,7 +668,7 @@ class PollService : LifecycleService(), Serializable
 
     val pendingIntent: PendingIntent =
       Intent(this, NotificationTapReceiver::class.java).let { notificationIntent ->
-        notificationIntent.putExtra(APP_ID_ARG, appId)
+        notificationIntent.putExtra(APP_ID_ARG, notificationId)
         notificationIntent.action = "TAP_ON_NOTIFICATION"
         PendingIntent.getBroadcast(this, 0, notificationIntent,
           FLAG_UPDATE_CURRENT)
