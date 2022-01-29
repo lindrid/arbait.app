@@ -116,8 +116,6 @@ class RegistrationFragment : Fragment() {
     Log.i (TAG, "Android version is $VERSION")
 
 
-    Log.i(TAG, "Manufacturer is samsung and version >= 9")
-
     setBirthDateEditTextWhenDialogResult()
 
     etBirthDate.setOnClickListener {
