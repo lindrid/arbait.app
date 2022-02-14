@@ -94,21 +94,21 @@
         android:id="@+id/bt_comsber_payed"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="15dp"
+        android:layout_marginBottom="24dp"
         android:text="@string/comsber_payed"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/tv_comsber_transfer"
-        app:layout_constraintEnd_toStartOf="@+id/bt_comsber_back"/>
+        app:layout_constraintEnd_toStartOf="@+id/bt_comsber_back"
+        app:layout_constraintStart_toStartOf="parent" />
 
     <Button
         android:id="@+id/bt_comsber_back"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="15dp"
+        android:layout_marginBottom="24dp"
         android:text="@string/back"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/tv_comsber_transfer"
-        app:layout_constraintStart_toEndOf="@+id/bt_comsber_payed"/>
+        app:layout_constraintStart_toEndOf="@+id/bt_comsber_payed" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

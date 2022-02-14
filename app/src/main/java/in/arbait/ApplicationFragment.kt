@@ -539,7 +539,6 @@ class ApplicationFragment (private val appId: Int): Fragment()
           couldNotEnrollCause = -1
         }
         val takenApps = vm.takenAppsLvdItems
-        val thisAppTimeStr = lvdAppItem.value?.time
 
         for (i in takenApps.keys) {
 
@@ -572,17 +571,25 @@ class ApplicationFragment (private val appId: Int): Fragment()
             if (takenApps[i]?.value?.id == lvdAppItem.value?.id)
               continue
 
-          val takenAppTimeStr = takenApps[i]?.value?.time
-          takenAppTimeStr?.let { takenStr ->
-            thisAppTimeStr?.let { thisStr ->
-              val takenDate = strToDate(takenStr, "HH:mm")
-              val thisDate = strToDate(thisStr, "HH:mm")
+          takenApps[i]?.value?.let { takenApp ->
+            lvdAppItem.value?.let { thisApp ->
+              val takenDate = strToDate(takenApp.date, DATE_FORMAT)
+              val thisDate = strToDate(thisApp.date, DATE_FORMAT)
               takenDate?.let {
                 thisDate?.let {
-                  val diff = abs(takenDate.time - thisDate.time)
-                  if (diff < MIN_TIME_RANGE_BETWEEN_APPS) {
-                    couldEnroll = false
-                    couldNotEnrollCause = CAUSE_SMALL_TIME_INTERVAL
+                  val appsHaveSameDay = (abs(takenDate.time - thisDate.time) == 0L)
+                  if (appsHaveSameDay) {
+                    val takenTime = strToDate(takenApp.time, TIME_FORMAT)
+                    val thisTime = strToDate(thisApp.time, TIME_FORMAT)
+                    takenTime?.let {
+                      thisTime?.let {
+                        val diffTime = abs(takenTime.time - thisTime.time)
+                        if (diffTime < MIN_TIME_RANGE_BETWEEN_APPS) {
+                          couldEnroll = false
+                          couldNotEnrollCause = CAUSE_SMALL_TIME_INTERVAL
+                        }
+                      }
+                    }
                   }
                 }
               }

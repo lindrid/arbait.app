@@ -181,6 +181,8 @@
     <string name="combal_atm">С комиссией (банкомат): %s</string>
     <string name="combal_fill_in">После пополнения нажмите кнопку \"Оплатил\" и укажите время операции</string>
     <string name="combal_time">Запомните/запишите время операции, указанное в чеке: час:минута:секунда</string>
+
+    <!-- ConfirmationFragment -->
     <string name="conf_main">Подтверждение оплаты</string>
     <string name="conf_date">Дата</string>
     <string name="conf_confirm">Подтвердить</string>
@@ -190,6 +192,9 @@
     <string name="conf_empty_fio">Введите Имя Отчество Фамилию (сокращенно)</string>
     <string name="conf_wrong_card">Введите последние 4 цифры вашей карты</string>
     <string name="conf_wrong_time">Введите час, минуту, секунду как указано в чеке. Пример, 02:15:09</string>
+    <string name="conf_your_card">Введите реквизиты или последние 4 цифры карты, с которой был сделан перевод. Если за вас оплатили, можете оставить свои реквизиты или 4 цифры или написать - За меня оплатили.</string>
+
+
     <string name="app_residue">Остаток комиссии: %d</string>
     <string name="app_could_not_enroll_cause_commission">Нельзя записаться: комиссия не оплачена</string>
     <string name="app_could_not_enroll_cause_not_confirmed_pay">Нельзя записаться: оплата комиссии не подтверждена</string>

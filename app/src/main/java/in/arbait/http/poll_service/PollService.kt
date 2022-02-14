@@ -6,8 +6,12 @@ import `in`.arbait.http.appIsConfirmed
 import `in`.arbait.http.items.ApplicationItem
 import `in`.arbait.http.response.SERVER_OK
 import `in`.arbait.http.response.ServiceDataResponse
-import android.app.*
-import android.app.NotificationManager.*
+import android.app.Notification
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.app.NotificationManager.IMPORTANCE_HIGH
+import android.app.NotificationManager.IMPORTANCE_NONE
+import android.app.PendingIntent
 import android.app.PendingIntent.FLAG_UPDATE_CURRENT
 import android.content.Context
 import android.content.Intent
@@ -23,7 +27,10 @@ import androidx.lifecycle.LifecycleService
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.Observer
-import kotlinx.coroutines.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import java.io.Serializable
 import java.util.*
 
@@ -471,35 +478,44 @@ class PollService : LifecycleService(), Serializable
     strToDate(appDateTimeStr, DATE_TIME_FORMAT)?.let { time ->
       appDateTime = time.time
     }
-    val diffTime = appDateTime - serverTime
 
-    val interval: Int = if (diffTime <= 55 * MINUTE)
+    var appCreatedAt = serverTime
+    strToDate(newApp.createdAt, DATE_TIME_FORMAT)?.let { time ->
+      appCreatedAt = time.time
+    }
+
+    val timeBeforeStart = appDateTime - appCreatedAt
+
+    val interval: Int = 1 * MINUTE /*if (timeBeforeStart <= 55 * MINUTE)
       1 * MINUTE
-    else if (diffTime > 55 * MINUTE && diffTime <= 65 * MINUTE)
+    else if (timeBeforeStart > 55 * MINUTE && timeBeforeStart <= 3 * ONE_HOUR)
       3 * MINUTE
-    else if (diffTime > 65 * MINUTE && diffTime <= 75 * MINUTE)
+    else if (timeBeforeStart > 3 * ONE_HOUR && timeBeforeStart <= 6 * ONE_HOUR)
       5 * MINUTE
-    else if (diffTime > 75 * MINUTE && diffTime <= 95 * MINUTE)
-      10 * MINUTE
-    else if (diffTime > 95 * MINUTE && diffTime <= 135 * MINUTE)
-      15 * MINUTE
-    else if (diffTime > 135 * MINUTE && diffTime <= 150 * MINUTE)
-      20 * MINUTE
-    else if (diffTime > 150 * MINUTE && diffTime <= 3 * ONE_HOUR)
-      30 * MINUTE
-    else if (diffTime > 3 * ONE_HOUR && diffTime <= 4 * ONE_HOUR)
-      40 * MINUTE
-    else if (diffTime > 4 * ONE_HOUR && diffTime <= 5 * ONE_HOUR)
-      50 * MINUTE
-    else if (diffTime > 5 * ONE_HOUR && diffTime <= 6 * ONE_HOUR)
-      60 * MINUTE
     else
-      90 * MINUTE
+      10 * MINUTE*/
+
+    /*else if (timeBeforeStart > 65 * MINUTE && timeBeforeStart <= 75 * MINUTE)
+      5 * MINUTE
+    else if (timeBeforeStart > 75 * MINUTE && timeBeforeStart <= 95 * MINUTE)
+      10 * MINUTE
+    else if (timeBeforeStart > 95 * MINUTE && timeBeforeStart <= 135 * MINUTE)
+      15 * MINUTE
+    else if (timeBeforeStart > 135 * MINUTE && timeBeforeStart <= 150 * MINUTE)
+      20 * MINUTE
+    else if (timeBeforeStart > 150 * MINUTE && timeBeforeStart <= 3 * ONE_HOUR)
+      30 * MINUTE
+    else if (timeBeforeStart > 3 * ONE_HOUR && timeBeforeStart <= 4 * ONE_HOUR)
+      40 * MINUTE
+    else if (timeBeforeStart > 4 * ONE_HOUR && timeBeforeStart <= 5 * ONE_HOUR)
+      50 * MINUTE
+    else if (timeBeforeStart > 5 * ONE_HOUR && timeBeforeStart <= 6 * ONE_HOUR)
+      60 * MINUTE*/
 
     val waitMultiplier = interval / maxRating
     val porterRating = App.userItem?.porter?.rating ?: 0
 
-    return serverTime + (waitMultiplier * (maxRating - porterRating)).toLong()
+    return appCreatedAt + (waitMultiplier * (maxRating - porterRating)).toLong()
   }
 
   private fun createNewAppNotification (newApp: ApplicationItem): Notification {

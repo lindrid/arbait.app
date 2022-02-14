@@ -2,8 +2,8 @@ package `in`.arbait
 
 import `in`.arbait.commission.COMMISSION_ARG
 import `in`.arbait.http.PollServerViewModel
-import `in`.arbait.http.poll_service.*
 import `in`.arbait.http.items.ApplicationItem
+import `in`.arbait.http.poll_service.Action
 import android.annotation.SuppressLint
 import android.graphics.Color
 import android.os.Bundle
@@ -16,15 +16,16 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.AppCompatButton
 import androidx.appcompat.widget.AppCompatTextView
 import androidx.constraintlayout.widget.ConstraintLayout
-import androidx.fragment.app.Fragment
-import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
 import androidx.core.content.ContextCompat
+import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.ConcatAdapter
 import androidx.recyclerview.widget.DividerItemDecoration
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 
 const val DATE_FORMAT = "yyyy-MM-dd"
 const val DATE_TIME_FORMAT = "yyyy-MM-dd HH:mm:ss"
+const val TIME_FORMAT = "HH:mm"
 const val APP_ID_ARG = "applicationId"
 const val APPLICATION_FRAGMENT_NAME = "Application"
 const val COMMISSION_FRAGMENT_NAME = "Commission"
@@ -45,7 +46,7 @@ class ApplicationsFragment: Fragment()
 {
   private var todayApps = mutableListOf<ApplicationItem>()
   private var tomorrowApps = mutableListOf<ApplicationItem>()
-  private var showTomorrowApps = false
+  private var showTomorrowApps = true
 
   private lateinit var rootView: View
   private lateinit var rvOpenApps: RecyclerView
@@ -270,7 +271,7 @@ class ApplicationsFragment: Fragment()
         Log.i(TAG, "Open apps size is ${it.size}")
         Log.i(TAG, "openApps is $it")
         setTodayAndTomorrowApps(it)
-        showTomorrowApps = todayApps.isEmpty()
+        showTomorrowApps = true//todayApps.isEmpty()
         updateOpenAppsUI(it)
       }
     }
@@ -524,12 +525,12 @@ class ApplicationsFragment: Fragment()
 
 
   private inner class HeaderHolder (view: View) : RecyclerView.ViewHolder(view) {
-    private val tvAppsHeader: TextView = view.findViewById(R.id.tv_header)
+    private val tvAppsHeader: TextView = view.findViewById (R.id.tv_header)
 
     fun bind(headerText: String, textSize: Float, textColor: Int) {
-      tvAppsHeader.text = headerText
-      tvAppsHeader.textSize = textSize
-      tvAppsHeader.setTextColor(textColor)
+        tvAppsHeader.text = headerText
+        tvAppsHeader.textSize = textSize
+        tvAppsHeader.setTextColor(textColor)
     }
   }
 
@@ -555,7 +556,7 @@ class ApplicationsFragment: Fragment()
 
       if (dayIsTomorrow) {
         holder.itemView.setOnClickListener {
-          showTomorrowApps = !showTomorrowApps
+          showTomorrowApps = true
           vm.openAppsLvdList.value?.let {
             updateOpenAppsUI(it)
             App.dbUser?.let { user ->

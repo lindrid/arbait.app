@@ -6,10 +6,9 @@ import `in`.arbait.http.response.UserResponse
 import retrofit2.Call
 import retrofit2.http.*
 
-const val ARBAIT_BASE_URL = "https://arbait.in"
+const val ARBAIT_BASE_URL = "https://test.arbait.in"
 
 interface ServerApi {
-
   //@Headers("Content-Type: application/json")
   @POST("/api/auth/android/register")
   fun register (@HeaderMap headers: Map<String, String>, @Body userData: User): Call<String>

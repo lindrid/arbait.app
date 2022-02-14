@@ -41,7 +41,7 @@
         android:id="@+id/et_conf_fio"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="50dp"
+        android:layout_marginBottom="40dp"
         android:ems="10"
         android:hint="@string/conf_fio"
         android:imeOptions="actionDone"
@@ -91,7 +91,22 @@
         android:layout_width="200dp"
         android:layout_height="0dp"
         android:layout_marginBottom="20dp"
+        app:layout_constraintBottom_toTopOf="@+id/tv_conf_your_card"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.497"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <TextView
+        android:id="@+id/tv_conf_your_card"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="10dp"
+        android:layout_marginEnd="10dp"
+        android:layout_marginBottom="20dp"
+        android:text="@string/conf_your_card"
+        android:textSize="16sp"
         app:layout_constraintBottom_toTopOf="@+id/et_conf_time"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.493"
         app:layout_constraintStart_toStartOf="parent" />
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -44,7 +44,7 @@ class BirthDateFragmentDialog: DialogFragment(), View.OnClickListener {
       if (datePicker.dayOfMonth < 10) {
         day = "0" + datePicker.dayOfMonth.toString()
       }
-      if (datePicker.month < 10) {
+      if (datePicker.month < 9) {
         month = "0" + (datePicker.month+1).toString()
       }
 

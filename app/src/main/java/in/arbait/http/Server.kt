@@ -1,6 +1,6 @@
 package `in`.arbait.http
 
-import `in`.arbait.BuildConfig
+import `in`.arbait.APP_VERSION
 import `in`.arbait.http.response.ApplicationResponse
 import `in`.arbait.http.response.ServiceDataResponse
 import `in`.arbait.http.response.UserResponse
@@ -61,7 +61,7 @@ class Server (private val context: Context)
 
   fun updateApplicationsResponse (cache: Boolean = true) {
     val intCache = if (cache) 1 else 0
-    serverApi.getData(headers, BuildConfig.VERSION_NAME, intCache).enqueue (
+    serverApi.getData(headers, APP_VERSION, intCache).enqueue (
       object : Callback<ServiceDataResponse> {
 
         override fun onFailure (call: Call<ServiceDataResponse>, t: Throwable) {
