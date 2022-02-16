@@ -42,8 +42,7 @@ import kotlin.math.abs
 
 private const val TAG = "ApplicationFragment"
 private const val REFUSE_DIALOG_TAG = "REFUSE_DIALOG"
-
-const val DISPATCHER_PHONE = "+79240078897"
+private const val RULES_DIALOG_TAG = "RULES_DIALOG"
 
 const val CLOSED_STATE = 2
 const val READY_TO_PAY = 4
@@ -296,8 +295,16 @@ class ApplicationFragment (private val appId: Int): Fragment()
           lastState = state
         )
 
-        if (porterWantToEnroll)
+        if (porterWantToEnroll) {
           enrollPorter(enrollingPermission, newEnrollingPermission)
+          val rulesDialog = RulesDialog()
+          rulesDialog.show(supportFragmentManager, RULES_DIALOG_TAG)
+          supportFragmentManager.setFragmentResultListener(CANCEL_KEY, viewLifecycleOwner)
+          { _, bundle ->
+            Log.i (TAG, "Dialog cancel, refuse from app")
+            refuseFromApp(enrollingPermission, newEnrollingPermission, changeStateCount)
+          }
+        }
 
         if (porterWantToRefuse) {
           val refuseDialog = ApplicationRefuseDialog()
@@ -903,10 +910,14 @@ class ApplicationFragment (private val appId: Int): Fragment()
 
       val date = strToDate(appItem.date, DATE_FORMAT)
       date?.let {
-        val time = if (isItToday(it))
+        val time = if (isItToday(it)) {
+          tvTime.setTextColor(Color.BLACK)
           "${appItem.time}"
-        else
+        }
+        else {
+          tvTime.setTextColor(Color.RED)
           "${getDateStr(it)} ${appItem.time}"
+        }
         tvTime.text = Html.fromHtml(getString(R.string.app_time, time))
       }
 

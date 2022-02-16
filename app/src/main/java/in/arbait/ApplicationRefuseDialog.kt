@@ -1,7 +1,5 @@
 package `in`.arbait
 
-import `in`.arbait.http.ReactionOnResponse
-import `in`.arbait.http.response.*
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -40,28 +38,5 @@ class ApplicationRefuseDialog: DialogFragment(), View.OnClickListener
     }
 
     dismiss()
-  }
-
-  private fun onResult(appResponse: ApplicationResponse) {
-    when (appResponse.response.type) {
-      SERVER_OK     -> RefuseReaction(appResponse).doOnServerOkResult()
-      SYSTEM_ERROR  -> RefuseReaction(appResponse).doOnSystemError()
-      SERVER_ERROR  -> RefuseReaction(appResponse).doOnServerError()
-    }
-  }
-
-  private inner class RefuseReaction (val appResponse: ApplicationResponse):
-    ReactionOnResponse(TAG, requireContext(), rootView, appResponse.response)
-  {
-    override fun doOnServerOkResult() {
-      val bundle = Bundle().apply {
-        putSerializable(APPLICATION_KEY, appResponse.app)
-      }
-      requireActivity().supportFragmentManager.setFragmentResult(APPLICATION_KEY, bundle)
-      dismiss()
-    }
-
-    override fun doOnServerFieldValidationError(response: Response) {}
-    override fun doOnEndSessionError() {}
   }
 }

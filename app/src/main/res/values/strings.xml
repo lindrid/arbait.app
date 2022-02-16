@@ -21,7 +21,7 @@
     <string name="in">в</string>
     <string name="tomorrow">Завтра</string>
     <string name="hourly_suffix"> р/ч</string>
-    <string name="daily_suffix"> за 8ч</string>
+    <string name="daily_suffix"> сдельно</string>
 
     <string name="empty_phone">Укажите номер телефона!</string>
     <string name="wrong_phone">Задайте корректный российский номер телефона!</string>
@@ -203,5 +203,12 @@
     <string name="app_confirm">свой выход на заявку</string>
     <string name="app_status_need_confirm">Подтвердите свой выход</string>
     <string name="app_sub_status_need_confirm">За 2 часа до начала подтвердите заявку! (появится кнопка в заявке)</string>
+    <string name="rules_header">Правила</string>
+    <string name="rules_one">Заявки берутся на ОДНОГО человека. Нельзя взять заявку и привести с собой друзей.</string>
+    <string name="rules_two">Вы должны быть на связи за 2 часа до начала заявки, а также в пути на заявку.</string>
+    <string name="rules_three">Оплатите комиссию до 22:00 после завершения заявки.</string>
+    <string name="rules_four">Отказывайтесь от заявки за час или более(без последствий). Если вы не отказались и не вышли на заявку, ваш рейтинг падает до 0. Если вы отказались за 30 минут или меньше, ваш рейтинг немного уменьшается.</string>
+    <string name="accept">Согласен</string>
+    <string name="reject">Не согласен</string>
 
 </resources>
