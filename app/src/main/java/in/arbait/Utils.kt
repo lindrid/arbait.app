@@ -1,6 +1,7 @@
 package `in`.arbait
 
 import `in`.arbait.http.items.ApplicationItem
+import `in`.arbait.http.poll_service.APP_MILLISECONDS_ADDITION_BY_DEFAULT
 import android.app.Activity
 import android.content.ClipData
 import android.content.ClipboardManager
@@ -302,6 +303,15 @@ fun getDiffYears (first: Date?, last: Date?): Int {
   }
 
   return diff
+}
+
+fun getAppTimeMlsc(applicationItem: ApplicationItem, serverTime: Long): Long {
+  val appDateTimeStr = "${applicationItem.date} ${applicationItem.time}:00"
+  var appDateTime = serverTime + APP_MILLISECONDS_ADDITION_BY_DEFAULT
+  strToDate(appDateTimeStr, DATE_TIME_FORMAT)?.let { time ->
+    appDateTime = time.time
+  }
+  return appDateTime
 }
 
 fun strToDate (dateStr: String?, dateFormat: String): Date? {

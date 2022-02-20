@@ -34,15 +34,15 @@ import kotlinx.coroutines.launch
 import java.io.Serializable
 import java.util.*
 
+const val MINUTE = 60 * 1000
+const val ONE_HOUR = 60 * MINUTE
+const val APP_MILLISECONDS_ADDITION_BY_DEFAULT = 2 * ONE_HOUR
 
 private const val TAG = "PollingService"
 private const val SERVICE_DELAY_SECONDS: Long = 5
 private const val MAX_PORTER_RATING_BY_DEFAULT = 5
 
-private const val ONE_HOUR = 60 * 60 * 1000
-private const val MINUTE = 60 * 1000
 private const val TWO_HOURS_AND_FIVE_MINUTES = 2 * ONE_HOUR + 5 * MINUTE
-private const val APP_MILLISECONDS_ADDITION_BY_DEFAULT = 2 * ONE_HOUR
 
 private const val SERVICE_NOTIFICATION_ID = 1
 private const val SERVICE_DELETED_APP_NOTIFICATION_ID = 2
@@ -64,6 +64,8 @@ class PollService : LifecycleService(), Serializable
   var serviceIsStarted = false
     private set
 
+  val lvdServerDateTime: MutableLiveData<Date> = MutableLiveData()
+  val lvdServerTimeMlsc: MutableLiveData<Long> = MutableLiveData()
   val lvdDispatcherWhatsapp: MutableLiveData<String> = MutableLiveData()
   val lvdDispatcherPhoneCall: MutableLiveData<String> = MutableLiveData()
 
@@ -160,12 +162,12 @@ class PollService : LifecycleService(), Serializable
 
             setOpenApps(openAppsFromServer, closedApps)
 
-            var serverDate = Date()
-            var serverTime = Date().time
+            lvdServerDateTime.value = Date()
+            lvdServerTimeMlsc.value = Date().time
             it.serverTime?.let { serverTimeStr ->
               strToDate(serverTimeStr, DATE_TIME_FORMAT)?.let { time ->
-                serverDate = time
-                serverTime = time.time
+                lvdServerDateTime.value = time
+                lvdServerTimeMlsc.value = time.time
               }
             }
 
@@ -176,26 +178,30 @@ class PollService : LifecycleService(), Serializable
 
             if (newApps.isNotEmpty()) {
                 Log.i (TAG, "newApps.indices=${newApps.indices}")
+              lvdServerTimeMlsc.value?.let {  timeMlsc ->
                 for (i in newApps.indices) {
-                  newApps[i].hideUntilTime = getAppWaitingTime(newApps[i], serverTime,
+                  newApps[i].hideUntilTime = getAppWaitingTime(newApps[i], timeMlsc,
                     maxPorterRating)
                   Log.i(TAG, "app.id = ${newApps[i].id}, hideUntilTime = " +
-                      "${newApps[i].hideUntilTime}")
+                    "${newApps[i].hideUntilTime}")
                 }
+              }
             }
 
             for (i in openApps.indices) {
               val notificationHasNotShown = !(openApps[i].notificationHasShown)
               if (notificationHasNotShown) {
-                if (serverTime >= openApps[i].hideUntilTime) {
-                  Log.i(TAG, "Notify: app.id = ${openApps[i].id}")
-                  openApps[i].notificationHasShown = true
+                lvdServerTimeMlsc.value?.let { timeMlsc ->
+                  if (timeMlsc >= openApps[i].hideUntilTime) {
+                    Log.i(TAG, "Notify: app.id = ${openApps[i].id}")
+                    openApps[i].notificationHasShown = true
 
-                  Log.i (TAG, "notificationsOff = ${App.dbUser?.notificationsOff}")
-                  if (App.dbUser?.notificationsOff == false && !firstTime) {
-                    if (!justRefusedOrRemovedFromThisApp(openApps[i].id)) {
-                      val n = createNewAppNotification(openApps[i])
-                      showNotification(applicationContext, openApps[i].id, n)
+                    Log.i(TAG, "notificationsOff = ${App.dbUser?.notificationsOff}")
+                    if (App.dbUser?.notificationsOff == false && !firstTime) {
+                      if (!justRefusedOrRemovedFromThisApp(openApps[i].id)) {
+                        val n = createNewAppNotification(openApps[i])
+                        showNotification(applicationContext, openApps[i].id, n)
+                      }
                     }
                   }
                 }
@@ -215,13 +221,17 @@ class PollService : LifecycleService(), Serializable
 
             val takenAppsFromServer = takenApps
             if (takenAppsWasChanged) {
-              doThingsIfItsTimeToConfirmApp(takenAppsFromServer, serverDate)
+              lvdServerDateTime.value?.let { serverDate ->
+                doThingsIfItsTimeToConfirmApp(takenAppsFromServer, serverDate)
+              }
               takenAppsLvdList.value = takenAppsFromServer
             }
             else {
               val mList = takenAppsLvdList.value?.toMutableList()
               mList?.let { list ->
-                doThingsIfItsTimeToConfirmApp(list, serverDate)
+                lvdServerDateTime.value?.let { serverDate ->
+                  doThingsIfItsTimeToConfirmApp(list, serverDate)
+                }
               }
               takenAppsLvdList.value = if (mList == null) emptyList() else mList
             }
@@ -473,11 +483,7 @@ class PollService : LifecycleService(), Serializable
     if (maxRating == 0)
       return serverTime
 
-    val appDateTimeStr = "${newApp.date} ${newApp.time}:00"
-    var appDateTime = serverTime + APP_MILLISECONDS_ADDITION_BY_DEFAULT
-    strToDate(appDateTimeStr, DATE_TIME_FORMAT)?.let { time ->
-      appDateTime = time.time
-    }
+    val appDateTime = getAppTimeMlsc(newApp, serverTime)
 
     var appCreatedAt = serverTime
     strToDate(newApp.createdAt, DATE_TIME_FORMAT)?.let { time ->

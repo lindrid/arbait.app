@@ -4,7 +4,9 @@ import `in`.arbait.database.*
 import android.content.Context
 import android.database.sqlite.SQLiteConstraintException
 import androidx.room.Room
-import kotlinx.coroutines.*
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.async
+import kotlinx.coroutines.runBlocking
 import java.util.*
 import java.util.concurrent.Executors
 
@@ -20,7 +22,7 @@ class Repository private constructor(context: Context)
     migration_1_2, migration_2_3, migration_3_4,
     migration_4_5, migration_5_6, migration_6_7,
     migration_7_8, migration_8_9, migration_9_10,
-    migration_10_11
+    migration_10_11, migration_11_12
   ).build()
 
   private val userDao = database.userDao()

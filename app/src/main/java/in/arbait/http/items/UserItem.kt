@@ -8,5 +8,6 @@ data class UserItem (
   @SerializedName("first_name") val name: String,
   @SerializedName("birth_date") val birthDate: String,
   @SerializedName("phones") val phones: List<PhoneItem>,
-  @SerializedName("porter") val porter: PorterItem
+  @SerializedName("porter") val porter: PorterItem,
+  @SerializedName("debit_cards") val debitCards: List<DebitCardItem>?
 ): Serializable {}

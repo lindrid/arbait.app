@@ -57,10 +57,15 @@ class RegistrationFragment : Fragment() {
   private lateinit var etPhone: MonitoringEditText
   private lateinit var etPhoneWa: MonitoringEditText
   private lateinit var btSamePhone: AppCompatButton
+  private lateinit var btSamePhoneWa: AppCompatButton
+  private lateinit var etDebitCard: MonitoringEditText
   private lateinit var btDone: Button
 
   private val setPhoneWaEqualsToPhone = { _: View ->
     etPhoneWa.text = etPhone.text
+  }
+  private val setDebitCardEqualsToPhone = { _: View ->
+    etDebitCard.text = etPhone.text
   }
 
 
@@ -80,19 +85,25 @@ class RegistrationFragment : Fragment() {
     etPhone = view.findViewById(R.id.et_reg_phone) as MonitoringEditText
     etPhoneWa = view.findViewById(R.id.et_reg_phone_wa) as MonitoringEditText
     btSamePhone = view.findViewById(R.id.bt_reg_same_phone)
+    btSamePhoneWa = view.findViewById(R.id.bt_reg_same_phone_wa)
+    etDebitCard = view.findViewById(R.id.et_reg_debit_card) as MonitoringEditText
     btDone = view.findViewById(R.id.bt_reg_done)
 
     registrationFields.add(etFirstName)
     registrationFields.add(etBirthDate)
     registrationFields.add(etPhone)
     registrationFields.add(etPhoneWa)
+    registrationFields.add(etDebitCard)
 
     etPhone.addTextChangedListener(PhoneFormatWatcher(etPhone, viewLifecycleOwner))
     etPhoneWa.addTextChangedListener(PhoneFormatWatcher(etPhoneWa, viewLifecycleOwner))
+    etDebitCard.addTextChangedListener(DebitCardFormatWatcher(etDebitCard, viewLifecycleOwner))
 
     btSamePhone.setOnClickListener(setPhoneWaEqualsToPhone)
+    btSamePhoneWa.setOnClickListener(setDebitCardEqualsToPhone)
 
     btDone.setOnClickListener {
+      btDone.isEnabled = false
       val str = etPhoneWa.text.toString()
       val phoneWa = if (str.isEmpty()) { null } else { str }
 
@@ -101,13 +112,15 @@ class RegistrationFragment : Fragment() {
         firstName = etFirstName.text.toString(),
         birthDate = etBirthDate.text.toString(),
         phone = etPhone.text.toString(),
-        phoneWa = phoneWa
+        phoneWa = phoneWa,
+        debitCard = etDebitCard.text.toString()
       )
       Log.i (TAG, "User = ${user.toString()}")
 
       if (inputFieldsAreValid(user)) {
         server.registerUser(user) { response: Response ->
           onResult(response)
+          btDone.isEnabled = true
         }
       }
     }
@@ -257,6 +270,9 @@ class RegistrationFragment : Fragment() {
         "phone_wa" -> {
           showErrorBalloon(requireContext(), etPhoneWa, errorStr)
         }
+        "debit_card" -> {
+          showErrorBalloon(requireContext(), etDebitCard, errorStr)
+        }
       }
     }
 
@@ -404,5 +420,14 @@ class RegistrationFragment : Fragment() {
       return true
     }
     return false
+  }
+
+  private fun debitCardIsValid(debitCard: String?, tag: String): Boolean {
+    if (debitCard.isNullOrEmpty()) return true
+    for (i in debitCard.indices) {
+      val validChar = (Character.isDigit(debitCard[i]) || debitCard[i] == ' ')
+      if (!validChar) return false
+    }
+    return true
   }
 }

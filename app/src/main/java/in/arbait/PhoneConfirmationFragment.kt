@@ -53,7 +53,9 @@ class PhoneConfirmationFragment(private val confirmationForLogin: Boolean = fals
   override fun onClick(v: View?) {
     when (v?.id) {
       R.id.bt_phone_conf_request_call -> {
+        btRequestCall.isEnabled = false
         onClickRequestCallButton()
+        btRequestCall.isEnabled = true
       }
       R.id.bt_phone_conf_done -> {
         onClickDoneButton()

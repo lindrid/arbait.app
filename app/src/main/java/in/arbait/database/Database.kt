@@ -6,7 +6,7 @@ import androidx.room.TypeConverters
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 
-@Database(entities = [User::class, EnrollingPermission::class], version = 11)
+@Database(entities = [User::class, EnrollingPermission::class], version = 12)
 @TypeConverters(MyTypeConverters::class)
 abstract class Database: RoomDatabase() {
   abstract fun userDao(): UserDao
@@ -105,5 +105,11 @@ val migration_10_11 = object: Migration(10, 11) {
   override fun migrate(database: SupportSQLiteDatabase) {
     database.execSQL("ALTER TABLE User ADD COLUMN sberFio TEXT NOT NULL DEFAULT ''")
     database.execSQL("ALTER TABLE User ADD COLUMN anotherBank4Digits TEXT NOT NULL DEFAULT ''")
+  }
+}
+
+val migration_11_12 = object: Migration(11, 12) {
+  override fun migrate(database: SupportSQLiteDatabase) {
+    database.execSQL("ALTER TABLE User ADD COLUMN rulesShowDatetime INT8 NOT NULL DEFAULT 0")
   }
 }

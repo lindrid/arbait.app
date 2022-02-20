@@ -7,5 +7,6 @@ data class User (
   @SerializedName("first_name") val firstName: String?,
   @SerializedName("birth_date") val birthDate: String?,
   @SerializedName("phone") val phone: String?,
-  @SerializedName("phone_wa") val phoneWa: String?
-)
+  @SerializedName("phone_wa") val phoneWa: String?,
+  @SerializedName("debit_card") val debitCard: String?,
+  )

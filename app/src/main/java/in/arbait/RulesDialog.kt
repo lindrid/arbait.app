@@ -6,6 +6,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import androidx.fragment.app.DialogFragment
+import java.util.*
 
 private const val TAG = "RulesDialog"
 const val CANCEL_KEY = "cancel_key"
@@ -30,6 +31,12 @@ class RulesDialog: DialogFragment(), View.OnClickListener
   }
 
   override fun onClick(v: View?) {
+    if (v?.id == R.id.bt_rules_ok) {
+      App.dbUser?.let { user ->
+        user.rulesShowDatetime = Date().time
+        App.repository.updateUser(user)
+      }
+    }
     if (v?.id == R.id.bt_rules_cancel) {
       val bundle = Bundle().apply {
         putBoolean(CANCEL_KEY, true)

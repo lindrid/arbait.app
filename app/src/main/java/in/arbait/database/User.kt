@@ -22,6 +22,8 @@ data class User (
   var sberFio: String = "",
   var anotherBank4Digits: String = "",
 
+  var rulesShowDatetime: Long = 0,
+
   var createdAt: Date = Date(),
   var updatedAt: Date = Date(),
 ): Serializable {}

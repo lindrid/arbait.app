@@ -18,8 +18,13 @@ import android.os.Build
 import android.os.IBinder
 import android.util.Log
 import android.view.View
-import androidx.lifecycle.*
+import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.Observer
+import androidx.lifecycle.ViewModel
 import java.io.Serializable
+import java.util.*
 
 private const val TAG = "PollServerViewModel"
 
@@ -42,6 +47,12 @@ class PollServerViewModel: ViewModel(), Serializable
   var pollService: PollService? = null
   var serviceIsBound: Boolean? = null
 
+  private var lvdServerDateTime: MutableLiveData<Date> = MutableLiveData()
+  private var lvdServerTimeMlsc: MutableLiveData<Long> = MutableLiveData()
+
+  val serverDateTime get() = lvdServerDateTime.value
+  val serverTimeMlsc get() = lvdServerTimeMlsc.value
+
   var lvdDispatcherWhatsapp = MutableLiveData<String>()
   var lvdDispatcherPhoneCall = MutableLiveData<String>()
 
@@ -63,14 +74,16 @@ class PollServerViewModel: ViewModel(), Serializable
       val binder = iBinder as PollService.PollBinder
       pollService = binder.service
       serviceIsBound = true
-      pollService?.let {
-        appsResponse = it.dataResponse
-        openAppsLvdList = it.openAppsLvdList
-        takenAppsLvdList = it.takenAppsLvdList
-        deletedAppsLvdList = it.deletedAppsLvdList
-        removedFromAppsLvdList = it.removedFromAppsLvdList
-        lvdDispatcherWhatsapp = it.lvdDispatcherWhatsapp
-        lvdDispatcherPhoneCall = it.lvdDispatcherPhoneCall
+      pollService?.let {  service ->
+        appsResponse            = service.dataResponse
+        openAppsLvdList         = service.openAppsLvdList
+        takenAppsLvdList        = service.takenAppsLvdList
+        deletedAppsLvdList      = service.deletedAppsLvdList
+        removedFromAppsLvdList  = service.removedFromAppsLvdList
+        lvdDispatcherWhatsapp   = service.lvdDispatcherWhatsapp
+        lvdDispatcherPhoneCall  = service.lvdDispatcherPhoneCall
+        lvdServerDateTime       = service.lvdServerDateTime
+        lvdServerTimeMlsc       = service.lvdServerTimeMlsc
       }
       setAppsResponseObserver()
       setAppsObservers()
