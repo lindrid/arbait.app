@@ -295,6 +295,7 @@ class PollService : LifecycleService(), Serializable
   override fun onDestroy() {
     super.onDestroy()
     log("The service has been destroyed".toUpperCase())
+    startService()
   }
 
 

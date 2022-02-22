@@ -55,7 +55,6 @@ class PhoneConfirmationFragment(private val confirmationForLogin: Boolean = fals
       R.id.bt_phone_conf_request_call -> {
         btRequestCall.isEnabled = false
         onClickRequestCallButton()
-        btRequestCall.isEnabled = true
       }
       R.id.bt_phone_conf_done -> {
         onClickDoneButton()
@@ -168,6 +167,7 @@ class PhoneConfirmationFragment(private val confirmationForLogin: Boolean = fals
         SYSTEM_ERROR  -> requestCall.doOnSystemError()
         SERVER_ERROR  -> requestCall.doOnServerError()
       }
+      btRequestCall.isEnabled = true
     }
   }
 

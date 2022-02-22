@@ -158,6 +158,19 @@
                 app:layout_constraintTop_toBottomOf="@+id/tv_app_commission" />
 
             <androidx.appcompat.widget.AppCompatTextView
+                android:id="@+id/tv_app_pay_from_who"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="20dp"
+                android:layout_marginTop="10dp"
+                android:text="TextView"
+                android:textColor="@color/black"
+                android:textSize="18sp"
+                android:visibility="invisible"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/tv_app_pay_method" />
+
+            <androidx.appcompat.widget.AppCompatTextView
                 android:id="@+id/tv_app_porters"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"

@@ -4,11 +4,15 @@ import androidx.lifecycle.LiveData
 import com.google.gson.annotations.SerializedName
 import java.io.Serializable
 
+const val FROM_DISPATCHER = 0
+const val FROM_CLIENT = 1
+
 data class ApplicationItem (
   val id: Int,
   val address: String?,
   val date: String,
   val time: String,
+  //@SerializedName("pay_from_who") val payFromWho: Int = FROM_DISPATCHER,
   @SerializedName("what_to_do") val whatToDo: String,
   @SerializedName("pay_method") val payMethod: Int,
   @SerializedName("client_phone_number") val clientPhoneNumber: String,

@@ -100,6 +100,7 @@ class ApplicationFragment (private val appId: Int): Fragment()
   private lateinit var tvMoney: AppCompatTextView
   private lateinit var tvCommission: AppCompatTextView
   private lateinit var tvPayMethod: AppCompatTextView
+  private lateinit var tvPayFromWho: AppCompatTextView
   private lateinit var tvDescription: AppCompatTextView
   private lateinit var tvPortersCount: AppCompatTextView
   private lateinit var rvPorters: RecyclerView
@@ -327,30 +328,19 @@ class ApplicationFragment (private val appId: Int): Fragment()
               enrollWithDebitCardDialog.show(supportFragmentManager, DEBIT_CARD_DIALOG_TAG)
               porterIsEnrolled = false
               view?.let {
-                reactOnEnrollWithCard(it, enrollingPermission, newEnrollingPermission)
+                reactOnEnrollWithCard(it,
+                  enrollingPermission,
+                  newEnrollingPermission,
+                  changeStateCount
+                )
               }
             }
             else {
-              enrollPorterWithoutCard(enrollingPermission, newEnrollingPermission)
-            }
-          }
-
-          var showDialog = false
-          App.dbUser?.let { u ->
-            if (Date().time - u.rulesShowDatetime >= SHOW_RULES_DELAY_TIME) {
-              showDialog = true
-            }
-          }
-
-          if (showDialog) {
-            delay(BEFORE_RULES_DELAY_IN_SECONDS * 1000)
-            val rulesDialog = RulesDialog()
-            rulesDialog.show(supportFragmentManager, RULES_DIALOG_TAG)
-            supportFragmentManager.setFragmentResultListener(CANCEL_KEY, viewLifecycleOwner)
-            { _, bundle ->
-              Log.i(TAG, "Dialog cancel, refuse from app")
-              refuseFromApp(enrollingPermission, newEnrollingPermission,
-                changeStateCount, Consiquences.NOTHING)
+              enrollPorterWithoutCard(
+                enrollingPermission,
+                newEnrollingPermission,
+                changeStateCount
+              )
             }
           }
 
@@ -385,12 +375,39 @@ class ApplicationFragment (private val appId: Int): Fragment()
     }
   }
 
+  private suspend fun showRulesDialog(enrollingPermission: EnrollingPermission?,
+                                      newEnrollingPermission: EnrollingPermission,
+                                      changeStateCount: Int
+  ) {
+    var showDialog = false
+    App.dbUser?.let { u ->
+      if (Date().time - u.rulesShowDatetime >= SHOW_RULES_DELAY_TIME) {
+        showDialog = true
+      }
+    }
+
+    if (showDialog) {
+      delay(BEFORE_RULES_DELAY_IN_SECONDS * 1000)
+      val rulesDialog = RulesDialog()
+      rulesDialog.show(supportFragmentManager, RULES_DIALOG_TAG)
+      supportFragmentManager.setFragmentResultListener(CANCEL_KEY, viewLifecycleOwner)
+      { _, bundle ->
+        Log.i(TAG, "Dialog cancel, refuse from app")
+        refuseFromApp(enrollingPermission, newEnrollingPermission,
+          changeStateCount, Consiquences.NOTHING)
+      }
+    }
+  }
+
   private fun stateIsChanging(ep: EnrollingPermission, state: AppState): Boolean {
     return ep.lastState == AppState.ENROLLED && state == AppState.REFUSED ||
         ep.lastState == AppState.REFUSED && state == AppState.ENROLLED
   }
 
-  private fun enrollPorterWithoutCard(ep: EnrollingPermission?, newEp: EnrollingPermission) {
+  private suspend fun enrollPorterWithoutCard(ep: EnrollingPermission?,
+                                              newEp: EnrollingPermission,
+                                              changeStateCount: Int
+  ) {
     server.enrollPorter(appId, null, null) { appResponse: ApplicationResponse ->
       when (appResponse.response.type) {
         SERVER_OK     -> EnrollReaction(appResponse).doOnServerOkResult(ep, newEp)
@@ -398,10 +415,15 @@ class ApplicationFragment (private val appId: Int): Fragment()
         SERVER_ERROR  -> EnrollReaction(appResponse).doOnServerError()
       }
       btEnrollRefuse.isEnabled = true
+
+      suspend {
+        showRulesDialog(ep, newEp, changeStateCount)
+      }
     }
   }
 
-  private fun reactOnEnrollWithCard(view: View, ep: EnrollingPermission?, newEp: EnrollingPermission)
+  private suspend fun reactOnEnrollWithCard(view: View, ep: EnrollingPermission?,
+                                    newEp: EnrollingPermission, changeStateCount: Int)
   {
     supportFragmentManager.setFragmentResultListener(APPLICATION_KEY, viewLifecycleOwner)
     { _, bundle ->
@@ -423,6 +445,10 @@ class ApplicationFragment (private val appId: Int): Fragment()
       btEnrollRefuse.text = getString(R.string.app_refuse)
       setVisibilityToViews(true, view)
       updateUI()
+
+      suspend {
+        showRulesDialog(ep, newEp, changeStateCount)
+      }
     }
   }
 
@@ -727,6 +753,7 @@ class ApplicationFragment (private val appId: Int): Fragment()
 
       if (app != null && app.state >= READY_TO_PAY) {
         tvStatus.text = getString(R.string.app_end)
+        btChangeDebitCard.isEnabled = false
         porter?.pivot?.let { pivot ->
           tvEndStatus.text = Html.fromHtml(getString(R.string.app_status,
             pivot.workHours,
@@ -935,7 +962,7 @@ class ApplicationFragment (private val appId: Int): Fragment()
       Log.i (TAG, "getThisUserPorter: app = $app, porters = ${app.porters}")
       app.porters?.let {
         for (i in app.porters.indices) {
-          if (user.id == app.porters[i].user.id) {
+          if (user.id == app.porters[i].user?.id) {
             Log.i (TAG, "user.id=${user.id}")
             porter = app.porters[i]
             break
@@ -959,6 +986,7 @@ class ApplicationFragment (private val appId: Int): Fragment()
     tvCommission = view.findViewById(R.id.tv_app_commission)
     tvDescription = view.findViewById(R.id.tv_app_description)
     tvPayMethod = view.findViewById(R.id.tv_app_pay_method)
+    tvPayFromWho = view.findViewById(R.id.tv_app_pay_from_who)
     tvPortersCount = view.findViewById(R.id.tv_app_porters)
     rvPorters = view.findViewById(R.id.rv_app_porters)
     btCallClient = view.findViewById(R.id.bt_app_call_client)
@@ -1038,8 +1066,7 @@ class ApplicationFragment (private val appId: Int): Fragment()
       }
 
       if (porterIsEnrolled) {
-        val debitCardNumber = getDebitCardNumber()
-        btChangeDebitCard.text = debitCardNumber
+        btChangeDebitCard.text = getDebitCardNumber()
 
         if (appItem.payMethod == PM_CARD)
           btChangeDebitCard.visibility = View.VISIBLE
