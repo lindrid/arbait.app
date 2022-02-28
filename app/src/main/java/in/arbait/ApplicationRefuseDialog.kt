@@ -39,7 +39,7 @@ class ApplicationRefuseDialog(private val consequences: Consiquences,
     when (consequences) {
       Consiquences.DECREASE_RATING_AND_BANN -> {
         tvAreYouSure.text = "${tvAreYouSure.text} " + getDaysHoursStr() + " " +
-            getString(R.string.dar_decrease_rating, decreaseRatingPercent)
+            getString(R.string.dar_decrease_rating, decreaseRatingPercent) + "%!"
       }
       else -> {
         tvAreYouSure.text = tvAreYouSure.text
@@ -56,8 +56,12 @@ class ApplicationRefuseDialog(private val consequences: Consiquences,
       if (bannDaysCount == 0)
         return getString(R.string.dar_bann_hours, bannHoursCount)
 
-    return getString(R.string.dar_bann_days_hours,
-      bannDaysCount, bannHoursCount)
+    return if (bannHoursCount > 0) {
+      getString(R.string.dar_bann_days_hours, bannDaysCount, bannHoursCount)
+    }
+    else {
+      getString(R.string.dar_bann_days, bannDaysCount)
+    }
   }
 
   override fun onClick(v: View?) {

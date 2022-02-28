@@ -38,7 +38,6 @@ import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import kotlinx.coroutines.*
-import java.math.BigDecimal
 import java.util.*
 import kotlin.math.abs
 import kotlin.math.roundToInt
@@ -409,7 +408,7 @@ class ApplicationFragment (private val appId: Int): Fragment()
                   val diff = abs(appTimeMlsc - serverTimeMlsc)
                   if (diff < MAX_REFUSAL_TIME_WITHOUT_CONSIQUENCES) {
                     val diffInMins: Double = diff.toDouble() / MINUTE
-                    val divider: Double = diffInMins / MAX_MIN_COUNT
+                    val divider: Double = 1 - diffInMins / MAX_MIN_COUNT
                     decreaseRatingPercent = (divider * 100).roundToInt()
                     val bannTime = divider * MAX_BANN_FOR_REFUSE
 
@@ -420,11 +419,10 @@ class ApplicationFragment (private val appId: Int): Fragment()
                       bannTimeHoursCount = (bannTimeInDays * 24).roundToInt()
                     }
                     else {
-                      val bigDecimal = BigDecimal(bannTimeInDays.toString())
-                      bannTimeDaysCount = bigDecimal.intValueExact()
+                      bannTimeDaysCount = bannTimeInDays.toInt()
                       Log.i(TAG, "Days: $bannTimeDaysCount")
-                      bannTimeHoursCount = bigDecimal.subtract(BigDecimal(bannTimeDaysCount))
-                        .toInt() * 24
+                      bannTimeHoursCount = ((bannTimeInDays - bannTimeDaysCount.toDouble()) * 24)
+                        .roundToInt()
                       Log.i(TAG, "hours: $bannTimeHoursCount")
                     }
                   }

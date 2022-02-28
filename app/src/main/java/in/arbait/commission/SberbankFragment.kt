@@ -11,8 +11,7 @@ import androidx.appcompat.widget.AppCompatButton
 import androidx.appcompat.widget.AppCompatTextView
 import androidx.fragment.app.Fragment
 
-const val SBER_TEL_NUMBER = "+79247969868"
-const val SBER_CARD_NUMBER = "4276 5000 3712 2874"
+const val SBER_CARD_NUMBER = "4276 5000 2844 9583"
 const val SBER_PAY_TYPE = 0
 
 private const val TAG = "SberbankFragment"

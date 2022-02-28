@@ -6,7 +6,7 @@ import androidx.room.TypeConverters
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 
-@Database(entities = [User::class, EnrollingPermission::class], version = 13)
+@Database(entities = [User::class, EnrollingPermission::class, AppHistory::class], version = 14)
 @TypeConverters(MyTypeConverters::class)
 abstract class Database: RoomDatabase() {
   abstract fun userDao(): UserDao

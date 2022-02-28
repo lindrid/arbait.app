@@ -178,7 +178,7 @@
     <!-- SberbankFragment -->
     <string name="comsber_tel">Телефон, привязанный к карте: %s</string>
     <string name="comsber_card">Номер карты: %s</string>
-    <string name="comsber_initials">Получатель: Людмила Николаевна Ф.</string>
+    <string name="comsber_initials">Получатель: Дмитрий Владимирович К.</string>
     <string name="comsber_sber_transfer">Перевод без комиссии: %s</string>
     <string name="comsber_bank_transfer">С комиссией (другой банк): %s</string>
     <string name="comsber_transfer">После перевода нажмите кнопку \"Оплатил\",
@@ -218,8 +218,9 @@
 
     <!-- AppRefuseDialog -->
     <string name="dar_bann_days_hours">Вы будете заблокированы на %1d дней и %2d часов!</string>
+    <string name="dar_bann_days">Вы будете заблокированы на %d дней!</string>
     <string name="dar_bann_hours">Вы будете заблокированы на %d часов!</string>
-    <string name="dar_decrease_rating">Также, ваш накопленный рейтинг уменьшится на %d\%!</string>
+    <string name="dar_decrease_rating">Также, ваш накопленный рейтинг уменьшится на %d</string>
 
     <!-- AutoStartSettingDialog -->
     <string name="autostart_header">Разрешение на автозапуск</string>

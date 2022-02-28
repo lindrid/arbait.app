@@ -118,7 +118,6 @@ class ApplicationsFragment: Fragment()
     val appName = getString(R.string.app_name)
     actionBar?.title = "$appName"
 
-
     if (manufacturerIsOneOf(AUTOSTART_PROBLEMS_MANUFACTURERS)) {
       val autoStartDialog = AutoStartSettingDialog()
       autoStartDialog.show(supportFragmentManager, AUTOSTART_DIALOG_TAG)
