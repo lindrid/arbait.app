@@ -6,22 +6,16 @@ import `in`.arbait.http.appIsConfirmed
 import `in`.arbait.http.items.ApplicationItem
 import `in`.arbait.http.response.SERVER_OK
 import `in`.arbait.http.response.ServiceDataResponse
-import android.app.Notification
-import android.app.NotificationChannel
-import android.app.NotificationManager
+import android.app.*
 import android.app.NotificationManager.IMPORTANCE_HIGH
 import android.app.NotificationManager.IMPORTANCE_NONE
-import android.app.PendingIntent
 import android.app.PendingIntent.FLAG_UPDATE_CURRENT
 import android.content.Context
 import android.content.Intent
 import android.graphics.Color
 import android.media.AudioAttributes
 import android.net.Uri
-import android.os.Binder
-import android.os.Build
-import android.os.IBinder
-import android.os.PowerManager
+import android.os.*
 import android.util.Log
 import androidx.lifecycle.LifecycleService
 import androidx.lifecycle.LiveData
@@ -34,15 +28,18 @@ import kotlinx.coroutines.launch
 import java.io.Serializable
 import java.util.*
 
+
 const val MINUTE = 60 * 1000
-const val ONE_HOUR = 60 * MINUTE
-const val APP_MILLISECONDS_ADDITION_BY_DEFAULT = 2 * ONE_HOUR
+const val HOUR = 60 * MINUTE
+const val DAY = 24 * HOUR
+
+const val APP_MILLISECONDS_ADDITION_BY_DEFAULT = 2 * HOUR
 
 private const val TAG = "PollingService"
 private const val SERVICE_DELAY_SECONDS: Long = 5
 private const val MAX_PORTER_RATING_BY_DEFAULT = 5
 
-private const val TWO_HOURS_AND_FIVE_MINUTES = 2 * ONE_HOUR + 5 * MINUTE
+private const val TWO_HOURS_AND_FIVE_MINUTES = 2 * HOUR + 5 * MINUTE
 
 private const val SERVICE_NOTIFICATION_ID = 1
 private const val SERVICE_DELETED_APP_NOTIFICATION_ID = 2
@@ -104,6 +101,7 @@ class PollService : LifecycleService(), Serializable
       IMPORTANCE_NONE
     )
     startForeground(SERVICE_NOTIFICATION_ID, notification)
+    acquireLock()
 
     server = Server(this)
     server.updateApplicationsResponse(cache = false)
@@ -253,6 +251,16 @@ class PollService : LifecycleService(), Serializable
     )
   }
 
+  private fun acquireLock() {
+    // we need this lock so our service gets not affected by Doze Mode
+    wakeLock =
+      (getSystemService(Context.POWER_SERVICE) as PowerManager).run {
+        newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "MyService::lock").apply {
+          acquire()
+        }
+      }
+  }
+
   // срабатывает правильно ДО того, как takenApps = takenAppsFromServer
   private fun justRefusedOrRemovedFromThisApp(id: Int): Boolean {
     for (i in takenApps.indices)
@@ -295,8 +303,14 @@ class PollService : LifecycleService(), Serializable
   override fun onDestroy() {
     super.onDestroy()
     log("The service has been destroyed".toUpperCase())
-    startService()
+
+    val broadcastIntent = Intent()
+    broadcastIntent.action = "restartservice"
+    broadcastIntent.setClass(this, Restarter::class.java)
+    this.sendBroadcast(broadcastIntent)
   }
+
+
 
 
   private fun doThingsIfItsTimeToConfirmApp(takenApps: MutableList<ApplicationItem>,
@@ -712,5 +726,26 @@ class PollService : LifecycleService(), Serializable
       .setPriority(Notification.PRIORITY_HIGH) // for under android 26 compatibility
       .setAutoCancel(true)
       .build()
+  }
+
+  /*override fun onTaskRemoved(rootIntent: Intent?) {
+    val restartServiceIntent = Intent(applicationContext, PollService::class.java).also {
+      it.setPackage(packageName)
+    }
+    val restartServicePendingIntent: PendingIntent = PendingIntent.getService(this,
+      1, restartServiceIntent, PendingIntent.FLAG_ONE_SHOT);
+    applicationContext.getSystemService(Context.ALARM_SERVICE);
+    val alarmService: AlarmManager = applicationContext.getSystemService(Context.ALARM_SERVICE)
+        as AlarmManager;
+    alarmService.set(AlarmManager.ELAPSED_REALTIME, SystemClock.elapsedRealtime() + 1000,
+      restartServicePendingIntent);
+  }*/
+  override fun onTaskRemoved(rootIntent: Intent?) {
+    val restartServiceIntent = Intent(applicationContext, this.javaClass)
+    restartServiceIntent.setPackage(packageName)
+    val restartServicePendingIntent = PendingIntent.getService(applicationContext, 1, restartServiceIntent, PendingIntent.FLAG_ONE_SHOT)
+    val alarmService = applicationContext.getSystemService(ALARM_SERVICE) as AlarmManager
+    alarmService[AlarmManager.ELAPSED_REALTIME, SystemClock.elapsedRealtime() + 1000] = restartServicePendingIntent
+    super.onTaskRemoved(rootIntent)
   }
 }

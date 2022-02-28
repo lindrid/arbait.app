@@ -6,11 +6,12 @@ import androidx.room.TypeConverters
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 
-@Database(entities = [User::class, EnrollingPermission::class], version = 12)
+@Database(entities = [User::class, EnrollingPermission::class], version = 13)
 @TypeConverters(MyTypeConverters::class)
 abstract class Database: RoomDatabase() {
   abstract fun userDao(): UserDao
   abstract fun enrollingPermissionDao(): EnrollingPermissionDao
+  abstract fun appHistoryDao(): AppHistoryDao
 }
 
 val migration_1_2 = object: Migration(1, 2) {
@@ -111,5 +112,25 @@ val migration_10_11 = object: Migration(10, 11) {
 val migration_11_12 = object: Migration(11, 12) {
   override fun migrate(database: SupportSQLiteDatabase) {
     database.execSQL("ALTER TABLE User ADD COLUMN rulesShowDatetime INT8 NOT NULL DEFAULT 0")
+  }
+}
+
+val migration_12_13 = object : Migration(12, 13) {
+  override fun migrate(database: SupportSQLiteDatabase) {
+    database.execSQL(
+  "CREATE TABLE IF NOT EXISTS `AppHistory` (" +
+        "`appId` INTEGER NOT NULL DEFAULT 0," +
+        "`enrollTime` INT8 NOT NULL DEFAULT 0," +
+        "`refuseTime` INT8 NOT NULL DEFAULT 0," +
+        "`consiquences` INTEGER NOT NULL DEFAULT 0," +
+        "PRIMARY KEY(`appId`)" +
+      ")"
+    )
+  }
+}
+
+val migration_13_14 = object: Migration(13, 14) {
+  override fun migrate(database: SupportSQLiteDatabase) {
+    database.execSQL("ALTER TABLE User ADD COLUMN endOfBannDatetime INT8 NOT NULL DEFAULT 0")
   }
 }

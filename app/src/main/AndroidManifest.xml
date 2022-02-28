@@ -6,6 +6,7 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
 
     <queries>
         <package android:name="com.whatsapp" />
@@ -29,10 +30,21 @@
             </intent-filter>
         </receiver>
 
+        <receiver
+            android:name=".StartActivityReceiver"
+            android:enabled="true"
+            >
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </receiver>
+
         <service
             android:name=".http.poll_service.PollService"
             android:enabled="true"
-            android:exported="false"></service>
+            >
+        </service>
 
         <activity
             android:name=".MainActivity"
@@ -40,16 +52,16 @@
             android:windowSoftInputMode="adjustPan">
             <intent-filter android:label="@string/app_name_in_launcher">
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
 
         <receiver
-            android:name=".http.poll_service.StartReceiver"
-            android:enabled="true">
+            android:name=".http.poll_service.Restarter"
+            android:enabled="true"
+            android:exported="true">
             <intent-filter>
-                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="restartservice" />
             </intent-filter>
         </receiver>
     </application>

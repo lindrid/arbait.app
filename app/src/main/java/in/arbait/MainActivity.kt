@@ -6,19 +6,19 @@ import `in`.arbait.commission.ConfirmationFragment
 import `in`.arbait.commission.PAY_TYPE_ARG
 import `in`.arbait.database.User
 import `in`.arbait.http.PollServerViewModel
-import `in`.arbait.http.poll_service.APP_NO_ID
-import `in`.arbait.http.poll_service.Action
 import `in`.arbait.http.poll_service.NOTIFICATION_ARG
+import `in`.arbait.http.poll_service.Restarter
 import android.content.ContentValues.TAG
-import androidx.appcompat.app.AppCompatActivity
+import android.content.Intent
 import android.os.Bundle
 import android.util.Log
+import android.view.View
+import android.view.inputmethod.InputMethodManager
+import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
-import android.view.View
-import android.view.inputmethod.InputMethodManager
 
 
 private const val TAG = "MainActivity"
@@ -125,8 +125,11 @@ class MainActivity : AppCompatActivity()
   }
 
   override fun onDestroy() {
+    val broadcastIntent = Intent()
+    broadcastIntent.action = "restartservice"
+    broadcastIntent.setClass(this, Restarter::class.java)
+    this.sendBroadcast(broadcastIntent)
     super.onDestroy()
-
   }
 
 }

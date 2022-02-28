@@ -23,6 +23,7 @@ data class User (
   var anotherBank4Digits: String = "",
 
   var rulesShowDatetime: Long = 0,
+  var endOfBannDatetime: Long = 0,
 
   var createdAt: Date = Date(),
   var updatedAt: Date = Date(),

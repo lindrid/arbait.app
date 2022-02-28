@@ -1,7 +1,9 @@
 package `in`.arbait
 
 import `in`.arbait.commission.COMMISSION_ARG
+import `in`.arbait.database.AppHistory
 import `in`.arbait.database.AppState
+import `in`.arbait.database.Consiquences
 import `in`.arbait.database.EnrollingPermission
 import `in`.arbait.http.PollServerViewModel
 import `in`.arbait.http.ReactionOnResponse
@@ -11,6 +13,7 @@ import `in`.arbait.http.items.ApplicationItem
 import `in`.arbait.http.items.DebitCardItem
 import `in`.arbait.http.items.PhoneItem
 import `in`.arbait.http.items.PorterItem
+import `in`.arbait.http.poll_service.HOUR
 import `in`.arbait.http.poll_service.MINUTE
 import `in`.arbait.http.poll_service.removeNotification
 import `in`.arbait.http.response.*
@@ -35,8 +38,10 @@ import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import kotlinx.coroutines.*
+import java.math.BigDecimal
 import java.util.*
 import kotlin.math.abs
+import kotlin.math.roundToInt
 
 
 private const val TAG = "ApplicationFragment"
@@ -46,8 +51,11 @@ private const val RULES_DIALOG_TAG = "RULES_DIALOG"
 const val CLOSED_STATE = 2
 const val READY_TO_PAY = 4
 
-private const val RESET_RATING_MIN_COUNT = 30
-private const val HALVE_RATING_MIN_COUNT = 60
+private const val MAX_REFUSAL_TIME_AFTER_ENROLL_WITHOUT_CONSIQUENCES = 3 * MINUTE
+private const val BANN_FOR_NON_APPEARANCE = 30L * 24L * HOUR.toLong()
+private const val MAX_BANN_FOR_REFUSE = 15 * 24 * HOUR
+private const val MAX_MIN_COUNT = 60
+private const val MAX_REFUSAL_TIME_WITHOUT_CONSIQUENCES = MAX_MIN_COUNT * MINUTE
 
 private const val BEFORE_RULES_DELAY_IN_SECONDS = 2L
 private const val SHOW_RULES_DELAY_TIME: Long = 7 * 24 * 60 * 60 * 1000 // 7 days
@@ -60,6 +68,7 @@ private const val CAUSE_FREQUENT_APP_REFUSING = 0
 private const val CAUSE_SMALL_TIME_INTERVAL = 1
 private const val CAUSE_COMMISSION_IS_NOT_PAYED = 2
 private const val CAUSE_PAY_IS_NOT_CONFIRMED = 3
+private const val CAUSE_BANNED = 4
 
 const val APP_REFUSE_DIALOG_TAG = "ApplicationRefuseDialog"
 const val DEBIT_CARD_DIALOG_TAG = "DebitCardDialog"
@@ -79,8 +88,8 @@ class ApplicationFragment (private val appId: Int): Fragment()
 {
   private var removedFromApp = false
   private var appWasDeleted = false
-  private var couldEnroll = false
-  private var couldNotEnrollCause = -1
+  private var canEnroll = false
+  private var canNotEnrollCause = -1
 
   private var porter: PorterItem? = null
   private var porterIsEnrolled = false
@@ -342,6 +351,23 @@ class ApplicationFragment (private val appId: Int): Fragment()
                 changeStateCount
               )
             }
+
+            val appHistoryCoroutineVal = GlobalScope.async {
+              App.repository.getAppHistory(appItem.id)
+            }
+
+            val appHistory = appHistoryCoroutineVal.await()
+            if (appHistory == null) {
+              val ah = AppHistory(
+                appId = appItem.id,
+                enrollTime = Date().time
+              )
+              App.repository.addAppHistory(ah)
+            }
+            else {
+              appHistory.enrollTime = Date().time
+              App.repository.updateAppHistory(appHistory)
+            }
           }
 
           btEnrollRefuse.isEnabled = true
@@ -349,19 +375,66 @@ class ApplicationFragment (private val appId: Int): Fragment()
 
         if (porterWantToRefuse) {
           var consiquences = Consiquences.NOTHING
+          var bannTimeDaysCount = 0
+          var bannTimeHoursCount = 0
+          var decreaseRatingPercent = 0
+
           lvdAppItem.value?.let { appItem ->
-            vm.serverTimeMlsc?.let { serverTimeMlsc ->
-              val appTimeMlsc = getAppTimeMlsc(appItem, serverTimeMlsc)
-              if (abs(appTimeMlsc - serverTimeMlsc) <= RESET_RATING_MIN_COUNT * MINUTE) {
-                consiquences = Consiquences.RESET_RATING
-              }
-              else if (abs(appTimeMlsc - serverTimeMlsc) <= HALVE_RATING_MIN_COUNT * MINUTE) {
-                consiquences = Consiquences.HALVE_RATING
+            val appHistoryCoroutineVal = GlobalScope.async {
+              App.repository.getAppHistory(appItem.id)
+            }
+
+            val appHistory = appHistoryCoroutineVal.await()
+            if (appHistory == null) {
+              val ah = AppHistory(
+                appId = appItem.id,
+                refuseTime = Date().time
+              )
+              App.repository.addAppHistory(ah)
+            }
+            else {
+              appHistory.refuseTime = Date().time
+              App.repository.updateAppHistory(appHistory)
+            }
+
+            appHistory?.let { ah ->
+              if (
+                ah.refuseTime > 0 &&
+                ah.enrollTime > 0 &&
+                ah.refuseTime - ah.enrollTime > MAX_REFUSAL_TIME_AFTER_ENROLL_WITHOUT_CONSIQUENCES
+              ) {
+                consiquences = Consiquences.DECREASE_RATING_AND_BANN
+                vm.serverTimeMlsc?.let { serverTimeMlsc ->
+                  val appTimeMlsc = getAppTimeMlsc(appItem, serverTimeMlsc)
+                  val diff = abs(appTimeMlsc - serverTimeMlsc)
+                  if (diff < MAX_REFUSAL_TIME_WITHOUT_CONSIQUENCES) {
+                    val diffInMins: Double = diff.toDouble() / MINUTE
+                    val divider: Double = diffInMins / MAX_MIN_COUNT
+                    decreaseRatingPercent = (divider * 100).roundToInt()
+                    val bannTime = divider * MAX_BANN_FOR_REFUSE
+
+                    val bannTimeInDays = bannTime / (24 * HOUR)
+                    bannTimeDaysCount = bannTimeInDays.toInt()
+
+                    if (bannTimeInDays < 1.0) {
+                      bannTimeHoursCount = (bannTimeInDays * 24).roundToInt()
+                    }
+                    else {
+                      val bigDecimal = BigDecimal(bannTimeInDays.toString())
+                      bannTimeDaysCount = bigDecimal.intValueExact()
+                      Log.i(TAG, "Days: $bannTimeDaysCount")
+                      bannTimeHoursCount = bigDecimal.subtract(BigDecimal(bannTimeDaysCount))
+                        .toInt() * 24
+                      Log.i(TAG, "hours: $bannTimeHoursCount")
+                    }
+                  }
+                }
               }
             }
           }
 
-          val refuseDialog = ApplicationRefuseDialog(consiquences)
+          val refuseDialog = ApplicationRefuseDialog(consiquences, decreaseRatingPercent,
+            bannTimeDaysCount, bannTimeHoursCount)
 
           refuseDialog.show(supportFragmentManager, REFUSE_DIALOG_TAG)
           supportFragmentManager.setFragmentResultListener(OK_KEY, viewLifecycleOwner)
@@ -482,7 +555,8 @@ class ApplicationFragment (private val appId: Int): Fragment()
   }
 
   private fun refuseFromApp(ep: EnrollingPermission?, newEp: EnrollingPermission,
-                            changeStateCount: Int, consiquences: Consiquences)
+                            changeStateCount: Int, consiquences: Consiquences
+  )
   {
     server.refuseApp(appId, consiquences.toString()) { appUserResponse ->
       Log.i (TAG, "setFragmentResultListener. response.type=${appUserResponse.response.type}")
@@ -659,9 +733,9 @@ class ApplicationFragment (private val appId: Int): Fragment()
       updateBtnEnabling()
 
       if (!porterIsEnrolled) {
-        if (couldNotEnrollCause != CAUSE_FREQUENT_APP_REFUSING) {
-          couldEnroll = true
-          couldNotEnrollCause = -1
+        if (canNotEnrollCause != CAUSE_FREQUENT_APP_REFUSING) {
+          canEnroll = true
+          canNotEnrollCause = -1
         }
         val takenApps = vm.takenAppsLvdItems
 
@@ -675,13 +749,13 @@ class ApplicationFragment (private val appId: Int): Fragment()
                   if (porters[j].user.id == App.userItem?.id) {
                     val pivot = porters[j].pivot
                     if (!pivot.payed) {
-                      couldEnroll = false
-                      couldNotEnrollCause = CAUSE_COMMISSION_IS_NOT_PAYED
+                      canEnroll = false
+                      canNotEnrollCause = CAUSE_COMMISSION_IS_NOT_PAYED
                       break
                     }
                     if (!pivot.confirmed) {
-                      couldEnroll = false
-                      couldNotEnrollCause = CAUSE_PAY_IS_NOT_CONFIRMED
+                      canEnroll = false
+                      canNotEnrollCause = CAUSE_PAY_IS_NOT_CONFIRMED
                       break
                     }
                   }
@@ -690,7 +764,7 @@ class ApplicationFragment (private val appId: Int): Fragment()
             }
           }
 
-          if (!couldEnroll) break
+          if (!canEnroll) break
 
           if (takenApps[i] != null && takenApps[i]?.value != null)
             if (takenApps[i]?.value?.id == lvdAppItem.value?.id)
@@ -710,8 +784,8 @@ class ApplicationFragment (private val appId: Int): Fragment()
                       thisTime?.let {
                         val diffTime = abs(takenTime.time - thisTime.time)
                         if (diffTime < MIN_TIME_RANGE_BETWEEN_APPS) {
-                          couldEnroll = false
-                          couldNotEnrollCause = CAUSE_SMALL_TIME_INTERVAL
+                          canEnroll = false
+                          canNotEnrollCause = CAUSE_SMALL_TIME_INTERVAL
                         }
                       }
                     }
@@ -720,21 +794,33 @@ class ApplicationFragment (private val appId: Int): Fragment()
               }
             }
           }
-          if (!couldEnroll) break
+          if (!canEnroll) break
         }
 
-        if (couldEnroll) {
+        var endOfBannDate = Date()
+        App.dbUser?.let { user ->
+          val now = Date().time
+          endOfBannDate = Date(user.endOfBannDatetime)
+          if (now < user.endOfBannDatetime) {
+            canEnroll = false
+            canNotEnrollCause = CAUSE_BANNED
+          }
+        }
+
+        if (canEnroll) {
           tvStatus.visibility = View.INVISIBLE
           btEnrollRefuse.isEnabled = true
           setLayoutConstraints(tvEnrolledIsVisible = false, btEnrollRefuse)
         }
         else {
-          couldEnroll = true
-          val statusText = when (couldNotEnrollCause) {
+          canEnroll = true
+          val statusText = when (canNotEnrollCause) {
             CAUSE_FREQUENT_APP_REFUSING -> getString(R.string.app_could_not_enroll_cause_refuses)
             CAUSE_SMALL_TIME_INTERVAL -> getString(R.string.app_could_not_enroll_cause_interval)
             CAUSE_COMMISSION_IS_NOT_PAYED -> getString(R.string.app_could_not_enroll_cause_commission)
             CAUSE_PAY_IS_NOT_CONFIRMED -> getString(R.string.app_could_not_enroll_cause_not_confirmed_pay)
+            CAUSE_BANNED -> getString(R.string.app_can_not_enroll_cause_banned,
+              endOfBannDate.toString())
             else -> getString(R.string.app_could_not_enroll_cause_unknown)
           }
           changeStatusToError(statusText)
@@ -874,21 +960,21 @@ class ApplicationFragment (private val appId: Int): Fragment()
       val ep = coroutineValue.await()
       val now = Date().time
 
-      if (couldNotEnrollCause != CAUSE_SMALL_TIME_INTERVAL) {
+      if (canNotEnrollCause != CAUSE_SMALL_TIME_INTERVAL) {
         if (ep == null) {
           btEnrollRefuse.isEnabled = true
-          couldEnroll = true
-          couldNotEnrollCause = -1
+          canEnroll = true
+          canNotEnrollCause = -1
         }
         else {
           btEnrollRefuse.isEnabled = (now >= ep.enableClickTime)
           if (now >= ep.enableClickTime) {
-            couldEnroll = true
-            couldNotEnrollCause = -1
+            canEnroll = true
+            canNotEnrollCause = -1
           }
           else {
-            couldEnroll = false
-            couldNotEnrollCause = CAUSE_FREQUENT_APP_REFUSING
+            canEnroll = false
+            canNotEnrollCause = CAUSE_FREQUENT_APP_REFUSING
           }
         }
       }

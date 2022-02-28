@@ -18,10 +18,14 @@ import androidx.appcompat.widget.AppCompatTextView
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.FragmentManager
 import androidx.recyclerview.widget.ConcatAdapter
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+
+val AUTOSTART_PROBLEMS_MANUFACTURERS = listOf<String>("meizu", "Meizu",
+  "huawei", "Huawei", "xiaomi", "Xiaomi")
 
 const val DATE_FORMAT = "yyyy-MM-dd"
 const val DATE_TIME_FORMAT = "yyyy-MM-dd HH:mm:ss"
@@ -41,6 +45,7 @@ private const val DAY_HEADER = 1
 private const val TEXT = 2
 
 private const val TAG = "ApplicationsFragment"
+private const val AUTOSTART_DIALOG_TAG = "AUTOSTART_DIALOG"
 
 class ApplicationsFragment: Fragment()
 {
@@ -57,6 +62,8 @@ class ApplicationsFragment: Fragment()
   private lateinit var tvCommissionConfirmation: AppCompatTextView
   private lateinit var btPayCommission: AppCompatButton
 
+  private lateinit var supportFragmentManager: FragmentManager
+
   private val vm: PollServerViewModel by lazy {
     val mainActivity = requireActivity() as MainActivity
     mainActivity.pollServerViewModel
@@ -68,6 +75,7 @@ class ApplicationsFragment: Fragment()
   {
     val view = inflater.inflate(R.layout.fragment_applications, container, false)
     rootView = view
+    supportFragmentManager = requireActivity().supportFragmentManager
 
     llTakenApps = view.findViewById(R.id.app_linear_layout)
     rvOpenApps = view.findViewById(R.id.rv_app_list)
@@ -109,6 +117,16 @@ class ApplicationsFragment: Fragment()
     val actionBar = (requireActivity() as AppCompatActivity).supportActionBar
     val appName = getString(R.string.app_name)
     actionBar?.title = "$appName"
+
+
+    if (manufacturerIsOneOf(AUTOSTART_PROBLEMS_MANUFACTURERS)) {
+      val autoStartDialog = AutoStartSettingDialog()
+      autoStartDialog.show(supportFragmentManager, AUTOSTART_DIALOG_TAG)
+      supportFragmentManager.setFragmentResultListener(OK_KEY, viewLifecycleOwner)
+      { _, bundle ->
+        Log.i(TAG, "Autostart dialog OK")
+      }
+    }
   }
 
   override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {

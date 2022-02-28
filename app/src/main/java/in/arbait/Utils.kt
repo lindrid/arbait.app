@@ -71,6 +71,29 @@ fun getFullYear (shortcutYear: String): Int {
   return -1
 }
 
+fun manufacturerIsOneOf (m: List<String>): Boolean {
+  for (i in m.indices) {
+    if (MANUFACTURER.indexOf(m[i]) != -1)
+      return true
+    if (Build.BRAND.indexOf(m[i]) != -1)
+      return true
+  }
+
+  return false
+}
+
+fun manufacturerIsMeizu(): Boolean {
+  return manufacturerIsOneOf(listOf("Meizu", "meizu"))
+}
+
+fun manufacturerIsHuawei(): Boolean {
+  return manufacturerIsOneOf(listOf("Huawei", "huawei"))
+}
+
+fun manufacturerIsXiaomi(): Boolean {
+  return manufacturerIsOneOf(listOf("Xiaomi", "xiaomi"))
+}
+
 fun isSamsung(): Boolean {
   if (MANUFACTURER.indexOf("samsung") != -1 ||
     MANUFACTURER.indexOf("Samsung") != -1)

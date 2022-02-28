@@ -2,8 +2,12 @@ package `in`.arbait
 
 import `in`.arbait.database.User
 import `in`.arbait.http.items.UserItem
+import `in`.arbait.http.poll_service.PollService
+import `in`.arbait.http.poll_service.StartReceiver
 import android.app.Application
+import android.content.ComponentName
 import android.content.Context
+import android.content.pm.PackageManager
 import android.content.res.Resources
 
 const val APP_VERSION = "1.1.6"
@@ -11,7 +15,22 @@ const val APP_VERSION = "1.1.6"
 class App : Application() {
   override fun onCreate() {
     super.onCreate()
+    val receiver = ComponentName(this, StartActivityReceiver::class.java)
+    val pm = packageManager
 
+    pm.setComponentEnabledSetting(
+      receiver,
+      PackageManager.COMPONENT_ENABLED_STATE_ENABLED,
+      PackageManager.DONT_KILL_APP
+    )
+
+    val pollService = ComponentName(this, PollService::class.java)
+
+    pm.setComponentEnabledSetting(
+      pollService,
+      PackageManager.COMPONENT_ENABLED_STATE_ENABLED,
+      PackageManager.DONT_KILL_APP
+    )
     //instance = this
     res = resources
     Repository.initialize(this)

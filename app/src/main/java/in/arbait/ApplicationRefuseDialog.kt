@@ -1,5 +1,8 @@
 package `in`.arbait
 
+import `in`.arbait.database.Consiquences
+import `in`.arbait.http.poll_service.DAY
+import `in`.arbait.http.poll_service.HOUR
 import android.annotation.SuppressLint
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -8,12 +11,16 @@ import android.view.ViewGroup
 import android.widget.Button
 import android.widget.TextView
 import androidx.fragment.app.DialogFragment
+import java.util.*
 
 private const val TAG = "ApplicationRefuseDialog"
 const val OK_KEY = "ok_key"
 
-class ApplicationRefuseDialog(private val consequences: Consiquences): DialogFragment(),
-  View.OnClickListener
+class ApplicationRefuseDialog(private val consequences: Consiquences,
+                              private val decreaseRatingPercent: Int,
+                              private val bannDaysCount: Int,
+                              private val bannHoursCount: Int
+                              ): DialogFragment(), View.OnClickListener
 {
   private lateinit var rootView: View
   private lateinit var tvAreYouSure: TextView
@@ -30,14 +37,12 @@ class ApplicationRefuseDialog(private val consequences: Consiquences): DialogFra
 
     tvAreYouSure = view.findViewById(R.id.tv_dar_are_you_sure)
     when (consequences) {
-      Consiquences.RESET_RATING -> {
-        tvAreYouSure.text = "${tvAreYouSure.text}${getString(R.string.dar_reset_rating)}"
-      }
-      Consiquences.HALVE_RATING -> {
-        tvAreYouSure.text = "${tvAreYouSure.text}${getString(R.string.dar_halve_rating)}"
+      Consiquences.DECREASE_RATING_AND_BANN -> {
+        tvAreYouSure.text = "${tvAreYouSure.text} " + getDaysHoursStr() + " " +
+            getString(R.string.dar_decrease_rating, decreaseRatingPercent)
       }
       else -> {
-        tvAreYouSure.text = "${tvAreYouSure.text}${getString(R.string.dar_nothing)}"
+        tvAreYouSure.text = tvAreYouSure.text
       }
     }
 
@@ -47,8 +52,22 @@ class ApplicationRefuseDialog(private val consequences: Consiquences): DialogFra
     return view
   }
 
+  private fun getDaysHoursStr(): String {
+      if (bannDaysCount == 0)
+        return getString(R.string.dar_bann_hours, bannHoursCount)
+
+    return getString(R.string.dar_bann_days_hours,
+      bannDaysCount, bannHoursCount)
+  }
+
   override fun onClick(v: View?) {
     if (v?.id == R.id.bt_dar_yes) {
+      App.dbUser?.let { user ->
+        val now = Date().time
+        user.endOfBannDatetime = now + bannDaysCount * DAY + bannHoursCount * HOUR
+        App.repository.updateUser(user)
+      }
+
       val bundle = Bundle().apply {
         putBoolean(OK_KEY, true)
       }

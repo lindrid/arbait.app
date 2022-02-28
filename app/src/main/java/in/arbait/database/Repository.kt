@@ -22,14 +22,32 @@ class Repository private constructor(context: Context)
     migration_1_2, migration_2_3, migration_3_4,
     migration_4_5, migration_5_6, migration_6_7,
     migration_7_8, migration_8_9, migration_9_10,
-    migration_10_11, migration_11_12
+    migration_10_11, migration_11_12, migration_12_13,
+    migration_13_14
   ).build()
 
   private val userDao = database.userDao()
   private val enrollPermDao = database.enrollingPermissionDao()
+  private val appHistoryDao = database.appHistoryDao()
 
   private val executor = Executors.newSingleThreadExecutor()
 
+
+  suspend fun getAppHistory(appId: Int): AppHistory? {
+    return appHistoryDao.get(appId)
+  }
+
+  fun updateAppHistory (appHistory: AppHistory) {
+    executor.execute {
+      appHistoryDao.update(appHistory)
+    }
+  }
+
+  fun addAppHistory (appHistory: AppHistory) {
+    executor.execute {
+      appHistoryDao.add(appHistory)
+    }
+  }
 
   suspend fun getEnrollingPermission(userId: Int): EnrollingPermission? {
     return enrollPermDao.get(userId)

@@ -109,6 +109,9 @@
     <string name="poll_deleted_app">Заявка "%1s" была отменена</string>
     <string name="poll_removed_from_app">Вы были удалены с заявки "%1s"</string>
 
+    <string name="poll_confirmation_notification">Подтвердите свой выход</string>
+    <string name="poll_confirmation_notification_text">на заявку</string>
+
     <!-- ApplicationFragment -->
     <string name="app_address"><![CDATA[<u>Адрес:</u> %s]]></string>
     <string name="app_time"><![CDATA[<u>Время:</u> %s]]></string>
@@ -140,6 +143,14 @@
     <string name="app_you_were_removed">Вы были удалены с заявки</string>
     <string name="app_deleted">Заявка была отменена</string>
     <string name="app_write_to_client">Написать</string>
+
+    <string name="app_residue">Остаток комиссии: %d</string>
+    <string name="app_could_not_enroll_cause_commission">Нельзя записаться: комиссия не оплачена</string>
+    <string name="app_could_not_enroll_cause_not_confirmed_pay">Нельзя записаться: оплата комиссии не подтверждена</string>
+    <string name="app_confirm">свой выход на заявку</string>
+    <string name="app_status_need_confirm">Подтвердите свой выход</string>
+    <string name="app_sub_status_need_confirm">За 2 часа до начала подтвердите заявку! (появится кнопка в заявке)</string>
+    <string name="app_can_not_enroll_cause_banned">Вы заблокированы до: %s</string>
 
     <!-- LoginFragment -->
     <string name="log_login">Войти</string>
@@ -195,23 +206,52 @@
     <string name="conf_your_card">Введите реквизиты или последние 4 цифры карты, с которой был сделан перевод. Если за вас оплатили, можете оставить свои реквизиты или 4 цифры или написать - За меня оплатили.</string>
 
 
-    <string name="app_residue">Остаток комиссии: %d</string>
-    <string name="app_could_not_enroll_cause_commission">Нельзя записаться: комиссия не оплачена</string>
-    <string name="app_could_not_enroll_cause_not_confirmed_pay">Нельзя записаться: оплата комиссии не подтверждена</string>
-    <string name="poll_confirmation_notification">Подтвердите свой выход</string>
-    <string name="poll_confirmation_notification_text">на заявку</string>
-    <string name="app_confirm">свой выход на заявку</string>
-    <string name="app_status_need_confirm">Подтвердите свой выход</string>
-    <string name="app_sub_status_need_confirm">За 2 часа до начала подтвердите заявку! (появится кнопка в заявке)</string>
+    <!-- RulesDialog -->
     <string name="rules_header">Правила</string>
     <string name="rules_one">Заявки берутся на ОДНОГО человека. Нельзя взять заявку и привести с собой друзей (пусть ставят приложение и берут).</string>
-    <string name="rules_two">Вы должны быть на связи за 2 часа до начала заявки, а также в пути на заявку.</string>
-    <string name="rules_three">Оплатите комиссию до 22:00 после завершения заявки. Если за вас будет оплачивать комиссию другой человек, проконтроллируйте это (были случаи кражи), в случае не оплаты именно Вы останитесь должны.</string>
-    <string name="rules_four">Отказывайтесь от заявки за час или более(без последствий). Если вы не отказались и не вышли на заявку, ваш рейтинг падает до 0. Если вы отказались за 30 минут или меньше, ваш рейтинг немного уменьшается.</string>
+    <string name="rules_two">Отказывайтесь от заявки за час или более(без последствий). Отказ от заявки менее чем за час будет иметь последствия. Если не отказались от заявки и не вышли на нее, вы не сможете брать заявки 30 дней и ваш заработанный рейтинг падает до 0 (это значит, что брать заявки будет сложнее)</string>
+    <string name="rules_three">Оплатите комиссию до 22:00 после завершения заявки. Если за вас будет оплачивать комиссию другой человек, проконтроллируйте это (были случаи кражи), в случае неоплаты именно Вы останитесь должны.</string>
+    <string name="rules_four">Будьте на связи за 2 часа до начала заявки, а также в пути на заявку!</string>
+
     <string name="accept">Согласен</string>
     <string name="reject">Не согласен</string>
-    <string name="dar_reset_rating">Ваш накопленный рейтинг упадет до 0!</string>
-    <string name="dar_halve_rating">Вы потеряете половину своего накопленного рейтинга!</string>
-    <string name="dar_nothing">Вы ничего не теряете.</string>
 
+    <!-- AppRefuseDialog -->
+    <string name="dar_bann_days_hours">Вы будете заблокированы на %1d дней и %2d часов!</string>
+    <string name="dar_bann_hours">Вы будете заблокированы на %d часов!</string>
+    <string name="dar_decrease_rating">Также, ваш накопленный рейтинг уменьшится на %d\%!</string>
+
+    <!-- AutoStartSettingDialog -->
+    <string name="autostart_header">Разрешение на автозапуск</string>
+    <string name="autostart_info">Вы являетесь владельцем телефона от производителя %1s.
+        Для того, чтобы приложение работало корректно при перезапуске или
+        выключении-включении телефона, вам нужно будет дать разрешение на автозапуск приложения.
+        Это позволит не пропустить новые заявки. Для этого зайдите в: %2s.
+    </string>
+
+    <string name="meizu">Meizu</string>
+    <string name="meizu_setting">
+        меню «Настройки» -> «Приложения» и во вкладку «Все», найдите приложение Арбайт,
+        в открывшемся меню выберите «Управление разрешениями» -> «Запуск в фоне»,
+        выберите параметр «Разрешить работу в фоне».
+    </string>
+
+    <string name="huawei">Huawei</string>
+    <string name="huawei_setting">
+        в меню Настройки / Батарея / Запуск приложений, вы увидите там активный переключатель
+        «Управлять всем автоматически», найдите Арбайт и кликните на него,
+        внизу появится окошко с тремя переключателями: автозапуск, косвенный запуск, работа в
+        фоновом режиме, ВКЛЮЧИТЕ все три переключателя и нажмите ОК.
+    </string>
+
+    <string name="xiaomi">Xiaomi</string>
+    <string name="xiaomi_setting">
+        безопасность (Security) -> Разрешения (Permissions), далее нажмите Автозапуск (Autostart) и
+        включите приложение Арбайт. Возможно для эффекта необходимо будет перезагрузить устройство.
+    </string>
+
+    <string name="autostart_if_setting">
+        Если по какой-то причине при перезагрузке или выключении-включении телефона приложение
+        Арбайт не было запущено, запустите его сами.
+    </string>
 </resources>
