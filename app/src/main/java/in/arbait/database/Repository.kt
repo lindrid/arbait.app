@@ -45,7 +45,12 @@ class Repository private constructor(context: Context)
 
   fun addAppHistory (appHistory: AppHistory) {
     executor.execute {
-      appHistoryDao.add(appHistory)
+      try {
+        appHistoryDao.add(appHistory)
+      }
+      catch (e: SQLiteConstraintException) {
+        appHistoryDao.update(appHistory)
+      }
     }
   }
 
@@ -61,7 +66,12 @@ class Repository private constructor(context: Context)
 
   fun addEnrollingPermission (ep: EnrollingPermission) {
     executor.execute {
-      enrollPermDao.add(ep)
+      try {
+        enrollPermDao.add(ep)
+      }
+      catch (e: SQLiteConstraintException) {
+        enrollPermDao.update(ep)
+      }
     }
   }
 

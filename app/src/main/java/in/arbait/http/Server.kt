@@ -119,9 +119,11 @@ class Server (private val context: Context)
     serverApi.enrollPorter(headers, appId, debitCardId, debitCard).enqueue(appUserCallback)
   }
 
-  fun refuseApp (appId: Int, consiquences: String, onResult: (ApplicationResponse) -> Unit) {
+  fun refuseApp (appId: Int, bannUntil: String?, reduceRating: Int?,
+                 onResult: (ApplicationResponse) -> Unit)
+  {
     appUserCallback.onResult = onResult
-    serverApi.refuseApp(headers, appId, consiquences).enqueue (appUserCallback)
+    serverApi.refuseApp(headers, appId, bannUntil, reduceRating).enqueue (appUserCallback)
   }
 
   fun registerUser (user: User, onResult: (`in`.arbait.http.response.Response) -> Unit) {

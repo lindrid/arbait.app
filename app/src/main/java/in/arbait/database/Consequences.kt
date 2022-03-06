@@ -1,6 +1,6 @@
 package `in`.arbait.database
 
-enum class Consiquences {
+enum class Consequences {
   NOTHING,
   DECREASE_RATING_AND_BANN
 }

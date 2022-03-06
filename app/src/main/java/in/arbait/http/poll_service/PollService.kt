@@ -507,31 +507,16 @@ class PollService : LifecycleService(), Serializable
 
     val timeBeforeStart = appDateTime - appCreatedAt
 
-    val interval: Int = 1 * MINUTE /*if (timeBeforeStart <= 55 * MINUTE)
+    val interval: Int = if (timeBeforeStart <= 75 * MINUTE)
       1 * MINUTE
-    else if (timeBeforeStart > 55 * MINUTE && timeBeforeStart <= 3 * ONE_HOUR)
+    else if (timeBeforeStart > 75 * MINUTE && timeBeforeStart <= 2 * HOUR)
       3 * MINUTE
-    else if (timeBeforeStart > 3 * ONE_HOUR && timeBeforeStart <= 6 * ONE_HOUR)
+    else if (timeBeforeStart > 2 * HOUR && timeBeforeStart <= 4 * HOUR)
       5 * MINUTE
-    else
-      10 * MINUTE*/
-
-    /*else if (timeBeforeStart > 65 * MINUTE && timeBeforeStart <= 75 * MINUTE)
-      5 * MINUTE
-    else if (timeBeforeStart > 75 * MINUTE && timeBeforeStart <= 95 * MINUTE)
+    else if (timeBeforeStart > 4 * HOUR && timeBeforeStart <= 6 * HOUR)
       10 * MINUTE
-    else if (timeBeforeStart > 95 * MINUTE && timeBeforeStart <= 135 * MINUTE)
+    else
       15 * MINUTE
-    else if (timeBeforeStart > 135 * MINUTE && timeBeforeStart <= 150 * MINUTE)
-      20 * MINUTE
-    else if (timeBeforeStart > 150 * MINUTE && timeBeforeStart <= 3 * ONE_HOUR)
-      30 * MINUTE
-    else if (timeBeforeStart > 3 * ONE_HOUR && timeBeforeStart <= 4 * ONE_HOUR)
-      40 * MINUTE
-    else if (timeBeforeStart > 4 * ONE_HOUR && timeBeforeStart <= 5 * ONE_HOUR)
-      50 * MINUTE
-    else if (timeBeforeStart > 5 * ONE_HOUR && timeBeforeStart <= 6 * ONE_HOUR)
-      60 * MINUTE*/
 
     val waitMultiplier = interval / maxRating
     val porterRating = App.userItem?.porter?.rating ?: 0

@@ -36,7 +36,6 @@ class DebitCardDialog: DialogFragment(), View.OnClickListener
   private val ldAnotherDC: MutableLiveData<Boolean> = MutableLiveData(false)
   private var debitCards: List<DebitCardItem> = emptyList()
   private var debitCardIndex: Int = NOT_INDEX
-  private var itIsChangingCard = false
 
   override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
                             savedInstanceState: Bundle?): View?
@@ -56,7 +55,6 @@ class DebitCardDialog: DialogFragment(), View.OnClickListener
     arguments?.let {
       val user = it.getSerializable(USER_ARG) as UserItem
       appId = it.getInt(APP_ID_ARG)
-      itIsChangingCard = it.getBoolean(IT_IS_CHANGING_CARD_ARG)
       user.debitCards?.let { dcs ->
         debitCards = dcs
       }
@@ -101,15 +99,8 @@ class DebitCardDialog: DialogFragment(), View.OnClickListener
       }
 
       appId?.let { appId ->
-        if (itIsChangingCard)
-          server.changeDebitCard(appId, debitCardId, debitCard) { appUserResponse: ApplicationResponse ->
-            onResult(appUserResponse)
-          }
-        else {
-          Log.i (TAG, "debitCard = $debitCard, debitCardId = $debitCardId")
-          server.enrollPorter(appId, debitCardId, debitCard) { appResponse: ApplicationResponse ->
-            onResult(appResponse)
-          }
+        server.changeDebitCard(appId, debitCardId, debitCard) { appUserResponse: ApplicationResponse ->
+          onResult(appUserResponse)
         }
       }
     }

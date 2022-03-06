@@ -355,6 +355,11 @@ fun strToDate (dateStr: String?, dateFormat: String): Date? {
   return date
 }
 
+fun dateToStr (date: Date, dateFormat: String): String {
+  val simpleDate = SimpleDateFormat(dateFormat)
+  return simpleDate.format(date)
+}
+
 fun getCalendar (date: Date?): Calendar {
   val cal = Calendar.getInstance()
   cal.time = date!!

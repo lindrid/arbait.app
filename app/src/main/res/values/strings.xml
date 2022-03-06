@@ -118,6 +118,7 @@
     <string name="app_money"><![CDATA[<u>Ставка:</u> %s]]></string>
     <string name="app_commission"><![CDATA[<u>Комиссия:</u> %s]]></string>
     <string name="app_pay_method"><![CDATA[<u>Оплата:</u> %s]]></string>
+    <string name="app_pay_from_who"><![CDATA[<u>Оплачивает:</u> %s]]></string>
     <string name="app_description"><![CDATA[<u>Описание:</u> %s]]></string>
     <string name="app_on_card">на карту</string>
     <string name="app_cash">наличные</string>
@@ -128,6 +129,9 @@
     <string name="app_action_bar_title">Заявка</string>
     <string name="app_you_are_enrolled">Вы записаны</string>
     <string name="app_no_card">без карты</string>
+    <string name="app_from_dispatcher">диспетчер</string>
+    <string name="app_from_client">клиент</string>
+
 
     <string name="app_when_call">Звонить(писать) только по приезду!</string>
     <string name="app_could_not_enroll_cause_interval">Нельзя записаться: между заявками меньше часа</string>
@@ -255,4 +259,5 @@
         Если по какой-то причине при перезагрузке или выключении-включении телефона приложение
         Арбайт не было запущено, запустите его сами.
     </string>
+    <string name="phone_incoming_call">Звонок поступит втечение 30 секунд, если нет, нажмите еще раз по истечении 30 секунд</string>
 </resources>

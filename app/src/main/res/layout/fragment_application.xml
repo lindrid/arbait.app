@@ -166,7 +166,6 @@
                 android:text="TextView"
                 android:textColor="@color/black"
                 android:textSize="18sp"
-                android:visibility="invisible"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@+id/tv_app_pay_method" />
 
@@ -180,7 +179,7 @@
                 android:textColor="@color/black"
                 android:textSize="18sp"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/tv_app_pay_method" />
+                app:layout_constraintTop_toBottomOf="@id/tv_app_pay_from_who" />
 
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/rv_app_porters"

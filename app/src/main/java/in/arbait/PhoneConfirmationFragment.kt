@@ -4,6 +4,7 @@ import `in`.arbait.http.ReactionOnResponse
 import `in`.arbait.http.Server
 import `in`.arbait.http.response.*
 import android.os.Bundle
+import android.os.Handler
 import android.text.method.PasswordTransformationMethod
 import android.util.Log
 import android.view.LayoutInflater
@@ -11,10 +12,13 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.EditText
+import android.widget.TextView
+import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.fragment.app.Fragment
 
 private const val TAG = "PhoneConfirmation"
 private const val CODE_LENGTH = 4
+private const val BTN_DISABLE_MILISECONDS = 30000L
 
 class PhoneConfirmationFragment(private val confirmationForLogin: Boolean = false): Fragment(),
   View.OnClickListener
@@ -25,6 +29,8 @@ class PhoneConfirmationFragment(private val confirmationForLogin: Boolean = fals
   private lateinit var etCode: EditText
   private lateinit var btRequestCall: Button
   private lateinit var btDone: Button
+  private lateinit var tvIncomingCall: TextView
+  private lateinit var tvConfirmIncomingCall: TextView
 
 
   override fun onCreateView(
@@ -41,6 +47,8 @@ class PhoneConfirmationFragment(private val confirmationForLogin: Boolean = fals
     etCode.transformationMethod = NumericKeyBoardTransformationMethod()
     btRequestCall = view.findViewById(R.id.bt_phone_conf_request_call)
     btDone = view.findViewById(R.id.bt_phone_conf_done)
+    tvIncomingCall = view.findViewById(R.id.tv_phone_incoming_call)
+    tvConfirmIncomingCall = view.findViewById(R.id.tv_phone_conf_incoming_call)
 
     btRequestCall.setOnClickListener(this)
     btDone.setOnClickListener(this)
@@ -54,12 +62,39 @@ class PhoneConfirmationFragment(private val confirmationForLogin: Boolean = fals
     when (v?.id) {
       R.id.bt_phone_conf_request_call -> {
         btRequestCall.isEnabled = false
+
+        setConstraintLayout(tvIncomingCall)
+        setVisibilit(View.INVISIBLE, View.VISIBLE)
+
+        Handler().postDelayed(
+          Runnable {
+            setConstraintLayout(tvConfirmIncomingCall)
+            setVisibilit(View.VISIBLE, View.INVISIBLE)
+          },
+          BTN_DISABLE_MILISECONDS
+        )
         onClickRequestCallButton()
       }
       R.id.bt_phone_conf_done -> {
         onClickDoneButton()
       }
     }
+  }
+
+  private fun setVisibilit(confirmIncomingCallVisibility: Int,
+                           incomingCallVisibility: Int) {
+    tvConfirmIncomingCall.visibility = confirmIncomingCallVisibility
+    tvIncomingCall.visibility = incomingCallVisibility
+  }
+
+  private fun setConstraintLayout(tv: TextView) {
+    val bp = btRequestCall.layoutParams as ConstraintLayout.LayoutParams
+    bp.bottomToTop = tv.id
+    btRequestCall.layoutParams = bp
+
+    val ep = etCode.layoutParams as ConstraintLayout.LayoutParams
+    ep.topToBottom = tv.id
+    etCode.layoutParams = ep
   }
 
 
@@ -167,7 +202,6 @@ class PhoneConfirmationFragment(private val confirmationForLogin: Boolean = fals
         SYSTEM_ERROR  -> requestCall.doOnSystemError()
         SERVER_ERROR  -> requestCall.doOnServerError()
       }
-      btRequestCall.isEnabled = true
     }
   }
 

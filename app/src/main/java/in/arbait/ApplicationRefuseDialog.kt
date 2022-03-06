@@ -1,6 +1,6 @@
 package `in`.arbait
 
-import `in`.arbait.database.Consiquences
+import `in`.arbait.database.Consequences
 import `in`.arbait.http.poll_service.DAY
 import `in`.arbait.http.poll_service.HOUR
 import android.annotation.SuppressLint
@@ -15,8 +15,9 @@ import java.util.*
 
 private const val TAG = "ApplicationRefuseDialog"
 const val OK_KEY = "ok_key"
+const val NO_CONSEQUENCES_KEY = "no_cons_key"
 
-class ApplicationRefuseDialog(private val consequences: Consiquences,
+class ApplicationRefuseDialog(private val consequences: Consequences,
                               private val decreaseRatingPercent: Int,
                               private val bannDaysCount: Int,
                               private val bannHoursCount: Int
@@ -37,7 +38,7 @@ class ApplicationRefuseDialog(private val consequences: Consiquences,
 
     tvAreYouSure = view.findViewById(R.id.tv_dar_are_you_sure)
     when (consequences) {
-      Consiquences.DECREASE_RATING_AND_BANN -> {
+      Consequences.DECREASE_RATING_AND_BANN -> {
         tvAreYouSure.text = "${tvAreYouSure.text} " + getDaysHoursStr() + " " +
             getString(R.string.dar_decrease_rating, decreaseRatingPercent) + "%!"
       }
@@ -66,14 +67,22 @@ class ApplicationRefuseDialog(private val consequences: Consiquences,
 
   override fun onClick(v: View?) {
     if (v?.id == R.id.bt_dar_yes) {
-      App.dbUser?.let { user ->
-        val now = Date().time
-        user.endOfBannDatetime = now + bannDaysCount * DAY + bannHoursCount * HOUR
-        App.repository.updateUser(user)
+      if (consequences != Consequences.NOTHING) {
+        App.dbUser?.let { user ->
+          val now = Date().time
+          user.endOfBannDatetime = now + bannDaysCount * DAY + bannHoursCount * HOUR
+          App.repository.updateUser(user)
+        }
       }
 
       val bundle = Bundle().apply {
         putBoolean(OK_KEY, true)
+        if (consequences == Consequences.NOTHING) {
+          putBoolean(NO_CONSEQUENCES_KEY, true)
+        }
+        else {
+          putBoolean(NO_CONSEQUENCES_KEY, false)
+        }
       }
       requireActivity().supportFragmentManager.setFragmentResult(OK_KEY, bundle)
     }

@@ -3,24 +3,24 @@ package `in`.arbait
 import `in`.arbait.commission.COMMISSION_ARG
 import `in`.arbait.database.AppHistory
 import `in`.arbait.database.AppState
-import `in`.arbait.database.Consiquences
+import `in`.arbait.database.Consequences
 import `in`.arbait.database.EnrollingPermission
 import `in`.arbait.http.PollServerViewModel
 import `in`.arbait.http.ReactionOnResponse
 import `in`.arbait.http.Server
 import `in`.arbait.http.appIsConfirmed
-import `in`.arbait.http.items.ApplicationItem
-import `in`.arbait.http.items.DebitCardItem
-import `in`.arbait.http.items.PhoneItem
-import `in`.arbait.http.items.PorterItem
+import `in`.arbait.http.items.*
+import `in`.arbait.http.poll_service.DAY
 import `in`.arbait.http.poll_service.HOUR
 import `in`.arbait.http.poll_service.MINUTE
 import `in`.arbait.http.poll_service.removeNotification
 import `in`.arbait.http.response.*
 import android.content.Intent
+import android.database.sqlite.SQLiteConstraintException
 import android.graphics.Color
 import android.net.Uri
 import android.os.Bundle
+import android.os.Handler
 import android.text.Html
 import android.util.Log
 import android.view.*
@@ -50,13 +50,13 @@ private const val RULES_DIALOG_TAG = "RULES_DIALOG"
 const val CLOSED_STATE = 2
 const val READY_TO_PAY = 4
 
-private const val MAX_REFUSAL_TIME_AFTER_ENROLL_WITHOUT_CONSIQUENCES = 3 * MINUTE
+private const val MAX_REFUSAL_TIME_AFTER_ENROLL_WITHOUT_CONSEQUENCES = 10 * 1000
 private const val BANN_FOR_NON_APPEARANCE = 30L * 24L * HOUR.toLong()
 private const val MAX_BANN_FOR_REFUSE = 15 * 24 * HOUR
 private const val MAX_MIN_COUNT = 60
-private const val MAX_REFUSAL_TIME_WITHOUT_CONSIQUENCES = MAX_MIN_COUNT * MINUTE
+private const val MAX_REFUSAL_TIME_WITHOUT_CONSEQUENCES = MAX_MIN_COUNT * MINUTE
 
-private const val BEFORE_RULES_DELAY_IN_SECONDS = 2L
+private const val BEFORE_RULES_DELAY_IN_SECONDS = 1L
 private const val SHOW_RULES_DELAY_TIME: Long = 7 * 24 * 60 * 60 * 1000 // 7 days
 
 private const val DISABLE_BTN_BASE_RANGE = 10 * 1000              // 10 sec
@@ -89,6 +89,7 @@ class ApplicationFragment (private val appId: Int): Fragment()
   private var appWasDeleted = false
   private var canEnroll = false
   private var canNotEnrollCause = -1
+  private var lvdEnrollResult: MutableLiveData<Boolean> = MutableLiveData(false)
 
   private var porter: PorterItem? = null
   private var porterIsEnrolled = false
@@ -255,7 +256,7 @@ class ApplicationFragment (private val appId: Int): Fragment()
 
     lvdAppItem = MutableLiveData(
       ApplicationItem(0,"","","","",
-      0,"",0,0,true,0,0,
+      0,false,"",0,0,true,0,0,
     1,0, false,"", "", listOf<PorterItem>(), true))
     lastAppItem?.let {
       lvdAppItem.value = it
@@ -329,51 +330,21 @@ class ApplicationFragment (private val appId: Int): Fragment()
 
         if (porterWantToEnroll) {
           btEnrollRefuse.isEnabled = false
+          lvdEnrollResult.value = false
 
-          lvdAppItem.value?.let { appItem ->
-            if (appItem.payMethod == PM_CARD) {
-              val enrollWithDebitCardDialog = DebitCardDialog.newInstance(appId, user)
-              enrollWithDebitCardDialog.show(supportFragmentManager, DEBIT_CARD_DIALOG_TAG)
-              porterIsEnrolled = false
-              view?.let {
-                reactOnEnrollWithCard(it,
-                  enrollingPermission,
-                  newEnrollingPermission,
-                  changeStateCount
-                )
-              }
-            }
-            else {
-              enrollPorterWithoutCard(
-                enrollingPermission,
-                newEnrollingPermission,
-                changeStateCount
-              )
-            }
-
-            val appHistoryCoroutineVal = GlobalScope.async {
-              App.repository.getAppHistory(appItem.id)
-            }
-
-            val appHistory = appHistoryCoroutineVal.await()
-            if (appHistory == null) {
-              val ah = AppHistory(
-                appId = appItem.id,
-                enrollTime = Date().time
-              )
-              App.repository.addAppHistory(ah)
-            }
-            else {
-              appHistory.enrollTime = Date().time
-              App.repository.updateAppHistory(appHistory)
-            }
-          }
+          enrollPorterWithoutCard (enrollingPermission, newEnrollingPermission)
+          setEnrollResultObserver(
+            enrollingPermission,
+            newEnrollingPermission,
+            changeStateCount,
+            user
+          )
 
           btEnrollRefuse.isEnabled = true
         }
 
         if (porterWantToRefuse) {
-          var consiquences = Consiquences.NOTHING
+          var consequences = Consequences.NOTHING
           var bannTimeDaysCount = 0
           var bannTimeHoursCount = 0
           var decreaseRatingPercent = 0
@@ -400,13 +371,13 @@ class ApplicationFragment (private val appId: Int): Fragment()
               if (
                 ah.refuseTime > 0 &&
                 ah.enrollTime > 0 &&
-                ah.refuseTime - ah.enrollTime > MAX_REFUSAL_TIME_AFTER_ENROLL_WITHOUT_CONSIQUENCES
+                ah.refuseTime - ah.enrollTime > MAX_REFUSAL_TIME_AFTER_ENROLL_WITHOUT_CONSEQUENCES
               ) {
-                consiquences = Consiquences.DECREASE_RATING_AND_BANN
                 vm.serverTimeMlsc?.let { serverTimeMlsc ->
                   val appTimeMlsc = getAppTimeMlsc(appItem, serverTimeMlsc)
                   val diff = abs(appTimeMlsc - serverTimeMlsc)
-                  if (diff < MAX_REFUSAL_TIME_WITHOUT_CONSIQUENCES) {
+                  if (diff < MAX_REFUSAL_TIME_WITHOUT_CONSEQUENCES) {
+                    consequences = Consequences.DECREASE_RATING_AND_BANN
                     val diffInMins: Double = diff.toDouble() / MINUTE
                     val divider: Double = 1 - diffInMins / MAX_MIN_COUNT
                     decreaseRatingPercent = (divider * 100).roundToInt()
@@ -431,42 +402,105 @@ class ApplicationFragment (private val appId: Int): Fragment()
             }
           }
 
-          val refuseDialog = ApplicationRefuseDialog(consiquences, decreaseRatingPercent,
+          val refuseDialog = ApplicationRefuseDialog(consequences, decreaseRatingPercent,
             bannTimeDaysCount, bannTimeHoursCount)
 
           refuseDialog.show(supportFragmentManager, REFUSE_DIALOG_TAG)
           supportFragmentManager.setFragmentResultListener(OK_KEY, viewLifecycleOwner)
           { _, bundle ->
             Log.i (TAG, "Dialog OK, refuse from app")
-            refuseFromApp(enrollingPermission, newEnrollingPermission,
-              changeStateCount, consiquences)
+            if (bundle.getBoolean(NO_CONSEQUENCES_KEY)) {
+              refuseFromApp(
+                enrollingPermission, newEnrollingPermission,
+                changeStateCount, null, null
+              )
+            }
+            else {
+              val bannUntilMlsc =
+                Date().time + (bannTimeDaysCount * DAY + bannTimeHoursCount * HOUR).toLong()
+              val bannUntil = dateToStr(Date(bannUntilMlsc), DATE_TIME_FORMAT)
+              refuseFromApp(
+                enrollingPermission, newEnrollingPermission,
+                changeStateCount, bannUntil, decreaseRatingPercent
+              )
+            }
           }
         }
       }
     }
   }
 
-  private suspend fun showRulesDialog(enrollingPermission: EnrollingPermission?,
-                                      newEnrollingPermission: EnrollingPermission,
-                                      changeStateCount: Int
+  private suspend fun setEnrollResultObserver(enrollingPermission: EnrollingPermission?,
+                                              newEnrollingPermission: EnrollingPermission,
+                                              changeStateCount: Int,
+                                              user: UserItem
+  ) {
+      lvdEnrollResult.observe(viewLifecycleOwner,
+        Observer { enrollResult ->
+          GlobalScope.launch(Dispatchers.Main) {
+            lvdAppItem.value?.let { appItem ->
+              if (enrollResult == true) {
+                if (appItem.payMethod == PM_CARD) {
+                  val enrollWithDebitCardDialog = DebitCardDialog.newInstance(appId, user)
+                  enrollWithDebitCardDialog.show(supportFragmentManager, DEBIT_CARD_DIALOG_TAG)
+                  porterIsEnrolled = false
+                  view?.let {
+                    reactOnEnrollWithCard(
+                      it, enrollingPermission, newEnrollingPermission,
+                      changeStateCount
+                    )
+                  }
+                }
+
+                val appHistoryCoroutineVal = GlobalScope.async {
+                  App.repository.getAppHistory(appItem.id)
+                }
+
+                val appHistory = appHistoryCoroutineVal.await()
+                if (appHistory == null) {
+                  val ah = AppHistory(
+                    appId = appItem.id,
+                    enrollTime = Date().time
+                  )
+                  App.repository.addAppHistory(ah)
+                }
+                else {
+                  appHistory.enrollTime = Date().time
+                  App.repository.updateAppHistory(appHistory)
+                }
+              }
+            }
+          }
+        }
+      )
+  }
+
+  private fun showRulesDialog(enrollingPermission: EnrollingPermission?,
+                              newEnrollingPermission: EnrollingPermission,
+                              changeStateCount: Int
   ) {
     var showDialog = false
     App.dbUser?.let { u ->
-      if (Date().time - u.rulesShowDatetime >= SHOW_RULES_DELAY_TIME) {
+      val now = vm.serverTimeMlsc
+      if (now != null && (now - u.rulesShowDatetime >= SHOW_RULES_DELAY_TIME)) {
         showDialog = true
       }
     }
 
     if (showDialog) {
-      delay(BEFORE_RULES_DELAY_IN_SECONDS * 1000)
-      val rulesDialog = RulesDialog()
-      rulesDialog.show(supportFragmentManager, RULES_DIALOG_TAG)
-      supportFragmentManager.setFragmentResultListener(CANCEL_KEY, viewLifecycleOwner)
-      { _, bundle ->
-        Log.i(TAG, "Dialog cancel, refuse from app")
-        refuseFromApp(enrollingPermission, newEnrollingPermission,
-          changeStateCount, Consiquences.NOTHING)
-      }
+      Handler().postDelayed(
+        Runnable {
+          val rulesDialog = RulesDialog()
+          rulesDialog.show(supportFragmentManager, RULES_DIALOG_TAG)
+          supportFragmentManager.setFragmentResultListener(CANCEL_KEY, viewLifecycleOwner)
+          { _, bundle ->
+            Log.i(TAG, "Dialog cancel, refuse from app")
+            refuseFromApp(enrollingPermission, newEnrollingPermission,
+              changeStateCount, null, null)
+          }
+        },
+        BEFORE_RULES_DELAY_IN_SECONDS * 1000
+      )
     }
   }
 
@@ -475,9 +509,8 @@ class ApplicationFragment (private val appId: Int): Fragment()
         ep.lastState == AppState.REFUSED && state == AppState.ENROLLED
   }
 
-  private suspend fun enrollPorterWithoutCard(ep: EnrollingPermission?,
-                                              newEp: EnrollingPermission,
-                                              changeStateCount: Int
+  private fun enrollPorterWithoutCard(ep: EnrollingPermission?,
+                                      newEp: EnrollingPermission,
   ) {
     server.enrollPorter(appId, null, null) { appResponse: ApplicationResponse ->
       when (appResponse.response.type) {
@@ -486,14 +519,10 @@ class ApplicationFragment (private val appId: Int): Fragment()
         SERVER_ERROR  -> EnrollReaction(appResponse).doOnServerError()
       }
       btEnrollRefuse.isEnabled = true
-
-      suspend {
-        showRulesDialog(ep, newEp, changeStateCount)
-      }
     }
   }
 
-  private suspend fun reactOnEnrollWithCard(view: View, ep: EnrollingPermission?,
+  private fun reactOnEnrollWithCard(view: View, ep: EnrollingPermission?,
                                     newEp: EnrollingPermission, changeStateCount: Int)
   {
     supportFragmentManager.setFragmentResultListener(APPLICATION_KEY, viewLifecycleOwner)
@@ -517,9 +546,7 @@ class ApplicationFragment (private val appId: Int): Fragment()
       setVisibilityToViews(true, view)
       updateUI()
 
-      suspend {
-        showRulesDialog(ep, newEp, changeStateCount)
-      }
+      showRulesDialog(ep, newEp, changeStateCount)
     }
   }
 
@@ -530,6 +557,7 @@ class ApplicationFragment (private val appId: Int): Fragment()
 
     fun doOnServerOkResult(ep: EnrollingPermission?, newEp: EnrollingPermission) {
       val app = appResponse.app
+      lvdEnrollResult.value = true
 
       vm.openAppsLvdItems.remove(appId)
       vm.takenAppsLvdItems[appId] = MutableLiveData(app)
@@ -553,10 +581,11 @@ class ApplicationFragment (private val appId: Int): Fragment()
   }
 
   private fun refuseFromApp(ep: EnrollingPermission?, newEp: EnrollingPermission,
-                            changeStateCount: Int, consiquences: Consiquences
+                            changeStateCount: Int, bannUntil: String?,
+                            decreaseRatingPercent: Int?
   )
   {
-    server.refuseApp(appId, consiquences.toString()) { appUserResponse ->
+    server.refuseApp(appId, bannUntil, decreaseRatingPercent) { appUserResponse ->
       Log.i (TAG, "setFragmentResultListener. response.type=${appUserResponse.response.type}")
       when (appUserResponse.response.type) {
         SERVER_OK     -> RefuseReaction(appUserResponse).doOnServerOkResult(ep, newEp,
@@ -614,10 +643,17 @@ class ApplicationFragment (private val appId: Int): Fragment()
   }
 
   private fun addOrUpdateEnrollPermission(ep: EnrollingPermission?, newEp: EnrollingPermission) {
-    if (ep == null)
-      App.repository.addEnrollingPermission(newEp)
-    else
+    if (ep == null) {
+      try {
+        App.repository.addEnrollingPermission(newEp)
+      }
+      catch (e: SQLiteConstraintException) {
+        App.repository.updateEnrollingPermission(newEp)
+      }
+    }
+    else {
       App.repository.updateEnrollingPermission(newEp)
+    }
   }
 
   private fun setAppObserver() {
@@ -744,7 +780,7 @@ class ApplicationFragment (private val appId: Int): Fragment()
             if (appIsEnded) {
               it.porters?.let { porters ->
                 for (j in porters.indices) {
-                  if (porters[j].user.id == App.userItem?.id) {
+                  if (porters[j].user?.id == App.userItem?.id) {
                     val pivot = porters[j].pivot
                     if (!pivot.payed) {
                       canEnroll = false
@@ -797,9 +833,9 @@ class ApplicationFragment (private val appId: Int): Fragment()
 
         var endOfBannDate = Date()
         App.dbUser?.let { user ->
-          val now = Date().time
+          val now = vm.serverTimeMlsc
           endOfBannDate = Date(user.endOfBannDatetime)
-          if (now < user.endOfBannDatetime) {
+          if (now != null && now < user.endOfBannDatetime) {
             canEnroll = false
             canNotEnrollCause = CAUSE_BANNED
           }
@@ -818,7 +854,7 @@ class ApplicationFragment (private val appId: Int): Fragment()
             CAUSE_COMMISSION_IS_NOT_PAYED -> getString(R.string.app_could_not_enroll_cause_commission)
             CAUSE_PAY_IS_NOT_CONFIRMED -> getString(R.string.app_could_not_enroll_cause_not_confirmed_pay)
             CAUSE_BANNED -> getString(R.string.app_can_not_enroll_cause_banned,
-              endOfBannDate.toString())
+              dateToStr(endOfBannDate, COOL_DATE_TIME_FORMAT))
             else -> getString(R.string.app_could_not_enroll_cause_unknown)
           }
           changeStatusToError(statusText)
@@ -1149,6 +1185,11 @@ class ApplicationFragment (private val appId: Int): Fragment()
         else -> ""
       }
 
+      val payFromWho = when (appItem.clientPay) {
+        true -> getString(R.string.app_from_client)
+        false -> getString(R.string.app_from_dispatcher)
+      }
+
       if (porterIsEnrolled) {
         btChangeDebitCard.text = getDebitCardNumber()
 
@@ -1162,6 +1203,7 @@ class ApplicationFragment (private val appId: Int): Fragment()
       }
 
       tvPayMethod.text = Html.fromHtml(getString(R.string.app_pay_method, payMethod))
+      tvPayFromWho.text = Html.fromHtml(getString(R.string.app_pay_from_who, payFromWho))
 
       val workers = "${appItem.workerCount} / ${appItem.workerTotal}"
       tvPortersCount.text = Html.fromHtml(getString(R.string.app_worker_count, workers))
@@ -1251,7 +1293,7 @@ class ApplicationFragment (private val appId: Int): Fragment()
     init {
       App.userItem?.let { user ->
         for (i in porters.indices) {
-          if (porters[i].user.id != user.id)
+          if (porters[i].user?.id != user.id)
             this.porters.add(porters[i])
         }
       }

@@ -29,6 +29,7 @@ val AUTOSTART_PROBLEMS_MANUFACTURERS = listOf<String>("meizu", "Meizu",
 
 const val DATE_FORMAT = "yyyy-MM-dd"
 const val DATE_TIME_FORMAT = "yyyy-MM-dd HH:mm:ss"
+const val COOL_DATE_TIME_FORMAT = "dd.MM.yyyy HH:mm:ss"
 const val TIME_FORMAT = "HH:mm"
 const val APP_ID_ARG = "applicationId"
 const val APPLICATION_FRAGMENT_NAME = "Application"

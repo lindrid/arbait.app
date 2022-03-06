@@ -6,19 +6,19 @@ import java.util.*
 class MyTypeConverters {
 
   @TypeConverter
-  fun fromConsiquences(cons: Consiquences): Int {
+  fun fromConsiquences(cons: Consequences): Int {
     return when (cons) {
-      Consiquences.NOTHING -> 0
-      Consiquences.DECREASE_RATING_AND_BANN -> 1
+      Consequences.NOTHING -> 0
+      Consequences.DECREASE_RATING_AND_BANN -> 1
     }
   }
 
   @TypeConverter
-  fun toConsiquences(consInt: Int): Consiquences {
+  fun toConsiquences(consInt: Int): Consequences {
     return when (consInt) {
-      0 -> Consiquences.NOTHING
-      1 -> Consiquences.DECREASE_RATING_AND_BANN
-      else -> Consiquences.NOTHING
+      0 -> Consequences.NOTHING
+      1 -> Consequences.DECREASE_RATING_AND_BANN
+      else -> Consequences.NOTHING
     }
   }
 

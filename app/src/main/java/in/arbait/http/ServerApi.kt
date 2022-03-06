@@ -37,7 +37,8 @@ interface ServerApi {
   @POST("/api/porter/refuse")
   fun refuseApp ( @HeaderMap headers: Map<String, String>,
                   @Query("app_id") appId: Int,
-                  @Query("consiquences") consiquences: String): Call<ApplicationResponse>
+                  @Query("bann_until") bannUntil: String?,
+                  @Query("reduce_rating") reduceRating: Int?): Call<ApplicationResponse>
 
   @POST("/api/porter/change/app/debit_card")
   fun changeDebitCard ( @HeaderMap headers: Map<String, String>,
