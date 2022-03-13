@@ -11,19 +11,20 @@
     android:orientation="vertical">
 
     <androidx.appcompat.widget.AppCompatTextView
-        android:id="@+id/tv_autost_header"
+        android:id="@+id/tv_info_header"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="20dp"
-        android:text="@string/autostart_header"
+        android:text="@string/dont_miss_header"
         android:textSize="30sp"
         android:textColor="@color/black"
+        android:gravity="center"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
     <androidx.core.widget.NestedScrollView
-        android:id="@+id/nsv_autost_info"
+        android:id="@+id/nsv_info"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_marginTop="10dp"
@@ -31,7 +32,7 @@
         android:fillViewport="true"
         android:orientation="vertical"
         app:layout_constraintBottom_toTopOf="@id/bt_autost_ok"
-        app:layout_constraintTop_toBottomOf="@id/tv_autost_header"
+        app:layout_constraintTop_toBottomOf="@id/tv_info_header"
         app:layout_constraintVertical_bias="0.0"
         tools:layout_editor_absoluteX="135dp">
 
@@ -41,25 +42,35 @@
             android:orientation="vertical">
 
             <androidx.appcompat.widget.AppCompatTextView
-                android:id="@+id/tv_autost_info"
+                android:id="@+id/tv_info"
                 android:layout_width="wrap_content"
                 android:layout_marginStart="10dp"
                 android:layout_marginEnd="10dp"
                 android:layout_marginBottom="10dp"
                 android:layout_height="wrap_content"
-                android:text="@string/autostart_info"
+                android:text="@string/correct_info"
                 android:textSize="20sp"
                 android:textColor="@color/black" />
 
             <androidx.appcompat.widget.AppCompatTextView
-                android:id="@+id/tv_autost_if_sting"
+                android:id="@+id/tv_info_2"
                 android:layout_width="wrap_content"
                 android:layout_marginStart="10dp"
                 android:layout_marginEnd="10dp"
                 android:layout_height="wrap_content"
-                android:text="@string/autostart_if_setting"
+                android:text=""
                 android:textSize="20sp"
                 android:textColor="@color/black" />
+
+            <androidx.appcompat.widget.AppCompatImageView
+                android:id="@+id/iv_info_notifications"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:adjustViewBounds="true"
+                android:cropToPadding="false"
+                android:scaleType="centerCrop"
+                app:layout_constraintTop_toBottomOf="@id/tv_info_2"
+                app:srcCompat="@drawable/img" />
 
 
         </LinearLayout>

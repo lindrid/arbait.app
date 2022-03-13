@@ -5,8 +5,13 @@ import `in`.arbait.http.PollServerViewModel
 import `in`.arbait.http.items.ApplicationItem
 import `in`.arbait.http.poll_service.Action
 import android.annotation.SuppressLint
+import android.content.Context
+import android.content.Intent
 import android.graphics.Color
+import android.net.Uri
 import android.os.Bundle
+import android.os.PowerManager
+import android.provider.Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS
 import android.util.Log
 import android.view.*
 import android.widget.LinearLayout
@@ -24,7 +29,8 @@ import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 
-val AUTOSTART_PROBLEMS_MANUFACTURERS = listOf<String>("meizu", "Meizu",
+
+val AUTOSTART_PROBLEMS_MANUFACTURERS = listOf("meizu", "Meizu",
   "huawei", "Huawei", "xiaomi", "Xiaomi")
 
 const val DATE_FORMAT = "yyyy-MM-dd"
@@ -46,7 +52,7 @@ private const val DAY_HEADER = 1
 private const val TEXT = 2
 
 private const val TAG = "ApplicationsFragment"
-private const val AUTOSTART_DIALOG_TAG = "AUTOSTART_DIALOG"
+private const val INFO_DIALOG_TAG = "AUTOSTART_DIALOG"
 
 class ApplicationsFragment: Fragment()
 {
@@ -117,14 +123,30 @@ class ApplicationsFragment: Fragment()
 
     val actionBar = (requireActivity() as AppCompatActivity).supportActionBar
     val appName = getString(R.string.app_name)
-    actionBar?.title = "$appName"
+    actionBar?.title = appName
 
-    if (manufacturerIsOneOf(AUTOSTART_PROBLEMS_MANUFACTURERS)) {
-      val autoStartDialog = AutoStartSettingDialog()
-      autoStartDialog.show(supportFragmentManager, AUTOSTART_DIALOG_TAG)
-      supportFragmentManager.setFragmentResultListener(OK_KEY, viewLifecycleOwner)
-      { _, bundle ->
-        Log.i(TAG, "Autostart dialog OK")
+    val dbUser = App.dbUser
+    if (dbUser != null) {
+      if (dbUser.needToShowInfo) {
+        showDialogAndReact(1) { _, _ ->
+          dbUser.needToShowInfo = false
+          App.repository.updateUser(dbUser)
+
+          showDialogAndReact(2) { _, _ ->
+            checkOptimization()
+          }
+        }
+      }
+      else {
+        val packageName: String = requireContext().packageName
+        val pm = requireContext().getSystemService(Context.POWER_SERVICE) as PowerManager
+        if (pm != null) {
+          if (!pm.isIgnoringBatteryOptimizations(packageName)) {
+            showDialogAndReact (2) { _, _ ->
+              checkOptimization()
+            }
+          }
+        }
       }
     }
   }
@@ -176,6 +198,28 @@ class ApplicationsFragment: Fragment()
 
   fun updateOpenAppsUI(openApps: List<ApplicationItem>) {
     rvOpenApps.adapter = getConcatOpenAdapter(openApps)
+  }
+
+
+  private fun showDialogAndReact (step: Int, reaction: (s: String, b: Bundle) -> Unit) {
+    val autoStartDialog = InfoDialog(step)
+    autoStartDialog.show(supportFragmentManager, INFO_DIALOG_TAG)
+    supportFragmentManager.setFragmentResultListener(OK_KEY, viewLifecycleOwner, reaction)
+  }
+
+  @Suppress("SENSELESS_COMPARISON")
+  @SuppressLint("NewApi", "BatteryLife")
+  private fun checkOptimization() {
+    val packageName: String = requireContext().packageName
+    val pm = requireContext().getSystemService(Context.POWER_SERVICE) as PowerManager
+    if (pm != null) {
+      if (!pm.isIgnoringBatteryOptimizations(packageName)) {
+        val intent = Intent()
+        intent.action = ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS
+        intent.data = Uri.parse("package:$packageName")
+        requireContext().startActivity(intent)
+      }
+    }
   }
 
 

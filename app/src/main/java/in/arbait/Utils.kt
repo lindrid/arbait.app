@@ -11,6 +11,8 @@ import android.content.res.ColorStateList
 import android.graphics.Color
 import android.net.Uri
 import android.os.Build
+import android.os.Build.MANUFACTURER
+import android.os.Build.MODEL
 import android.util.Log
 import android.view.View
 import android.widget.EditText
@@ -36,6 +38,14 @@ val DEFAULT_EDITTEXT_EMERALD_COLOR = Color.parseColor("#02dac5")
 private const val DEBIT_CARD_MIN_LENGTH = 19
 private const val CENTURY_21_YEAR_UP_TO = 21
 private const val CENTURY_20_YEAR_UP_TO = 99
+
+
+fun getDeviceName(): String =
+  if (MODEL.startsWith(MANUFACTURER, ignoreCase = true)) {
+    MODEL
+  } else {
+    "$MANUFACTURER $MODEL"
+  }.capitalize(Locale.ROOT)
 
 fun getFullYear (shortcutYear: String): Int {
   try {
@@ -72,12 +82,9 @@ fun getFullYear (shortcutYear: String): Int {
 }
 
 fun manufacturerIsOneOf (m: List<String>): Boolean {
-  for (i in m.indices) {
-    if (MANUFACTURER.indexOf(m[i]) != -1)
+  for (i in m.indices)
+    if (getDeviceName().indexOf(m[i]) != -1)
       return true
-    if (Build.BRAND.indexOf(m[i]) != -1)
-      return true
-  }
 
   return false
 }

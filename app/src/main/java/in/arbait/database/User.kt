@@ -15,6 +15,7 @@ data class User (
   var login: Boolean = false,
   var isItRegistration: Boolean = false,
   var headerWasPressed: Boolean = false,
+  var needToShowInfo: Boolean = true,
 
   var notificationsOff: Boolean = false,
   var soundOff: Boolean = false,

@@ -6,7 +6,7 @@ import androidx.room.TypeConverters
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 
-@Database(entities = [User::class, EnrollingPermission::class, AppHistory::class], version = 14)
+@Database(entities = [User::class, EnrollingPermission::class, AppHistory::class], version = 15)
 @TypeConverters(MyTypeConverters::class)
 abstract class Database: RoomDatabase() {
   abstract fun userDao(): UserDao
@@ -132,5 +132,11 @@ val migration_12_13 = object : Migration(12, 13) {
 val migration_13_14 = object: Migration(13, 14) {
   override fun migrate(database: SupportSQLiteDatabase) {
     database.execSQL("ALTER TABLE User ADD COLUMN endOfBannDatetime INT8 NOT NULL DEFAULT 0")
+  }
+}
+
+val migration_14_15 = object: Migration(14, 15) {
+  override fun migrate(database: SupportSQLiteDatabase) {
+    database.execSQL("ALTER TABLE User ADD COLUMN needToShowInfo TINYINT NOT NULL DEFAULT 1")
   }
 }

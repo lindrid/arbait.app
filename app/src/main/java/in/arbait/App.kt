@@ -15,7 +15,9 @@ const val APP_VERSION = "1.1.6"
 class App : Application() {
   override fun onCreate() {
     super.onCreate()
-    val receiver = ComponentName(this, StartActivityReceiver::class.java)
+    val receiver = ComponentName(this, StartReceiver::class.java)
+    //val receiver = if (manufacturerIsHuawei()) ComponentName(this, StartReceiver::class.java)
+    //else ComponentName(this, StartActivityReceiver::class.java)
     val pm = packageManager
 
     pm.setComponentEnabledSetting(
