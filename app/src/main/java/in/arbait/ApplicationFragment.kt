@@ -5,6 +5,8 @@ import `in`.arbait.database.AppHistory
 import `in`.arbait.database.AppState
 import `in`.arbait.database.Consequences
 import `in`.arbait.database.EnrollingPermission
+import `in`.arbait.helpers.setLayoutParams
+import `in`.arbait.helpers.setVisibilityToViews
 import `in`.arbait.http.PollServerViewModel
 import `in`.arbait.http.ReactionOnResponse
 import `in`.arbait.http.Server
@@ -123,7 +125,7 @@ class ApplicationFragment (private val appId: Int): Fragment()
   private lateinit var btChangeDebitCard: AppCompatButton
   private lateinit var btEnrollRefuse: AppCompatButton
   private lateinit var btBack: AppCompatButton
-  private lateinit var nsvApp: NestedScrollView
+  private lateinit var nsvAppArea: NestedScrollView
   private lateinit var tvWhenCall: AppCompatTextView
 
   private lateinit var btAppConfirm: AppCompatButton
@@ -150,13 +152,18 @@ class ApplicationFragment (private val appId: Int): Fragment()
     setViews(view)
     setAppItem()
     setPorter()
-    updateUI()
     setHasOptionsMenu(true)
 
     rvPorters.layoutManager = LinearLayoutManager(context)
     rvWorkers.layoutManager = LinearLayoutManager(context)
+
+    updateUI()
+
     setAppObserver()
-    setVisibilityToViews(porterIsEnrolled, view)
+    if (porterIsEnrolled)
+      setUiToEnrolledState()
+    else
+      setUiToRefusedState()
 
     setDeletedAppObserver()
     setRemovedFromAppObserver()
@@ -174,7 +181,7 @@ class ApplicationFragment (private val appId: Int): Fragment()
 
   override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
     inflater.inflate(R.menu.app_card_menu, menu)
-    
+
     super.onCreateOptionsMenu(menu, inflater)
   }
 
@@ -199,9 +206,9 @@ class ApplicationFragment (private val appId: Int): Fragment()
     vm.deletedAppsLvdList.observe(viewLifecycleOwner,
       Observer { deletedApps ->
         deletedApps?.let {
-          for (i in deletedApps.indices) {
-            if (deletedApps[i].id == appId) {
-              setAppDeletedStatus()
+          deletedApps.forEach {
+            if (appId == it.id) {
+              setUiToDeletedState()
             }
           }
         }
@@ -215,7 +222,7 @@ class ApplicationFragment (private val appId: Int): Fragment()
         removedFromApps?.let {
           for (i in removedFromApps.indices) {
             if (removedFromApps[i].id == appId) {
-              setRemovedFromAppStatus()
+              setUiToRemovedFromAppState()
             }
           }
         }
@@ -262,8 +269,8 @@ class ApplicationFragment (private val appId: Int): Fragment()
 
     lvdAppItem = MutableLiveData(
       ApplicationItem(0,"","","","",
-      0,false,"",0,0,true,0,0,
-    1,0, false,"", "", listOf<PorterItem>(),
+        0,false,"",0,0,true,0,0,
+        1,0, false,"", "", listOf<PorterItem>(),
         listOf<WorkerItem>(),true))
     lastAppItem?.let {
       lvdAppItem.value = it
@@ -301,7 +308,7 @@ class ApplicationFragment (private val appId: Int): Fragment()
     val porterWantToRefuse = porterIsEnrolled
 
     val state = if (!porterIsEnrolled) AppState.ENROLLED
-                else AppState.REFUSED
+    else AppState.REFUSED
 
     GlobalScope.launch(Dispatchers.Main) {
       App.userItem?.let { user ->
@@ -313,8 +320,8 @@ class ApplicationFragment (private val appId: Int): Fragment()
         val now = Date().time
 
         val passTooMuchTimeAfterLastClick = (enrollingPermission != null &&
-          now > enrollingPermission.lastClickTime + PENALTY_TIME_RANGE
-        )
+            now > enrollingPermission.lastClickTime + PENALTY_TIME_RANGE
+            )
 
         val changeStateCount =
           if (enrollingPermission == null || passTooMuchTimeAfterLastClick) {
@@ -442,44 +449,44 @@ class ApplicationFragment (private val appId: Int): Fragment()
                                               changeStateCount: Int,
                                               user: UserItem
   ) {
-      lvdEnrollResult.observe(viewLifecycleOwner,
-        Observer { enrollResult ->
-          GlobalScope.launch(Dispatchers.Main) {
-            lvdAppItem.value?.let { appItem ->
-              if (enrollResult == true) {
-                if (appItem.payMethod == PM_CARD) {
-                  val enrollWithDebitCardDialog = DebitCardDialog.newInstance(appId, user)
-                  enrollWithDebitCardDialog.show(supportFragmentManager, DEBIT_CARD_DIALOG_TAG)
-                  porterIsEnrolled = false
-                  view?.let {
-                    reactOnEnrollWithCard(
-                      it, enrollingPermission, newEnrollingPermission,
-                      changeStateCount
-                    )
-                  }
-                }
-
-                val appHistoryCoroutineVal = GlobalScope.async {
-                  App.repository.getAppHistory(appItem.id)
-                }
-
-                val appHistory = appHistoryCoroutineVal.await()
-                if (appHistory == null) {
-                  val ah = AppHistory(
-                    appId = appItem.id,
-                    enrollTime = Date().time
+    lvdEnrollResult.observe(viewLifecycleOwner,
+      Observer { enrollResult ->
+        GlobalScope.launch(Dispatchers.Main) {
+          lvdAppItem.value?.let { appItem ->
+            if (enrollResult == true) {
+              if (appItem.payMethod == PM_CARD) {
+                val enrollWithDebitCardDialog = DebitCardDialog.newInstance(appId, user)
+                enrollWithDebitCardDialog.show(supportFragmentManager, DEBIT_CARD_DIALOG_TAG)
+                porterIsEnrolled = false
+                view?.let {
+                  reactOnEnrollWithCard(
+                    it, enrollingPermission, newEnrollingPermission,
+                    changeStateCount
                   )
-                  App.repository.addAppHistory(ah)
                 }
-                else {
-                  appHistory.enrollTime = Date().time
-                  App.repository.updateAppHistory(appHistory)
-                }
+              }
+
+              val appHistoryCoroutineVal = GlobalScope.async {
+                App.repository.getAppHistory(appItem.id)
+              }
+
+              val appHistory = appHistoryCoroutineVal.await()
+              if (appHistory == null) {
+                val ah = AppHistory(
+                  appId = appItem.id,
+                  enrollTime = Date().time
+                )
+                App.repository.addAppHistory(ah)
+              }
+              else {
+                appHistory.enrollTime = Date().time
+                App.repository.updateAppHistory(appHistory)
               }
             }
           }
         }
-      )
+      }
+    )
   }
 
   private fun showRulesDialog(enrollingPermission: EnrollingPermission?,
@@ -550,7 +557,7 @@ class ApplicationFragment (private val appId: Int): Fragment()
       porterIsEnrolled = true
 
       btEnrollRefuse.text = getString(R.string.app_refuse)
-      setVisibilityToViews(true, view)
+      setUiToEnrolledState()
       updateUI()
 
       showRulesDialog(ep, newEp, changeStateCount)
@@ -579,7 +586,7 @@ class ApplicationFragment (private val appId: Int): Fragment()
       porterIsEnrolled = true
 
       btEnrollRefuse.text = getString(R.string.app_refuse)
-      setVisibilityToViews(true, vm.rootView)
+      setUiToEnrolledState()
       updateUI()
     }
 
@@ -641,7 +648,7 @@ class ApplicationFragment (private val appId: Int): Fragment()
       hideConfirmationInfo()
 
       btEnrollRefuse.text = getString(R.string.app_enroll)
-      setVisibilityToViews(false, vm.rootView)
+      setUiToRefusedState()
       updateUI()
     }
 
@@ -676,7 +683,7 @@ class ApplicationFragment (private val appId: Int): Fragment()
 
           porter?.let { porter ->
             if (porter.pivot.removed) {
-              setRemovedFromAppStatus()
+              setUiToRemovedFromAppState()
             }
           }
           updateUI()
@@ -685,44 +692,25 @@ class ApplicationFragment (private val appId: Int): Fragment()
     )
   }
 
-  private fun setAppDeletedStatus() {
-    val statusText = getString(R.string.app_deleted)
-    changeStatusToError(statusText)
-
-    rvPorters.visibility = View.INVISIBLE
-
-    setLayoutConstraints(
-      tvEnrolledIsVisible = true,
-      btEnrollRefuse,
-      withoutPorters = true
+  private fun setUiToDeletedState() {
+    changeStatusToError(statusText = getString(R.string.app_deleted))
+    setUiToRefusedState(
+      tvAddressTopToTop = ConstraintLayout.LayoutParams.UNSET,
+      tvAddressTopToBottom = tvStatus.id
     )
-
-    btCallClient.isEnabled = false
-    btClientWhatsapp.isEnabled = false
-    btEnrollRefuse.isEnabled = false
     appWasDeleted = true
-
     lvdAppItem.value?.let {
       updateUI()
     }
   }
 
-  private fun setRemovedFromAppStatus() {
-    val statusText = getString(R.string.app_you_were_removed)
-    changeStatusToError(statusText)
-
-    rvPorters.visibility = View.INVISIBLE
-    setLayoutConstraints(
-      tvEnrolledIsVisible = true,
-      btEnrollRefuse,
-      withoutPorters = true
+  private fun setUiToRemovedFromAppState() {
+    changeStatusToError(statusText = getString(R.string.app_you_were_removed))
+    setUiToRefusedState(
+      tvAddressTopToTop = ConstraintLayout.LayoutParams.UNSET,
+      tvAddressTopToBottom = tvStatus.id
     )
-
-    btCallClient.isEnabled = false
-    btClientWhatsapp.isEnabled = false
-    btEnrollRefuse.isEnabled = false
     removedFromApp = true
-
     lvdAppItem.value?.let {
       it.workerCount--
       updateUI()
@@ -782,7 +770,6 @@ class ApplicationFragment (private val appId: Int): Fragment()
         val takenApps = vm.takenAppsLvdItems
 
         for (i in takenApps.keys) {
-
           takenApps[i]?.value?.let {
             val appIsEnded = it.state > CLOSED_STATE
             if (appIsEnded) {
@@ -852,10 +839,8 @@ class ApplicationFragment (private val appId: Int): Fragment()
         if (canEnroll) {
           tvStatus.visibility = View.INVISIBLE
           btEnrollRefuse.isEnabled = true
-          setLayoutConstraints(tvEnrolledIsVisible = false, btEnrollRefuse)
-        }
-        else {
-          canEnroll = true
+          setLayoutConstraints(tvEnrolledIsVisible = false)
+        } else {
           val statusText = when (canNotEnrollCause) {
             CAUSE_FREQUENT_APP_REFUSING -> getString(R.string.app_could_not_enroll_cause_refuses)
             CAUSE_SMALL_TIME_INTERVAL -> getString(R.string.app_could_not_enroll_cause_interval)
@@ -867,10 +852,10 @@ class ApplicationFragment (private val appId: Int): Fragment()
           }
           changeStatusToError(statusText)
           btEnrollRefuse.isEnabled = false
-          setLayoutConstraints(tvEnrolledIsVisible = true, btEnrollRefuse, withoutPorters = true)
+          setLayoutConstraints(tvEnrolledIsVisible = true, withPorters = false)
         }
-      }
-      else {
+        canEnroll = true
+      } else {
         btEnrollRefuse.isEnabled = true
       }
 
@@ -898,7 +883,7 @@ class ApplicationFragment (private val appId: Int): Fragment()
 
       lvdAppItem.value?.let { app ->
         if (app.id == 0)
-           btEnrollRefuse.isEnabled = false
+          btEnrollRefuse.isEnabled = false
       }
     }
   }
@@ -968,9 +953,9 @@ class ApplicationFragment (private val appId: Int): Fragment()
   }
 
   private fun showConfirmationInfo() {
-    val dp = nsvApp.layoutParams as ConstraintLayout.LayoutParams
+    val dp = nsvAppArea.layoutParams as ConstraintLayout.LayoutParams
     dp.bottomToTop = btAppConfirm.id
-    nsvApp.layoutParams = dp
+    nsvAppArea.layoutParams = dp
 
     btAppConfirm.visibility = View.VISIBLE
     tvAppConfirm.visibility = View.VISIBLE
@@ -988,9 +973,9 @@ class ApplicationFragment (private val appId: Int): Fragment()
   }
 
   private fun hideConfirmationInfo() {
-    val dp = nsvApp.layoutParams as ConstraintLayout.LayoutParams
+    val dp = nsvAppArea.layoutParams as ConstraintLayout.LayoutParams
     dp.bottomToTop = btCallClient.id
-    nsvApp.layoutParams = dp
+    nsvAppArea.layoutParams = dp
 
     val lp = tvAddress.layoutParams as ConstraintLayout.LayoutParams
     if (porterIsEnrolled)
@@ -1054,66 +1039,66 @@ class ApplicationFragment (private val appId: Int): Fragment()
     }
   }
 
-  private fun setVisibilityToViews(porterIsEnrolled: Boolean, view: View) {
-    if (porterIsEnrolled) {
-      changeStatusToEnrolled()
-
-      rvPorters.visibility = View.VISIBLE
-      btCallClient.visibility = View.VISIBLE
-      btClientWhatsapp.visibility = View.VISIBLE
-      tvWhenCall.visibility = View.VISIBLE
-      setLayoutConstraints(tvEnrolledIsVisible = true, view)
-    }
-    else {
-      tvStatus.visibility = View.INVISIBLE
-      rvPorters.visibility = View.INVISIBLE
-      btCallClient.visibility = View.INVISIBLE
-      btClientWhatsapp.visibility = View.INVISIBLE
-      tvWhenCall.visibility = View.INVISIBLE
-      setLayoutConstraints(tvEnrolledIsVisible = false, view)
-    }
-  }
-
-  private fun setLayoutConstraints(tvEnrolledIsVisible: Boolean, view: View,
-                                   withoutPorters: Boolean = false)
+  private fun setUiToEnrolledState()
   {
-    if (tvEnrolledIsVisible) {
-      val ap = tvAddress.layoutParams as ConstraintLayout.LayoutParams
-      ap.topToTop = ConstraintLayout.LayoutParams.UNSET
-      ap.topToBottom = tvStatus.id
-      tvAddress.layoutParams = ap
-
-      if (withoutPorters) {
-        val dp = tvDescription.layoutParams as ConstraintLayout.LayoutParams
-        dp.topToBottom = tvPortersCount.id
-        tvDescription.layoutParams = dp
-      }
-      else {
-        val dp = tvDescription.layoutParams as ConstraintLayout.LayoutParams
-        dp.topToBottom = rvPorters.id
-        tvDescription.layoutParams = dp
-      }
-
-      val np = nsvApp.layoutParams as ConstraintLayout.LayoutParams
-      np.bottomToTop = btCallClient.id
-      nsvApp.layoutParams = np
-    }
-    else {
-      val ap = tvAddress.layoutParams as ConstraintLayout.LayoutParams
-      ap.topToTop = view.id
-      ap.topToBottom = ConstraintLayout.LayoutParams.UNSET
-      tvAddress.layoutParams = ap
-
-      val dp = tvDescription.layoutParams as ConstraintLayout.LayoutParams
-      dp.topToBottom = tvPortersCount.id
-      tvDescription.layoutParams = dp
-
-      val np = nsvApp.layoutParams as ConstraintLayout.LayoutParams
-      np.bottomToTop = btBack.id
-      nsvApp.layoutParams = np
-    }
+    changeStatusToEnrolled()
+    setVisibilityToViews(listOf(rvPorters, btCallClient, btClientWhatsapp, tvWhenCall), View.VISIBLE)
+    setLayoutParamsToViews (
+      tvAddressTopToTop = ConstraintLayout.LayoutParams.UNSET,
+      tvAddressTopToBottom = tvStatus.id,
+      tvDescriptionTopToBottom = rvPorters.id,
+      nsvAppAreaBottomToTop = btCallClient.id
+    )
   }
 
+  private fun setUiToRefusedState(tvAddressTopToTop: Int = vm.rootView.id,
+                                  tvAddressTopToBottom: Int = ConstraintLayout.LayoutParams.UNSET)
+  {
+    setVisibilityToViews(listOf(tvStatus, rvPorters, btCallClient, btClientWhatsapp, tvWhenCall),
+      View.INVISIBLE)
+    setLayoutParamsToViews (
+      tvAddressTopToTop = tvAddressTopToTop,
+      tvAddressTopToBottom = tvAddressTopToBottom,
+      tvDescriptionTopToBottom = tvPortersCount.id,
+      nsvAppAreaBottomToTop = btBack.id
+    )
+  }
+
+  private fun setLayoutConstraints(tvEnrolledIsVisible: Boolean,
+                                   withPorters: Boolean = true)
+  {
+    if (tvEnrolledIsVisible)
+      setLayoutParamsToViews (
+        tvAddress = listOf(ConstraintLayout.LayoutParams.UNSET, tvStatus.id),
+        tvDescriptionTopToBottom = if (withPorters) rvPorters.id else tvPortersCount.id,
+        nsvAppAreaBottomToTop = btCallClient.id
+      )
+    else
+      setLayoutParamsToViews (
+        tvAddress = listOf(vm.rootView.id, ConstraintLayout.LayoutParams.UNSET),
+        tvDescriptionTopToBottom = tvPortersCount.id,
+        nsvAppAreaBottomToTop = btBack.id
+      )
+  }
+
+  private fun setLayoutParamsToViews(tvAddressTopToTop: Int, tvAddressTopToBottom: Int,
+                                     tvDescriptionTopToBottom: Int, nsvAppAreaBottomToTop: Int)
+  {
+    val tvAddressMap: Map<String, Int> = mapOf(
+      "topToTop" to tvAddressTopToTop,
+      "topToBottom" to tvAddressTopToBottom
+    )
+    val tvDescriptionMap: Map<String, Int> = mapOf(
+      "topToBottom" to tvDescriptionTopToBottom
+    )
+    val nsvAppAreaMap: Map<String, Int> = mapOf(
+      "bottomToTop" to nsvAppAreaBottomToTop
+    )
+
+    setLayoutParams(this.tvAddress, tvAddressMap)
+    setLayoutParams(this.tvDescription, tvDescriptionMap)
+    setLayoutParams(this.nsvAppArea, nsvAppAreaMap)
+  }
 
   private fun getThisUserPorter(app: ApplicationItem): PorterItem? {
     var porter: PorterItem? = null
@@ -1154,7 +1139,7 @@ class ApplicationFragment (private val appId: Int): Fragment()
     btEnrollRefuse = view.findViewById(R.id.bt_app_enroll_refuse)
     btBack = view.findViewById(R.id.bt_app_back)
     btChangeDebitCard = view.findViewById(R.id.bt_app_change_debit_card)
-    nsvApp = view.findViewById(R.id.nsv_app)
+    nsvAppArea = view.findViewById(R.id.nsv_app)
     tvWhenCall = view.findViewById(R.id.tv_app_when_call)
     btAppConfirm = view.findViewById(R.id.bt_app_confirm)
     tvAppConfirm = view.findViewById(R.id.tv_app_confirm)
@@ -1361,30 +1346,30 @@ class ApplicationFragment (private val appId: Int): Fragment()
     fun bind(workerName: String, phones: List<WorkerPhoneItem>) {
       tvName.text = workerName
 
-      var phoneWhatsapp = ""
-      var phoneCall = ""
+      var waPhone = ""
+      var callPhone = ""
       for (i in phones.indices) {
         if (phones[i].type == PHONE_CALL_TEXT ||
           phones[i].type == PHONE_CALL_AND_WHATSAPP_TEXT
         ) {
-          phoneCall = phones[i].number
+          callPhone = phones[i].number
         }
         if (phones[i].type == PHONE_WHATSAPP_TEXT ||
           phones[i].type == PHONE_CALL_AND_WHATSAPP_TEXT
         ) {
-          phoneWhatsapp = phones[i].number
+          waPhone = phones[i].number
         }
       }
 
       ivCall.setOnClickListener {
         val intent = Intent(Intent.ACTION_DIAL)
-        val uriStr = "tel:$phoneCall"
+        val uriStr = "tel:$callPhone"
         intent.data = Uri.parse(uriStr)
         context?.startActivity(intent)
       }
 
       ivWhatsapp.setOnClickListener {
-        openWhatsappContact(requireActivity(), phoneWhatsapp)
+        openWhatsappContact(requireActivity(), waPhone)
       }
     }
   }
@@ -1404,7 +1389,7 @@ class ApplicationFragment (private val appId: Int): Fragment()
 
     override fun onBindViewHolder(holder: WorkerHolder, position: Int) {
       val workerName = if (itemCount > 1) "${getString(R.string.mate)} ${position + 1}"
-        else getString(R.string.mate)
+      else getString(R.string.mate)
       holder.bind(workerName, workers[position].phones)
     }
   }
