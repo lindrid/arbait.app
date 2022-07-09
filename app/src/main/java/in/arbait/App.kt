@@ -10,7 +10,7 @@ import android.content.Context
 import android.content.pm.PackageManager
 import android.content.res.Resources
 
-const val APP_VERSION = "1.1.6"
+const val APP_VERSION = "1.2.23"
 
 class App : Application() {
   override fun onCreate() {

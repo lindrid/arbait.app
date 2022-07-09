@@ -80,6 +80,10 @@ const val PHONE_CALL = 1
 const val PHONE_WHATSAPP = 2
 const val PHONE_CALL_AND_WHATSAPP = 3
 
+const val PHONE_CALL_TEXT = "c"
+const val PHONE_WHATSAPP_TEXT = "w"
+const val PHONE_CALL_AND_WHATSAPP_TEXT = "cw"
+
 const val PM_CARD = 1
 const val PM_CASH = 2
 
@@ -113,6 +117,7 @@ class ApplicationFragment (private val appId: Int): Fragment()
   private lateinit var tvDescription: AppCompatTextView
   private lateinit var tvPortersCount: AppCompatTextView
   private lateinit var rvPorters: RecyclerView
+  private lateinit var rvWorkers: RecyclerView
   private lateinit var btCallClient: AppCompatButton
   private lateinit var btClientWhatsapp: AppCompatButton
   private lateinit var btChangeDebitCard: AppCompatButton
@@ -149,6 +154,7 @@ class ApplicationFragment (private val appId: Int): Fragment()
     setHasOptionsMenu(true)
 
     rvPorters.layoutManager = LinearLayoutManager(context)
+    rvWorkers.layoutManager = LinearLayoutManager(context)
     setAppObserver()
     setVisibilityToViews(porterIsEnrolled, view)
 
@@ -257,7 +263,8 @@ class ApplicationFragment (private val appId: Int): Fragment()
     lvdAppItem = MutableLiveData(
       ApplicationItem(0,"","","","",
       0,false,"",0,0,true,0,0,
-    1,0, false,"", "", listOf<PorterItem>(), true))
+    1,0, false,"", "", listOf<PorterItem>(),
+        listOf<WorkerItem>(),true))
     lastAppItem?.let {
       lvdAppItem.value = it
     }
@@ -742,6 +749,7 @@ class ApplicationFragment (private val appId: Int): Fragment()
 
     setViewsTexts()
     updatePorters()
+    updateWorkers()
 
     if (appWasDeleted || removedFromApp)
       return
@@ -875,41 +883,15 @@ class ApplicationFragment (private val appId: Int): Fragment()
         tvStatus.text = getString(R.string.app_end)
         btChangeDebitCard.isEnabled = false
         porter?.pivot?.let { pivot ->
-          tvEndStatus.text = Html.fromHtml(getString(R.string.app_status,
-            pivot.workHours,
-            pivot.money
-          ))
-          val commission = if (pivot.residue > 0) pivot.residue else pivot.commission
-          if (pivot.payed) {
-            if (pivot.confirmed) {
-              tvCommissionStatus.text = getString(R.string.app_status_commission_payed, pivot.commission)
-              tvCommissionStatus.setTextColor(resources.getColor(R.color.emerald))
+          lvdAppItem.value?.let { app ->
+            if (app.clientPaysForWork) {
+              renderEndResultWithCommission(pivot)
+            } else {
+              renderEndResult(pivot)
             }
-            else {
-              tvCommissionStatus.text = getString(R.string.app_status_commission_confirmation,
-                commission)
-              tvCommissionStatus.setTextColor(resources.getColor(R.color.emerald))
-            }
-            btPay.visibility = View.INVISIBLE
+            setTvAddressLayoutParams(app)
           }
-          else {
-            btPay.visibility = View.VISIBLE
-            tvCommissionStatus.text = if (pivot.residue > 0) getString(R.string.app_residue,
-              pivot.residue)
-              else getString(R.string.app_status_commission, pivot.commission)
-            tvCommissionStatus.setTextColor(resources.getColor(R.color.red))
-          }
-
-          tvEndStatus.visibility = View.VISIBLE
-          tvCommissionStatus.visibility = View.VISIBLE
-
-          val ap = tvAddress.layoutParams as ConstraintLayout.LayoutParams
-          ap.topToTop = ConstraintLayout.LayoutParams.UNSET
-          ap.topToBottom = if (btPay.visibility == View.VISIBLE) btPay.id
-            else tvCommissionStatus.id
-          tvAddress.layoutParams = ap
         }
-
         btCallClient.isEnabled = false
         btClientWhatsapp.isEnabled = false
       }
@@ -919,6 +901,54 @@ class ApplicationFragment (private val appId: Int): Fragment()
            btEnrollRefuse.isEnabled = false
       }
     }
+  }
+
+  private fun renderEndResultWithCommission(pivot: PorterPivotItem) {
+    tvEndStatus.text = Html.fromHtml(getString(R.string.app_end_pay_by_client,
+      pivot.workHours,
+      pivot.money
+    ))
+    val commission = if (pivot.residue > 0) pivot.residue else pivot.commission
+    if (pivot.payed) {
+      if (pivot.confirmed) {
+        tvCommissionStatus.text = getString(R.string.app_end_commission_payed, pivot.commission)
+        tvCommissionStatus.setTextColor(resources.getColor(R.color.emerald))
+      }
+      else {
+        tvCommissionStatus.text = getString(R.string.app_end_commission_confirmation,
+          commission)
+        tvCommissionStatus.setTextColor(resources.getColor(R.color.emerald))
+      }
+      btPay.visibility = View.INVISIBLE
+    }
+    else {
+      btPay.visibility = View.VISIBLE
+      tvCommissionStatus.text = if (pivot.residue > 0) getString(R.string.app_residue,
+        pivot.residue)
+      else getString(R.string.app_end_commission, pivot.commission)
+      tvCommissionStatus.setTextColor(resources.getColor(R.color.red))
+    }
+
+    tvEndStatus.visibility = View.VISIBLE
+    tvCommissionStatus.visibility = View.VISIBLE
+  }
+
+  private fun renderEndResult(pivot: PorterPivotItem) {
+    tvEndStatus.text = Html.fromHtml(getString(R.string.app_end_pay_by_dispatcher,
+      pivot.workHours,
+      pivot.money - pivot.commission
+    ))
+    tvEndStatus.visibility = View.VISIBLE
+  }
+
+  private fun setTvAddressLayoutParams(app: ApplicationItem) {
+    val ap = tvAddress.layoutParams as ConstraintLayout.LayoutParams
+    ap.topToTop = ConstraintLayout.LayoutParams.UNSET
+    ap.topToBottom = when (btPay.visibility) {
+      View.VISIBLE -> btPay.id
+      else -> if (app.clientPaysForWork) tvCommissionStatus.id else tvEndStatus.id
+    }
+    tvAddress.layoutParams = ap
   }
 
   private fun showConfirmationStatus() {
@@ -981,6 +1011,15 @@ class ApplicationFragment (private val appId: Int): Fragment()
     lvdAppItem.value?.let {
       it.porters?.let { porters ->
         rvPorters.adapter = PortersAdapter(porters)
+      }
+    }
+  }
+
+  private fun updateWorkers() {
+    lvdAppItem.value?.let {
+      it.workers?.let { workers ->
+        rvWorkers.adapter = WorkersAdapter(workers)
+        rvWorkers.visibility = if (workers.size > 0) View.VISIBLE else View.INVISIBLE
       }
     }
   }
@@ -1109,6 +1148,7 @@ class ApplicationFragment (private val appId: Int): Fragment()
     tvPayFromWho = view.findViewById(R.id.tv_app_pay_from_who)
     tvPortersCount = view.findViewById(R.id.tv_app_porters)
     rvPorters = view.findViewById(R.id.rv_app_porters)
+    rvWorkers = view.findViewById(R.id.rv_app_workers)
     btCallClient = view.findViewById(R.id.bt_app_call_client)
     btClientWhatsapp = view.findViewById(R.id.bt_app_client_whatsapp)
     btEnrollRefuse = view.findViewById(R.id.bt_app_enroll_refuse)
@@ -1185,7 +1225,7 @@ class ApplicationFragment (private val appId: Int): Fragment()
         else -> ""
       }
 
-      val payFromWho = when (appItem.clientPay) {
+      val payFromWho = when (appItem.clientPaysForWork) {
         true -> getString(R.string.app_from_client)
         false -> getString(R.string.app_from_dispatcher)
       }
@@ -1310,6 +1350,62 @@ class ApplicationFragment (private val appId: Int): Fragment()
 
     override fun onBindViewHolder(holder: PorterHolder, position: Int) {
       holder.bind(porters[position].user.name, porters[position].user.phones)
+    }
+  }
+
+  private inner class WorkerHolder (view: View) : RecyclerView.ViewHolder(view) {
+    private val tvName: TextView = view.findViewById(R.id.tv_porter_name)
+    private val ivCall: ImageView = view.findViewById(R.id.iv_porter_call)
+    private val ivWhatsapp: ImageView = view.findViewById(R.id.iv_porter_whatsapp)
+
+    fun bind(workerName: String, phones: List<WorkerPhoneItem>) {
+      tvName.text = workerName
+
+      var phoneWhatsapp = ""
+      var phoneCall = ""
+      for (i in phones.indices) {
+        if (phones[i].type == PHONE_CALL_TEXT ||
+          phones[i].type == PHONE_CALL_AND_WHATSAPP_TEXT
+        ) {
+          phoneCall = phones[i].number
+        }
+        if (phones[i].type == PHONE_WHATSAPP_TEXT ||
+          phones[i].type == PHONE_CALL_AND_WHATSAPP_TEXT
+        ) {
+          phoneWhatsapp = phones[i].number
+        }
+      }
+
+      ivCall.setOnClickListener {
+        val intent = Intent(Intent.ACTION_DIAL)
+        val uriStr = "tel:$phoneCall"
+        intent.data = Uri.parse(uriStr)
+        context?.startActivity(intent)
+      }
+
+      ivWhatsapp.setOnClickListener {
+        openWhatsappContact(requireActivity(), phoneWhatsapp)
+      }
+    }
+  }
+
+  private inner class WorkersAdapter (private val workers: List<WorkerItem>):
+    RecyclerView.Adapter<WorkerHolder>()
+  {
+
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): WorkerHolder {
+      val view = LayoutInflater.from(parent.context).inflate(
+        R.layout.list_item_porter, parent, false
+      )
+      return WorkerHolder(view)
+    }
+
+    override fun getItemCount() = workers.size
+
+    override fun onBindViewHolder(holder: WorkerHolder, position: Int) {
+      val workerName = if (itemCount > 1) "${getString(R.string.mate)} ${position + 1}"
+        else getString(R.string.mate)
+      holder.bind(workerName, workers[position].phones)
     }
   }
 

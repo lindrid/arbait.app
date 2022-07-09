@@ -7,9 +7,7 @@ import `in`.arbait.commission.PAY_TYPE_ARG
 import `in`.arbait.database.User
 import `in`.arbait.http.PollServerViewModel
 import `in`.arbait.http.poll_service.NOTIFICATION_ARG
-import `in`.arbait.http.poll_service.Restarter
 import android.content.ContentValues.TAG
-import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import android.view.View
@@ -125,10 +123,10 @@ class MainActivity : AppCompatActivity()
   }
 
   override fun onDestroy() {
-    val broadcastIntent = Intent()
+    /*val broadcastIntent = Intent()
     broadcastIntent.action = "restartservice"
     broadcastIntent.setClass(this, Restarter::class.java)
-    this.sendBroadcast(broadcastIntent)
+    this.sendBroadcast(broadcastIntent)*/
     super.onDestroy()
   }
 

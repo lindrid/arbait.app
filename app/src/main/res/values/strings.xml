@@ -29,6 +29,8 @@
     <string name="sber">Сбербанк</string>
     <string name="another_bank">Другой банк</string>
 
+    <string name="mate">Напарник</string>
+
     <!-- Месяцы -->
     <string name="month_jan">янв</string>
     <string name="month_feb">фев</string>
@@ -139,10 +141,13 @@
     <string name="app_could_not_enroll_cause_unknown">Нельзя записаться: неизвестная проблема</string>
 
     <string name="app_end">Заявка завершена</string>
-    <string name="app_status"><![CDATA[Часов отработано: %1$d <br> Денег получено: %2$d]]></string>
-    <string name="app_status_commission">Комиссия: %1$d</string>
-    <string name="app_status_commission_confirmation">Комиссия: %1$d, оплачена, ждите подтверждения...</string>
-    <string name="app_status_commission_payed">Комиссия: %1$d, оплачена</string>
+    <string name="app_end_pay_by_client"><![CDATA[Часов отработано: %1$d <br> Денег получено: %2$d]]></string>
+    <string name="app_end_pay_by_dispatcher">
+        <![CDATA[Часов отработано: %1$d <br> Диспетчер переведет: %2$d]]>
+    </string>
+    <string name="app_end_commission">Комиссия: %1$d</string>
+    <string name="app_end_commission_confirmation">Комиссия: %1$d, оплачена, ждите подтверждения...</string>
+    <string name="app_end_commission_payed">Комиссия: %1$d, оплачена</string>
     <string name="app_is_gone">Заявка собрана или удалена</string>
     <string name="app_you_were_removed">Вы были удалены с заявки</string>
     <string name="app_deleted">Заявка была отменена</string>
@@ -244,7 +249,8 @@
         Не выгружайте из памяти приложение Арбайт (особенно, на телефонах Xiaomi).
         Если вы увидели, что среди уведомлений нет поиска заявок, запустите приложение.
         Чтобы увидеть свои уведомления, проведите пальцем по экрану сверху вниз, должно
-        появится меню с уведомлениями, похожее на то, что на картинке ниже.
+        появится меню с уведомлениями, похожее на то, что на картинке ниже. Среди уведомлений должен
+        быть "поиск заявок"
     </string>
 
     <string name="meizu">Meizu</string>

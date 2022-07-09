@@ -15,7 +15,8 @@ data class ApplicationItem (
   //@SerializedName("pay_from_who") val payFromWho: Int = FROM_DISPATCHER,
   @SerializedName("what_to_do") val whatToDo: String,
   @SerializedName("pay_method") val payMethod: Int,
-  @SerializedName("client_pay") val clientPay: Boolean,
+  // 2 variants: client pays or dispatcher pays
+  @SerializedName("client_pay") val clientPaysForWork: Boolean,
   @SerializedName("client_phone_number") val clientPhoneNumber: String,
   @SerializedName("worker_count") var workerCount: Int,
   @SerializedName("worker_total") val workerTotal: Int,
@@ -28,6 +29,7 @@ data class ApplicationItem (
   @SerializedName("created_at") val createdAt: String,
   @SerializedName("updated_at") val updatedAt: String,
   @SerializedName("porters") val porters: List<PorterItem>?,
+  @SerializedName("workers") val workers: List<WorkerItem>?,
 
   var expanded: Boolean = true,
   var itIsTimeToConfirm: Boolean = false,

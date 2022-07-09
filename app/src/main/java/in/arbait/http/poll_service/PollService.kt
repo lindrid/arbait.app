@@ -304,10 +304,10 @@ class PollService : LifecycleService(), Serializable
     super.onDestroy()
     log("The service has been destroyed".toUpperCase())
 
-    val broadcastIntent = Intent()
-    broadcastIntent.action = "restartservice"
-    broadcastIntent.setClass(this, Restarter::class.java)
-    this.sendBroadcast(broadcastIntent)
+    //val broadcastIntent = Intent()
+    //broadcastIntent.action = "restartservice"
+    //broadcastIntent.setClass(this, Restarter::class.java)
+    //this.sendBroadcast(broadcastIntent)
   }
 
 

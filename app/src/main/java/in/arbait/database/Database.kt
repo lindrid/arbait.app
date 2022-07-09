@@ -122,7 +122,7 @@ val migration_12_13 = object : Migration(12, 13) {
         "`appId` INTEGER NOT NULL DEFAULT 0," +
         "`enrollTime` INT8 NOT NULL DEFAULT 0," +
         "`refuseTime` INT8 NOT NULL DEFAULT 0," +
-        "`consiquences` INTEGER NOT NULL DEFAULT 0," +
+        "`consequences` INTEGER NOT NULL DEFAULT 0," +
         "PRIMARY KEY(`appId`)" +
       ")"
     )
