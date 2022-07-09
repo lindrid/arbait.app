@@ -826,35 +826,17 @@ class ApplicationFragment (private val appId: Int): Fragment()
           if (!canEnroll) break
         }
 
-        var endOfBannDate = Date()
-        App.dbUser?.let { user ->
-          val now = vm.serverTimeMlsc
-          endOfBannDate = Date(user.endOfBannDatetime)
-          if (now != null && now < user.endOfBannDatetime) {
-            canEnroll = false
-            canNotEnrollCause = CAUSE_BANNED
-          }
+        if (userIsBanned()) {
+          canEnroll = false
+          canNotEnrollCause = CAUSE_BANNED
         }
 
         if (canEnroll) {
-          tvStatus.visibility = View.INVISIBLE
-          btEnrollRefuse.isEnabled = true
-          setLayoutConstraints(tvEnrolledIsVisible = false)
+          setUiToAbleToEnrollState()
         } else {
-          val statusText = when (canNotEnrollCause) {
-            CAUSE_FREQUENT_APP_REFUSING -> getString(R.string.app_could_not_enroll_cause_refuses)
-            CAUSE_SMALL_TIME_INTERVAL -> getString(R.string.app_could_not_enroll_cause_interval)
-            CAUSE_COMMISSION_IS_NOT_PAYED -> getString(R.string.app_could_not_enroll_cause_commission)
-            CAUSE_PAY_IS_NOT_CONFIRMED -> getString(R.string.app_could_not_enroll_cause_not_confirmed_pay)
-            CAUSE_BANNED -> getString(R.string.app_can_not_enroll_cause_banned,
-              dateToStr(endOfBannDate, COOL_DATE_TIME_FORMAT))
-            else -> getString(R.string.app_could_not_enroll_cause_unknown)
-          }
-          changeStatusToError(statusText)
-          btEnrollRefuse.isEnabled = false
-          setLayoutConstraints(tvEnrolledIsVisible = true, withPorters = false)
+          setUiToUnableToEnrollState()
         }
-        canEnroll = true
+        //canEnroll = true
       } else {
         btEnrollRefuse.isEnabled = true
       }
@@ -886,6 +868,17 @@ class ApplicationFragment (private val appId: Int): Fragment()
           btEnrollRefuse.isEnabled = false
       }
     }
+  }
+
+  private fun userIsBanned(): Boolean
+  {
+    App.dbUser?.let { user ->
+      val now = vm.serverTimeMlsc
+      if (now != null && now < user.endOfBannDatetime) {
+        return true
+      }
+    }
+    return false
   }
 
   private fun renderEndResultWithCommission(pivot: PorterPivotItem) {
@@ -1064,21 +1057,41 @@ class ApplicationFragment (private val appId: Int): Fragment()
     )
   }
 
-  private fun setLayoutConstraints(tvEnrolledIsVisible: Boolean,
-                                   withPorters: Boolean = true)
+  private fun setUiToAbleToEnrollState()
   {
-    if (tvEnrolledIsVisible)
-      setLayoutParamsToViews (
-        tvAddress = listOf(ConstraintLayout.LayoutParams.UNSET, tvStatus.id),
-        tvDescriptionTopToBottom = if (withPorters) rvPorters.id else tvPortersCount.id,
-        nsvAppAreaBottomToTop = btCallClient.id
-      )
-    else
-      setLayoutParamsToViews (
-        tvAddress = listOf(vm.rootView.id, ConstraintLayout.LayoutParams.UNSET),
-        tvDescriptionTopToBottom = tvPortersCount.id,
-        nsvAppAreaBottomToTop = btBack.id
-      )
+    tvStatus.visibility = View.INVISIBLE
+    btEnrollRefuse.isEnabled = true
+    setLayoutParamsToViews (
+      tvAddressTopToTop = vm.rootView.id,
+      tvAddressTopToBottom = ConstraintLayout.LayoutParams.UNSET,
+      tvDescriptionTopToBottom = tvPortersCount.id,
+      nsvAppAreaBottomToTop = btBack.id
+    )
+  }
+
+  private fun setUiToUnableToEnrollState()
+  {
+    App.dbUser?.let { user ->
+      val endOfBannDate = Date(user.endOfBannDatetime)
+      val statusText = when (canNotEnrollCause) {
+        CAUSE_FREQUENT_APP_REFUSING -> getString(R.string.app_could_not_enroll_cause_refuses)
+        CAUSE_SMALL_TIME_INTERVAL -> getString(R.string.app_could_not_enroll_cause_interval)
+        CAUSE_COMMISSION_IS_NOT_PAYED -> getString(R.string.app_could_not_enroll_cause_commission)
+        CAUSE_PAY_IS_NOT_CONFIRMED -> getString(R.string.app_could_not_enroll_cause_not_confirmed_pay)
+        CAUSE_BANNED -> getString(R.string.app_can_not_enroll_cause_banned,
+          dateToStr(endOfBannDate, COOL_DATE_TIME_FORMAT))
+        else -> getString(R.string.app_could_not_enroll_cause_unknown)
+      }
+      changeStatusToError(statusText)
+    }
+
+    btEnrollRefuse.isEnabled = false
+    setLayoutParamsToViews (
+      tvAddressTopToTop = ConstraintLayout.LayoutParams.UNSET,
+      tvAddressTopToBottom = tvStatus.id,
+      tvDescriptionTopToBottom = tvPortersCount.id,
+      nsvAppAreaBottomToTop = btCallClient.id
+    )
   }
 
   private fun setLayoutParamsToViews(tvAddressTopToTop: Int, tvAddressTopToBottom: Int,
